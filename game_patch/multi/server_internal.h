@@ -69,6 +69,7 @@ struct MatchInfo
     std::set<rf::Player*> ready_players_red;
     std::set<rf::Player*> ready_players_blue;
     std::set<rf::Player*> active_match_players;
+    std::string match_level_name;
 };
 
 extern ServerAdditionalConfig g_additional_server_config;
@@ -83,8 +84,10 @@ void handle_ready_command(rf::Player* sender);
 void handle_unready_command(rf::Player* sender);
 bool is_player_in_match(rf::Player* player);
 bool is_player_ready(rf::Player* player);
+void update_pre_match_powerups(rf::Player* player);
 void start_match();
 void reset_match_state();
+std::pair<bool, std::string> is_level_name_valid(const std::string& level_name_input);
 void server_vote_do_frame();
 void init_server_commands();
 void extend_round_time(int minutes);

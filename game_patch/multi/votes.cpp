@@ -4,6 +4,7 @@
 #include <ctime>
 #include <format>
 #include "../rf/player/player.h"
+#include "../rf/level.h"
 #include "../rf/multi.h"
 #include "../rf/gameseq.h"
 #include "../rf/misc.h"
@@ -16,6 +17,19 @@
 #include "multi.h"
 
 MatchInfo g_match_info;
+
+enum class VoteType
+{    
+    Kick,
+    Level,
+    Restart,
+    Extend,
+    Next,
+    Previous,
+    Match,
+    CancelMatch,
+    Unknown
+};
 
 struct Vote
 {
@@ -30,6 +44,8 @@ private:
 
 public:
     virtual ~Vote() = default;
+
+    virtual VoteType get_type() const = 0;
 
     bool start(std::string_view arg, rf::Player* source)
     {
@@ -180,20 +196,27 @@ protected:
     }
 };
 
-int parse_match_team_size(std::string_view arg)
+std::tuple<int, bool, std::string> parse_match_vote_info(std::string_view arg)
 {
-    if (arg.length() < 3 || arg[1] != 'v') {
-        return -1;
+    // validate match param
+    if (arg.length() < 3 || arg[1] != 'v' || arg[0] < '1' || arg[0] > '8' || arg[2] != arg[0]) {
+        return {-1, false, ""};
     }
 
     int a_size = arg[0] - '0';
-    int b_size = arg[2] - '0';
 
-    if (a_size < 1 || a_size > 8 || b_size != a_size) {
-        return -1;
+    // no level param
+    if (arg[3] != ' ') {
+        return {a_size, false, ""};
     }
 
-    return a_size;
+    std::string level_name;
+    bool valid_level;
+
+    level_name = arg.substr(4);
+    std::tie(valid_level, level_name) = is_level_name_valid(level_name); 
+
+    return {a_size, valid_level, level_name};
 }
 
 void add_ready_player(rf::Player* player)
@@ -212,7 +235,7 @@ void add_ready_player(rf::Player* player)
     }
 
     team_ready_list.insert(player);
-    rf::multi_powerup_add(player, 1, 3600000);
+    update_pre_match_powerups(player);
 
     auto ready_msg = std::format("{} ({}) is ready!", player->name.c_str(), team_name);
     send_chat_line_packet(ready_msg.c_str(), nullptr);
@@ -251,14 +274,13 @@ void remove_ready_player(rf::Player* player)
     send_chat_line_packet(msg.c_str(), nullptr);
 }
 
-
-void build_match_team_size(std::string_view arg)
-{
-    g_match_info.team_size = parse_match_team_size(arg);
-}
-
 struct VoteMatch : public Vote
 {
+    VoteType get_type() const override
+    {
+        return VoteType::Match;
+    }
+
     bool process_vote_arg(std::string_view arg, rf::Player* source) override
     {
         if (rf::multi_get_game_type() == rf::NG_TYPE_DM) {
@@ -267,13 +289,28 @@ struct VoteMatch : public Vote
         }
 
         if (arg.empty()) {
-            send_chat_line_packet("\xA6 You must specify a match size. Supported sizes are 1v1 up to 8v8.", source);
+            send_chat_line_packet("\xA6 You must specify a match size. Supported sizes are 1v1 - 8v8.", source);
             return false;
         }
 
-        g_match_info.team_size = parse_match_team_size(arg);
+        //g_match_info.team_size = parse_match_team_size(arg);
+        auto [team_size, valid_level, match_level_name] = parse_match_vote_info(arg);
+        g_match_info.team_size = team_size;        
 
-        if (g_match_info.team_size < 1 || g_match_info.team_size > 8) {
+        if (valid_level) {
+            g_match_info.match_level_name = match_level_name;
+        }
+        else if (match_level_name == "") {
+            g_match_info.match_level_name = rf::level.filename.c_str();
+        }
+        else {
+            send_chat_line_packet("\xA6 Invalid level specified! Try again, or omit level filename to use the current level.", source);
+            return false;
+        }
+
+        //rf::File::find(g_match_info.match_level_name.c_str());
+
+        if (g_match_info.team_size == -1) {
             send_chat_line_packet("\xA6 Invalid match size! Supported sizes are 1v1 up to 8v8.", source);
             return false;
         }
@@ -283,7 +320,8 @@ struct VoteMatch : public Vote
 
     [[nodiscard]] std::string get_title() const override
     {
-        return std::format("START {}v{} MATCH", g_match_info.team_size, g_match_info.team_size);      
+        return std::format("START {}v{} MATCH on {}",
+            g_match_info.team_size, g_match_info.team_size, g_match_info.match_level_name);      
     }
 
     void on_accepted() override
@@ -315,9 +353,53 @@ struct VoteMatch : public Vote
     }
 };
 
+struct VoteCancelMatch : public Vote
+{
+    VoteType get_type() const override
+    {
+        return VoteType::CancelMatch;
+    }
+
+    [[nodiscard]] std::string get_title() const override
+    {
+        return "CANCEL CURRENT MATCH";
+    }
+
+    bool process_vote_arg(std::string_view arg, rf::Player* source) override
+    {
+        if (!g_match_info.match_active && !g_match_info.pre_match_active) {
+            send_chat_line_packet("\xA6 No active or queued match to cancel.", source);
+            return false;
+        }
+
+        return true;
+    }
+
+    void on_accepted() override
+    {
+        send_chat_line_packet("\xA6 Vote passed: Match canceled!", nullptr);
+
+        reset_match_state();
+        load_next_level();
+
+        send_chat_line_packet("The match has been canceled by vote.", nullptr);
+    }
+
+    [[nodiscard]] const VoteConfig& get_config() const override
+    {
+        return g_additional_server_config.vote_match; // Ensure this config exists in your settings
+    }
+};
+
+
 struct VoteKick : public Vote
 {
     rf::Player* m_target_player;
+
+    VoteType get_type() const override
+    {
+        return VoteType::Kick;
+    }
 
     bool process_vote_arg(std::string_view arg, [[ maybe_unused ]] rf::Player* source) override
     {
@@ -355,6 +437,11 @@ struct VoteExtend : public Vote
 {
     rf::Player* m_target_player;
 
+    VoteType get_type() const override
+    {
+        return VoteType::Extend;
+    }
+
     [[nodiscard]] std::string get_title() const override
     {
         return "EXTEND ROUND BY 5 MINUTES";
@@ -380,6 +467,11 @@ struct VoteExtend : public Vote
 struct VoteLevel : public Vote
 {
     std::string m_level_name;
+
+    VoteType get_type() const override
+    {
+        return VoteType::Level;
+    }
 
     bool process_vote_arg([[maybe_unused]] std::string_view arg, rf::Player* source) override
     {
@@ -415,6 +507,12 @@ struct VoteLevel : public Vote
 
 struct VoteRestart : public Vote
 {
+
+    VoteType get_type() const override
+    {
+        return VoteType::Restart;
+    }
+
     [[nodiscard]] std::string get_title() const override
     {
         return "RESTART LEVEL";
@@ -439,6 +537,11 @@ struct VoteRestart : public Vote
 
 struct VoteNext : public Vote
 {
+    VoteType get_type() const override
+    {
+        return VoteType::Next;
+    }
+
     [[nodiscard]] std::string get_title() const override
     {
         return "LOAD NEXT LEVEL";
@@ -463,6 +566,11 @@ struct VoteNext : public Vote
 
 struct VotePrevious : public Vote
 {
+    VoteType get_type() const override
+    {
+        return VoteType::Previous;
+    }
+
     [[nodiscard]] std::string get_title() const override
     {
         return "LOAD PREV LEVEL";
@@ -508,6 +616,12 @@ public:
 
         if (!vote->is_allowed_in_limbo_state() && rf::gameseq_get_state() != rf::GS_GAMEPLAY) {
             send_chat_line_packet("Vote cannot be started now!", source);
+            return false;
+        }
+
+        if (vote->get_type() == VoteType::Match && (g_match_info.pre_match_active || g_match_info.match_active)) {
+            send_chat_line_packet(
+                "A match is already queued or in progress. Finish it before starting a new one.", source);
             return false;
         }
 
@@ -606,6 +720,8 @@ void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, 
         g_vote_mgr.StartVote<VotePrevious>(vote_arg, sender);
     else if (vote_name == "match")
         g_vote_mgr.StartVote<VoteMatch>(vote_arg, sender);
+    else if (vote_name == "cancelmatch" || vote_name == "nomatch")
+        g_vote_mgr.StartVote<VoteCancelMatch>(vote_arg, sender);
     else if (vote_name == "yes" || vote_name == "y")
         g_vote_mgr.add_player_vote(true, sender);
     else if (vote_name == "no" || vote_name == "n")

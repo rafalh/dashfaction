@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <limits>
 #include <format>
+#include <sstream>
 #include <windows.h>
 #include <winsock2.h>
 #include "server.h"
@@ -19,6 +20,7 @@
 #include "../misc/player.h"
 #include "../main/main.h"
 #include <common/utils/list-utils.h>
+#include "../rf/file/file.h"
 #include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/parse.h"
@@ -228,6 +230,17 @@ void handle_next_map_command(rf::Player* player)
     send_chat_line_packet(msg.c_str(), player);
 }
 
+void handle_has_map_command(rf::Player* player, std::string_view level_name)
+{
+    bool is_valid = false;
+    std::string checked_level_name = std::string(level_name);
+    std::tie(is_valid, checked_level_name) = is_level_name_valid(checked_level_name);
+
+    auto msg = std::format("{}, this server does {}have level {} installed.",
+        is_valid ? "Yes" : "No", is_valid ? "" : "NOT ", checked_level_name);
+    send_chat_line_packet(msg.c_str(), player);
+}
+
 void handle_save_command(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = get_player_additional_data(player);
@@ -265,6 +278,38 @@ void handle_load_command(rf::Player* player, std::string_view save_name)
             send_chat_line_packet("You do not have any position saved!", player);
         }
     }
+}
+
+std::string get_ready_player_names(bool is_blue_team)
+{
+    const auto& team_players = is_blue_team ? g_match_info.ready_players_blue : g_match_info.ready_players_red;
+    std::ostringstream oss;
+    for (const auto& player : team_players) {
+        if (oss.tellp() > 0) {
+            oss << ", ";
+        }
+        oss << player->name;
+    }
+    return oss.str();
+}
+
+void handle_whosready_command(rf::Player* player)
+{
+    auto msg = std::format("\xA6 No match is queued.");
+
+    if (g_match_info.pre_match_active) {
+        if (!g_match_info.ready_players_red.empty() || !g_match_info.ready_players_blue.empty()) {
+            msg = std::format("\xA6 These players are currently ready:\n"
+                                   "RED TEAM: {}\n"
+                                   "BLUE TEAM: {}\n",
+                                   get_ready_player_names(0), get_ready_player_names(1));
+        }
+        else {
+            msg = std::format("\xA6 No players are ready.");
+        }        
+    }
+
+    send_chat_line_packet(msg.c_str(), player);
 }
 
 CodeInjection process_obj_update_set_pos_injection{
@@ -334,6 +379,12 @@ bool handle_server_chat_command(std::string_view server_command, rf::Player* sen
     }
     else if (cmd_name == "unready") {
         handle_unready_command(sender);
+    }
+    else if (cmd_name == "whosready") {
+        handle_whosready_command(sender);
+    }
+    else if (cmd_name == "hasmap" || cmd_name == "haslevel") {
+        handle_has_map_command(sender, cmd_arg);
     }
     else {
         return false;
@@ -572,28 +623,25 @@ bool is_player_in_match(rf::Player* player)
     return g_match_info.match_active && g_match_info.active_match_players.contains(player);
 }
 
+void update_pre_match_powerups(rf::Player* player)
+{
+    if (g_match_info.pre_match_active) {
+        rf::multi_powerup_add(player, 0, 3600000);
+
+        if (g_match_info.ready_players_red.contains(player) || g_match_info.ready_players_blue.contains(player)) {
+            rf::multi_powerup_add(player, 1, 3600000);
+        }
+    }
+}
+
 void start_match()
 {
-    std::string red_team_names;
-    for (const auto& player : g_match_info.ready_players_red) {
-        if (!red_team_names.empty()) {
-            red_team_names += ", ";
-        }
-        red_team_names += player->name.c_str();
-    }
-
-    std::string blue_team_names;
-    for (const auto& player : g_match_info.ready_players_blue) {
-        if (!blue_team_names.empty()) {
-            blue_team_names += ", ";
-        }
-        blue_team_names += player->name.c_str();
-    }
-
-    auto msg = std::format("\n=========== {}v{} MATCH STARTING NOW ===========\n"
-                           "RED TEAM: {}\n"
-                           "BLUE TEAM: {}\n",
-                           g_match_info.team_size, g_match_info.team_size, red_team_names, blue_team_names);
+    auto msg = std::format(
+        "\n=========== {}v{} MATCH STARTING NOW ===========\n"
+        "RED TEAM: {}\n"
+        "BLUE TEAM: {}\n",
+        g_match_info.team_size, g_match_info.team_size,
+        get_ready_player_names(0), get_ready_player_names(1));
 
     send_chat_line_packet(msg.c_str(), nullptr);
 
@@ -615,10 +663,25 @@ void reset_match_state()
     g_match_info.pre_match_active = false;
     g_match_info.everyone_ready = false;
     g_match_info.match_active = false;
-    g_match_info.team_size = 0;
+    g_match_info.team_size = -1;
     g_match_info.active_match_players.clear();
     g_match_info.ready_players_red.clear();
     g_match_info.ready_players_blue.clear();
+    g_match_info.match_level_name = "";
+}
+
+std::pair<bool, std::string> is_level_name_valid(const std::string& level_name_input)
+{
+    std::string level_name = level_name_input;
+
+    if (level_name.size() < 4 || level_name.compare(level_name.size() - 4, 4, ".rfl") != 0) {
+        level_name += ".rfl";
+    }
+
+    rf::File file;
+    bool is_valid = file.find(level_name.c_str());
+
+    return {is_valid, level_name};
 }
 
 FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
@@ -636,6 +699,10 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
         }
 
         multi_spawn_player_server_side_hook.call_target(player);
+
+        if (g_match_info.pre_match_active) {
+            update_pre_match_powerups(player);
+        }
 
         rf::Entity* ep = rf::entity_from_handle(player->entity_handle);
         if (ep) {
@@ -732,7 +799,7 @@ CodeInjection multi_limbo_init_injection{
             send_chat_line_packet("\xA6 Match complete!", nullptr);
             reset_match_state();
         }
-        else {
+        else if (g_match_info.pre_match_active && g_match_info.everyone_ready) {
             addr_as_ref<int>(regs.esp) = 5000;
             g_match_info.match_active = g_match_info.everyone_ready;
             g_match_info.everyone_ready = false;
