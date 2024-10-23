@@ -63,6 +63,7 @@ struct ServerAdditionalConfig
 struct MatchInfo
 {
     bool pre_match_active;
+    bool everyone_ready;
     bool match_active;
     int team_size;
     std::set<rf::Player*> ready_players_red;
@@ -80,6 +81,10 @@ void cleanup_win32_server_console();
 void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);
 void handle_ready_command(rf::Player* sender);
 void handle_unready_command(rf::Player* sender);
+bool is_player_in_match(rf::Player* player);
+bool is_player_ready(rf::Player* player);
+void start_match();
+void reset_match_state();
 void server_vote_do_frame();
 void init_server_commands();
 void extend_round_time(int minutes);

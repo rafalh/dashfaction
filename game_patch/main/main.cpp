@@ -26,6 +26,7 @@
 #include "../object/object.h"
 #include "../multi/multi.h"
 #include "../multi/server.h"
+#include "../multi/server_internal.h"
 #include "../misc/misc.h"
 #include "../misc/vpackfile.h"
 #include "../misc/high_fps.h"
@@ -157,6 +158,9 @@ FunHook<void(bool)> level_init_post_hook{
     [](bool transition) {
         level_init_post_hook.call_target(transition);
         xlog::info("Level loaded: {}{}", rf::level.filename, transition ? " (transition)" : "");
+        if (g_match_info.match_active) {
+            send_chat_line_packet("=========== MATCH LIVE ===========", nullptr);
+        }        
     },
 };
 

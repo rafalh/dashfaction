@@ -388,7 +388,16 @@ FunHook<MultiIoPacketHandler> process_team_change_packet_hook{
         if (rf::is_server) {
             verify_player_id_in_packet(&data[0], addr, "team_change");
             data[1] = std::clamp(data[1], '\0', '\1'); // team validation (fixes "green team")
-        }
+            rf::Player* player = rf::multi_find_player_by_id(data[0]);
+            //xlog::warn("Player {}, team {}", player->name, player->team);
+            if (is_player_ready(player) || is_player_in_match(player)) {
+                auto msg = std::format("\xA6 You can't change teams {}", is_player_ready(player)
+                    ? "while ready for a match. Use \"/unready\" first."
+                    : "during a match.");
+                send_chat_line_packet(msg.c_str(), player);
+                return;
+            }
+        }        
         process_team_change_packet_hook.call_target(data, addr);
     },
 };

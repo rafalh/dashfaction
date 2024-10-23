@@ -561,6 +561,66 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
     return true;
 }
 
+bool is_player_ready(rf::Player* player)
+{
+    return g_match_info.pre_match_active &&
+        (g_match_info.ready_players_red.contains(player) || g_match_info.ready_players_blue.contains(player));
+}
+
+bool is_player_in_match(rf::Player* player)
+{
+    return g_match_info.match_active && g_match_info.active_match_players.contains(player);
+}
+
+void start_match()
+{
+    std::string red_team_names;
+    for (const auto& player : g_match_info.ready_players_red) {
+        if (!red_team_names.empty()) {
+            red_team_names += ", ";
+        }
+        red_team_names += player->name.c_str();
+    }
+
+    std::string blue_team_names;
+    for (const auto& player : g_match_info.ready_players_blue) {
+        if (!blue_team_names.empty()) {
+            blue_team_names += ", ";
+        }
+        blue_team_names += player->name.c_str();
+    }
+
+    auto msg = std::format("\n=========== {}v{} MATCH STARTING NOW ===========\n"
+                           "RED TEAM: {}\n"
+                           "BLUE TEAM: {}\n",
+                           g_match_info.team_size, g_match_info.team_size, red_team_names, blue_team_names);
+
+    send_chat_line_packet(msg.c_str(), nullptr);
+
+    g_match_info.active_match_players.clear();
+
+    g_match_info.active_match_players.insert(g_match_info.ready_players_red.begin(),
+                                             g_match_info.ready_players_red.end());
+    g_match_info.ready_players_red.clear();
+
+    g_match_info.active_match_players.insert(g_match_info.ready_players_blue.begin(),
+                                             g_match_info.ready_players_blue.end());
+    g_match_info.ready_players_blue.clear();
+
+    restart_current_level();
+}
+
+void reset_match_state()
+{
+    g_match_info.pre_match_active = false;
+    g_match_info.everyone_ready = false;
+    g_match_info.match_active = false;
+    g_match_info.team_size = 0;
+    g_match_info.active_match_players.clear();
+    g_match_info.ready_players_red.clear();
+    g_match_info.ready_players_blue.clear();
+}
+
 FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
     0x00480820,
     [](rf::Player* player) {
@@ -570,9 +630,12 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
         if (!check_player_ac_status(player)) {
             return;
         }
-        //if (1 == 2) {
-        //    multi_spawn_player_server_side_hook.call_target(player);
-		//}
+        if (g_match_info.match_active && !is_player_in_match(player)) {
+            send_chat_line_packet("You cannot spawn because a match is in progress. Please feel free to spectate.", player);
+            return;
+        }
+
+        multi_spawn_player_server_side_hook.call_target(player);
 
         rf::Entity* ep = rf::entity_from_handle(player->entity_handle);
         if (ep) {
@@ -663,6 +726,17 @@ CodeInjection multi_limbo_init_injection{
         if (!rf::player_list) {
             xlog::trace("Wait between levels shortened because server is empty");
             addr_as_ref<int>(regs.esp) = 100;
+        }
+
+        if (g_match_info.match_active) {
+            send_chat_line_packet("\xA6 Match complete!", nullptr);
+            reset_match_state();
+        }
+        else {
+            addr_as_ref<int>(regs.esp) = 5000;
+            g_match_info.match_active = g_match_info.everyone_ready;
+            g_match_info.everyone_ready = false;
+            g_match_info.pre_match_active = false;
         }
     },
 };
