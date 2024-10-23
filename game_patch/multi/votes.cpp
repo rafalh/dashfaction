@@ -326,19 +326,19 @@ struct VoteMatch : public Vote
 
     void on_accepted() override
     {
-        auto msg = std::format("\xA6 Vote passed."
-                               "\n============= {}v{} MATCH QUEUED =============\n"
-                               "Waiting for players. Send message \"/ready\" to ready up.",
-                               g_match_info.team_size, g_match_info.team_size);
+        auto msg = std::format("\xA6 Vote passed. {}.",
+            g_match_info.match_level_name == rf::level.filename.c_str()
+            ? "Entering pre-match ready up phase" : "Changing to match level, then entering pre-match ready up phase");
         send_chat_line_packet(msg.c_str(), nullptr);
 
-        g_match_info.pre_match_active = true;
+        g_match_info.pre_match_queued = true;
 
-        auto player_list = SinglyLinkedList{rf::player_list};
-
-        for (auto& player : player_list) {
-            rf::multi_powerup_add(&player, 0, 3600000);
-        }        
+        if (g_match_info.match_level_name == rf::level.filename.c_str()) {
+            start_pre_match();
+        }
+        else if (!g_match_info.match_level_name.empty()) {
+            rf::multi_change_level(g_match_info.match_level_name.c_str());
+        }      
     }
 
     bool on_player_leave(rf::Player* player) override

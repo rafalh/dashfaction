@@ -158,9 +158,14 @@ FunHook<void(bool)> level_init_post_hook{
     [](bool transition) {
         level_init_post_hook.call_target(transition);
         xlog::info("Level loaded: {}{}", rf::level.filename, transition ? " (transition)" : "");
-        if (g_match_info.match_active) {
-            send_chat_line_packet("=========== MATCH LIVE ===========", nullptr);
-        }        
+        if (rf::is_server) {        
+            if (g_match_info.match_active) {
+                send_chat_line_packet("=========== MATCH LIVE ===========", nullptr);
+            }
+            else if (g_match_info.pre_match_queued) {
+                start_pre_match();
+            }
+        }
     },
 };
 

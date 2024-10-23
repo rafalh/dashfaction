@@ -658,8 +658,28 @@ void start_match()
     restart_current_level();
 }
 
+void start_pre_match()
+{
+    if (g_match_info.pre_match_queued) {
+        g_match_info.pre_match_active = g_match_info.pre_match_queued;
+        g_match_info.pre_match_queued = false;
+
+        auto msg = std::format("\n============= {}v{} MATCH QUEUED =============\n"
+                               "Waiting for players. Send message \"/ready\" to ready up.",
+                               g_match_info.team_size, g_match_info.team_size);
+        send_chat_line_packet(msg.c_str(), nullptr);
+
+        auto player_list = SinglyLinkedList{rf::player_list};
+
+        for (auto& player : player_list) {
+            rf::multi_powerup_add(&player, 0, 3600000);
+        }
+    }
+}
+
 void reset_match_state()
 {
+    g_match_info.pre_match_queued = false;
     g_match_info.pre_match_active = false;
     g_match_info.everyone_ready = false;
     g_match_info.match_active = false;
