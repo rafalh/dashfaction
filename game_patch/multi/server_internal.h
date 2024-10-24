@@ -63,7 +63,7 @@ extern std::string g_prev_level;
 
 void cleanup_win32_server_console();
 void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);
-std::pair<bool, std::string> is_level_name_valid(const std::string& level_name_input);
+std::pair<bool, std::string> is_level_name_valid(std::string_view level_name_input);
 void server_vote_do_frame();
 void init_server_commands();
 void extend_round_time(int minutes);

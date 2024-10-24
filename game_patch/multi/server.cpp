@@ -230,12 +230,11 @@ void handle_next_map_command(rf::Player* player)
 
 void handle_has_map_command(rf::Player* player, std::string_view level_name)
 {
-    bool is_valid = false;
-    std::string checked_level_name = std::string(level_name);
-    std::tie(is_valid, checked_level_name) = is_level_name_valid(checked_level_name);
+    auto [is_valid, checked_level_name] = is_level_name_valid(level_name);
 
-    auto msg = std::format("{}, level {} is {}available on the server.", is_valid ? "Yes" : "No",
-                           checked_level_name, is_valid ? "" : "NOT ");
+    auto availability = is_valid ? "available" : "NOT available";
+    auto msg = std::format("Level {} is {} on the server.", checked_level_name, availability);
+
     send_chat_line_packet(msg.c_str(), player);
 }
 
@@ -569,9 +568,9 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
     return true;
 }
 
-std::pair<bool, std::string> is_level_name_valid(const std::string& level_name_input)
+std::pair<bool, std::string> is_level_name_valid(std::string_view level_name_input)
 {
-    std::string level_name = level_name_input;
+    std::string level_name{level_name_input};
 
     if (level_name.size() < 4 || level_name.compare(level_name.size() - 4, 4, ".rfl") != 0) {
         level_name += ".rfl";

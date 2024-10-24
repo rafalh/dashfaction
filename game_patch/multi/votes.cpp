@@ -245,7 +245,7 @@ struct VoteLevel : public Vote
 
     bool process_vote_arg([[maybe_unused]] std::string_view arg, rf::Player* source) override
     {
-        auto [is_valid, level_name] = is_level_name_valid(std::string(arg));
+        auto [is_valid, level_name] = is_level_name_valid(arg);
 
         if (!is_valid) {
             auto msg = std::format("\xA6 Cannot start vote: level {} is not available on the server!", level_name);
@@ -264,7 +264,8 @@ struct VoteLevel : public Vote
 
     void on_accepted() override
     {
-        send_chat_line_packet("\xA6 Vote passed: changing level", nullptr);
+        auto msg = std::format("\xA6 Vote passed: changing level to {}", m_level_name);
+        send_chat_line_packet(msg.c_str(), nullptr);
         rf::multi_change_level(m_level_name.c_str());
     }
 
