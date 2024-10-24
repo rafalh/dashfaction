@@ -19,8 +19,8 @@
 #include "../misc/player.h"
 #include "../main/main.h"
 #include <common/utils/list-utils.h>
-#include "../rf/file/file.h"
 #include "../rf/player/player.h"
+#include "../rf/misc.h"
 #include "../rf/multi.h"
 #include "../rf/parse.h"
 #include "../rf/weapon.h"
@@ -234,8 +234,8 @@ void handle_has_map_command(rf::Player* player, std::string_view level_name)
     std::string checked_level_name = std::string(level_name);
     std::tie(is_valid, checked_level_name) = is_level_name_valid(checked_level_name);
 
-    auto msg = std::format("{}, this server does {}have level {} installed.", is_valid ? "Yes" : "No",
-                           is_valid ? "" : "NOT ", checked_level_name);
+    auto msg = std::format("{}, level {} is {}available on the server.", is_valid ? "Yes" : "No",
+                           checked_level_name, is_valid ? "" : "NOT ");
     send_chat_line_packet(msg.c_str(), player);
 }
 
@@ -577,8 +577,7 @@ std::pair<bool, std::string> is_level_name_valid(const std::string& level_name_i
         level_name += ".rfl";
     }
 
-    rf::File file;
-    bool is_valid = file.find(level_name.c_str());
+    bool is_valid = rf::get_file_checksum(level_name.c_str()) != 0;
 
     return {is_valid, level_name};
 }

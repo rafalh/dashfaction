@@ -245,11 +245,15 @@ struct VoteLevel : public Vote
 
     bool process_vote_arg([[maybe_unused]] std::string_view arg, rf::Player* source) override
     {
-        m_level_name = std::format("{}.rfl", arg);
-        if (!rf::get_file_checksum(m_level_name.c_str())) {
-            send_chat_line_packet("Cannot find specified level!", source);
+        auto [is_valid, level_name] = is_level_name_valid(std::string(arg));
+
+        if (!is_valid) {
+            auto msg = std::format("\xA6 Cannot start vote: level {} is not available on the server!", level_name);
+            send_chat_line_packet(msg.c_str(), source);
             return false;
         }
+
+        m_level_name = std::move(level_name);
         return true;
     }
 
