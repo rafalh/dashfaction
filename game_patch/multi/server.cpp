@@ -19,6 +19,7 @@
 #include "../misc/player.h"
 #include "../main/main.h"
 #include <common/utils/list-utils.h>
+#include "../rf/file/file.h"
 #include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/parse.h"
@@ -227,6 +228,17 @@ void handle_next_map_command(rf::Player* player)
     send_chat_line_packet(msg.c_str(), player);
 }
 
+void handle_has_map_command(rf::Player* player, std::string_view level_name)
+{
+    bool is_valid = false;
+    std::string checked_level_name = std::string(level_name);
+    std::tie(is_valid, checked_level_name) = is_level_name_valid(checked_level_name);
+
+    auto msg = std::format("{}, this server does {}have level {} installed.", is_valid ? "Yes" : "No",
+                           is_valid ? "" : "NOT ", checked_level_name);
+    send_chat_line_packet(msg.c_str(), player);
+}
+
 void handle_save_command(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = get_player_additional_data(player);
@@ -327,6 +339,9 @@ bool handle_server_chat_command(std::string_view server_command, rf::Player* sen
     }
     else if (cmd_name == "stats") {
         send_private_message_with_stats(sender);
+    }
+    else if (cmd_name == "hasmap" || cmd_name == "haslevel") {
+        handle_has_map_command(sender, cmd_arg);
     }
     else {
         return false;
@@ -552,6 +567,20 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
     }
 #endif // HAS_PF
     return true;
+}
+
+std::pair<bool, std::string> is_level_name_valid(const std::string& level_name_input)
+{
+    std::string level_name = level_name_input;
+
+    if (level_name.size() < 4 || level_name.compare(level_name.size() - 4, 4, ".rfl") != 0) {
+        level_name += ".rfl";
+    }
+
+    rf::File file;
+    bool is_valid = file.find(level_name.c_str());
+
+    return {is_valid, level_name};
 }
 
 FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
