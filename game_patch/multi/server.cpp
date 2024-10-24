@@ -20,8 +20,8 @@
 #include "../misc/player.h"
 #include "../main/main.h"
 #include <common/utils/list-utils.h>
-#include "../rf/file/file.h"
 #include "../rf/player/player.h"
+#include "../rf/misc.h"
 #include "../rf/multi.h"
 #include "../rf/parse.h"
 #include "../rf/weapon.h"
@@ -230,17 +230,6 @@ void handle_next_map_command(rf::Player* player)
     send_chat_line_packet(msg.c_str(), player);
 }
 
-void handle_has_map_command(rf::Player* player, std::string_view level_name)
-{
-    bool is_valid = false;
-    std::string checked_level_name = std::string(level_name);
-    std::tie(is_valid, checked_level_name) = is_level_name_valid(checked_level_name);
-
-    auto msg = std::format("{}, this server does {}have level {} installed.",
-        is_valid ? "Yes" : "No", is_valid ? "" : "NOT ", checked_level_name);
-    send_chat_line_packet(msg.c_str(), player);
-}
-
 void handle_save_command(rf::Player* player, std::string_view save_name)
 {
     auto& pdata = get_player_additional_data(player);
@@ -382,9 +371,6 @@ bool handle_server_chat_command(std::string_view server_command, rf::Player* sen
     }
     else if (cmd_name == "whosready") {
         handle_whosready_command(sender);
-    }
-    else if (cmd_name == "hasmap" || cmd_name == "haslevel") {
-        handle_has_map_command(sender, cmd_arg);
     }
     else {
         return false;
@@ -612,13 +598,15 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
     return true;
 }
 
-std::set<rf::Player*> get_current_player_pointer_list()
+std::set<rf::Player*> get_current_player_list(bool include_browsers)
 {
     std::set<rf::Player*> player_list;
     auto linked_player_list = SinglyLinkedList{rf::player_list};
 
     for (auto& player : linked_player_list) {
-        player_list.insert(&player);
+        if (include_browsers || !get_player_additional_data(&player).is_browser) {
+            player_list.insert(&player);
+        }
     }
 
     return player_list;
@@ -682,14 +670,14 @@ void cancel_match()
     else {
         // restore the level timer and limit if pre-match is canceled        
         rf::level.time = 0.0f;
-        rf::multi_time_limit = g_match_info.time_limit_on_pre_match_start;
-
-        for (rf::Player* player : get_current_player_pointer_list()) {
-            update_pre_match_powerups(player);
-        }
+        rf::multi_time_limit = g_match_info.time_limit_on_pre_match_start;        
     }
 
     g_match_info.reset();
+
+    for (rf::Player* player : get_current_player_list(false)) {
+        update_pre_match_powerups(player);
+    }
 }
 
 void start_pre_match()
@@ -709,7 +697,7 @@ void start_pre_match()
                                g_match_info.team_size, g_match_info.team_size);
         send_chat_line_packet(msg.c_str(), nullptr);
 
-        for (rf::Player* player : get_current_player_pointer_list()) {
+        for (rf::Player* player : get_current_player_list(false)) {
             update_pre_match_powerups(player);
         }
     }
@@ -746,7 +734,7 @@ void match_do_frame()
             const auto ready_red = g_match_info.ready_players_red.size();
             const auto ready_blue = g_match_info.ready_players_blue.size();
 
-            for (rf::Player* player : get_current_player_pointer_list()) {
+            for (rf::Player* player : get_current_player_list(false)) {
                 if (!is_player_ready(player)) {                    
                     auto msg = std::format(
                         "\xA6 You are NOT ready! {}v{} match queued, waiting for players - RED: {}, BLUE: {}.\n"
@@ -760,16 +748,15 @@ void match_do_frame()
     }
 }
 
-std::pair<bool, std::string> is_level_name_valid(const std::string& level_name_input)
+std::pair<bool, std::string> is_level_name_valid(std::string_view level_name_input)
 {
-    std::string level_name = level_name_input;
+    std::string level_name{level_name_input};
 
     if (level_name.size() < 4 || level_name.compare(level_name.size() - 4, 4, ".rfl") != 0) {
         level_name += ".rfl";
     }
 
-    rf::File file;
-    bool is_valid = file.find(level_name.c_str());
+    bool is_valid = rf::get_file_checksum(level_name.c_str()) != 0;
 
     return {is_valid, level_name};
 }
