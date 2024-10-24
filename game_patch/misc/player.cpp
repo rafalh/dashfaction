@@ -11,6 +11,7 @@
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../multi/multi.h"
+#include "../multi/server_internal.h"
 #include "../hud/multi_spectate.h"
 #include <common/utils/list-utils.h>
 #include <common/config/GameConfig.h>
@@ -48,6 +49,7 @@ FunHook<void(rf::Player*)> player_destroy_hook{
     0x004A35C0,
     [](rf::Player* player) {
         multi_spectate_on_destroy_player(player);
+        set_ready_status(player, 0);
         player_destroy_hook.call_target(player);
         g_player_additional_data_map.erase(player);
     },
