@@ -2,6 +2,7 @@
 
 #include <string_view>
 #include <string>
+#include <set>
 #include <map>
 #include <optional>
 
@@ -63,12 +64,14 @@ extern std::string g_prev_level;
 
 void cleanup_win32_server_console();
 void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, rf::Player* sender);
+std::set<rf::Player*> get_current_player_list(bool include_browsers);
 void server_vote_do_frame();
 void init_server_commands();
 void extend_round_time(int minutes);
 void restart_current_level();
 void load_next_level();
 void load_prev_level();
+void server_vote_on_player_leave(rf::Player* player);
 void server_vote_on_limbo_state_enter();
 void process_delayed_kicks();
 const ServerAdditionalConfig& server_get_df_config();
