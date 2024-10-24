@@ -44,6 +44,8 @@ Version 1.9.0 (not released yet)
 - Add level filename to "Level Initializing" console message
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 - Fix crash when `verify_level` command is run without a level being loaded
+- Add `/hasmap` server chat command
+- Add handling of level filename extensions with `/vote level` server chat command
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
