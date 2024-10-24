@@ -625,15 +625,14 @@ bool is_player_in_match(rf::Player* player)
 
 void update_pre_match_powerups(rf::Player* player)
 {
+    rf::multi_powerup_remove_all_for_player(player);
+
     if (g_match_info.pre_match_active) {
         rf::multi_powerup_add(player, 0, 3600000);
 
         if (g_match_info.ready_players_red.contains(player) || g_match_info.ready_players_blue.contains(player)) {
             rf::multi_powerup_add(player, 1, 3600000);
         }
-    }
-    else {
-        rf::multi_powerup_remove_all_for_player(player);
     }
 }
 
@@ -847,10 +846,6 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
 
         multi_spawn_player_server_side_hook.call_target(player);
 
-        if (g_match_info.pre_match_active) {
-            update_pre_match_powerups(player);
-        }
-
         rf::Entity* ep = rf::entity_from_handle(player->entity_handle);
         if (ep) {
             if (g_additional_server_config.spawn_life) {
@@ -859,6 +854,10 @@ FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
             if (g_additional_server_config.spawn_armor) {
                 ep->armor = g_additional_server_config.spawn_armor.value();
             }
+        }
+
+        if (g_match_info.pre_match_active) {
+            update_pre_match_powerups(player);
         }
     },
 };
