@@ -612,6 +612,18 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
     return true;
 }
 
+std::set<rf::Player*> get_current_player_pointer_list()
+{
+    std::set<rf::Player*> player_list;
+    auto linked_player_list = SinglyLinkedList{rf::player_list};
+
+    for (auto& player : linked_player_list) {
+        player_list.insert(&player);
+    }
+
+    return player_list;
+}
+
 bool is_player_ready(rf::Player* player)
 {
     return g_match_info.pre_match_active &&
@@ -631,6 +643,9 @@ void update_pre_match_powerups(rf::Player* player)
         if (g_match_info.ready_players_red.contains(player) || g_match_info.ready_players_blue.contains(player)) {
             rf::multi_powerup_add(player, 1, 3600000);
         }
+    }
+    else {
+        rf::multi_powerup_remove_all_for_player(player);
     }
 }
 
@@ -658,36 +673,91 @@ void start_match()
     restart_current_level();
 }
 
+void cancel_match()
+{
+    rf::console::print("Canceling match");
+    if (g_match_info.match_active) {
+        load_next_level(); // end the round if active match is canceled
+    }
+    else {
+        // restore the level timer and limit if pre-match is canceled        
+        rf::level.time = 0.0f;
+        rf::multi_time_limit = g_match_info.time_limit_on_pre_match_start;
+
+        for (rf::Player* player : get_current_player_pointer_list()) {
+            update_pre_match_powerups(player);
+        }
+    }
+
+    g_match_info.reset();
+}
+
 void start_pre_match()
 {
     if (g_match_info.pre_match_queued) {
         g_match_info.pre_match_active = g_match_info.pre_match_queued;
         g_match_info.pre_match_queued = false;
+        g_match_info.pre_match_start_time = std::time(nullptr);
+        g_match_info.last_ready_reminder_time = g_match_info.pre_match_start_time; // don't remind immediately
 
-        auto msg = std::format("\n============= {}v{} MATCH QUEUED =============\n"
-                               "Waiting for players. Send message \"/ready\" to ready up.",
+        // store time limit for later, remove level timer during pre-match
+        g_match_info.time_limit_on_pre_match_start = rf::multi_time_limit;
+        rf::multi_time_limit = 0.0f;
+
+        auto msg = std::format("\n>>>>>>>>>>>>>>>>> {}v{} MATCH QUEUED <<<<<<<<<<<<<<<<<\n"
+                               "Waiting for players. Use \"/ready\" to ready up, or \"/vote nomatch\" to call a vote to cancel.",
                                g_match_info.team_size, g_match_info.team_size);
         send_chat_line_packet(msg.c_str(), nullptr);
 
-        auto player_list = SinglyLinkedList{rf::player_list};
-
-        for (auto& player : player_list) {
-            rf::multi_powerup_add(&player, 0, 3600000);
+        for (rf::Player* player : get_current_player_pointer_list()) {
+            update_pre_match_powerups(player);
         }
     }
 }
 
-void reset_match_state()
+void match_do_frame()
 {
-    g_match_info.pre_match_queued = false;
-    g_match_info.pre_match_active = false;
-    g_match_info.everyone_ready = false;
-    g_match_info.match_active = false;
-    g_match_info.team_size = -1;
-    g_match_info.active_match_players.clear();
-    g_match_info.ready_players_red.clear();
-    g_match_info.ready_players_blue.clear();
-    g_match_info.match_level_name = "";
+    if (!g_additional_server_config.vote_match.enabled) {
+        return;
+    }
+
+    if ((g_match_info.match_active || g_match_info.pre_match_active) && rf::multi_num_players() <= 0) {
+        cancel_match();
+        return;
+    }
+
+    std::time_t current_time = std::time(nullptr);
+
+    if (!g_match_info.match_active && !g_match_info.pre_match_active)
+    {
+        if (current_time >= g_match_info.last_match_reminder_time + 270) {
+            g_match_info.last_match_reminder_time = current_time;
+
+            send_chat_line_packet(
+                "\xA6 No active match. Use \"/vote match <type> <map filename>\" to call a match vote.", nullptr);
+        }
+    }
+    else if (g_match_info.pre_match_active) {
+        int reminder_interval = (current_time - g_match_info.pre_match_start_time) > 90 ? 15 : 30;
+
+        if (current_time >= g_match_info.last_ready_reminder_time + reminder_interval) {
+            g_match_info.last_ready_reminder_time = current_time;
+
+            const auto ready_red = g_match_info.ready_players_red.size();
+            const auto ready_blue = g_match_info.ready_players_blue.size();
+
+            for (rf::Player* player : get_current_player_pointer_list()) {
+                if (!is_player_ready(player)) {                    
+                    auto msg = std::format(
+                        "\xA6 You are NOT ready! {}v{} match queued, waiting for players - RED: {}, BLUE: {}.\n"
+                        "Use \"/ready\" to ready up, or \"/vote nomatch\" to call a vote to cancel the match.",
+                        g_match_info.team_size, g_match_info.team_size,
+                        g_match_info.team_size - ready_red, g_match_info.team_size - ready_blue);
+                    send_chat_line_packet(msg.c_str(), player);
+                }
+            }
+        }
+    }
 }
 
 std::pair<bool, std::string> is_level_name_valid(const std::string& level_name_input)
@@ -823,7 +893,7 @@ CodeInjection multi_limbo_init_injection{
 
         if (g_match_info.match_active) {
             send_chat_line_packet("\xA6 Match complete!", nullptr);
-            reset_match_state();
+            g_match_info.reset();
         }
         else if (g_match_info.pre_match_active && g_match_info.everyone_ready) {
             addr_as_ref<int>(regs.esp) = 5000;
@@ -904,6 +974,7 @@ void server_init()
 void server_do_frame()
 {
     server_vote_do_frame();
+    match_do_frame();
     process_delayed_kicks();
 }
 

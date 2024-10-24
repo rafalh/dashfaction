@@ -377,12 +377,9 @@ struct VoteCancelMatch : public Vote
 
     void on_accepted() override
     {
-        send_chat_line_packet("\xA6 Vote passed: Match canceled!", nullptr);
+        send_chat_line_packet("\xA6 Vote passed: The match has been canceled.", nullptr);
 
-        reset_match_state();
-        load_next_level();
-
-        send_chat_line_packet("The match has been canceled by vote.", nullptr);
+        cancel_match();
     }
 
     [[nodiscard]] const VoteConfig& get_config() const override
