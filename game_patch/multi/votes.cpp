@@ -17,12 +17,9 @@
 struct Vote
 {
 private:
-    int num_votes_yes = 0;
-    int num_votes_no = 0;
     std::time_t start_time = 0;
     bool reminder_sent = false;
     std::map<rf::Player*, bool> players_who_voted;
-    std::set<rf::Player*> remaining_players;
     rf::Player* owner;
 
 public:
@@ -40,30 +37,18 @@ public:
 
         start_time = std::time(nullptr);
 
-        // prepare allowed player list
-        auto player_list = SinglyLinkedList{rf::player_list};
-        for (auto& player : player_list) {
-            if (&player != source && !get_player_additional_data(&player).is_browser) {
-                remaining_players.insert(&player);
-            }
-        }
-
-        ++num_votes_yes;
         players_who_voted.insert({source, true});
 
         return check_for_early_vote_finish();
     }
 
     virtual bool on_player_leave(rf::Player* player)
-    {
-        remaining_players.erase(player);
-        auto it = players_who_voted.find(player);
-        if (it != players_who_voted.end()) {
-            if (it->second)
-                num_votes_yes--;
-            else
-                num_votes_no--;
+    {        
+        if (player == owner) {
+            send_chat_line_packet("\xA6 Vote canceled: owner left the game!", nullptr);
+            return false;
         }
+        players_who_voted.erase(player);
         return check_for_early_vote_finish();
     }
 
@@ -74,41 +59,55 @@ public:
 
     bool add_player_vote(bool is_yes_vote, rf::Player* source)
     {
-        if (players_who_voted.count(source) == 1)
+        if (players_who_voted.count(source) == 1) {
             send_chat_line_packet("You already voted!", source);
-        else if (remaining_players.count(source) == 0)
-            send_chat_line_packet("You cannot vote!", source);
+        }
         else {
-            if (is_yes_vote)
-                num_votes_yes++;
-            else
-                num_votes_no++;
-            remaining_players.erase(source);
-            players_who_voted.insert({source, is_yes_vote});
-            auto msg = std::format("\xA6 Vote status:  Yes: {}  No: {}  Waiting: {}", num_votes_yes, num_votes_no, remaining_players.size());
+            players_who_voted[source] = is_yes_vote;
+
+            const auto current_player_list = get_current_player_list(false);
+
+            auto yes_votes = std::count_if(players_who_voted.begin(), players_who_voted.end(), [](const auto& pair) {
+                return pair.second;
+            });
+            auto no_votes = players_who_voted.size() - yes_votes;
+
+            auto msg = std::format("\xA6 Vote status: Yes: {} No: {} Waiting: {}", yes_votes, no_votes,
+                                   current_player_list.size() - players_who_voted.size());
             send_chat_line_packet(msg.c_str(), nullptr);
+
             return check_for_early_vote_finish();
         }
+
         return true;
     }
+
 
     bool do_frame()
     {
         const auto& vote_config = get_config();
         std::time_t passed_time_sec = std::time(nullptr) - start_time;
+
         if (passed_time_sec >= vote_config.time_limit_seconds) {
             send_chat_line_packet("\xA6 Vote timed out!", nullptr);
             return false;
         }
+
         if (passed_time_sec >= vote_config.time_limit_seconds / 2 && !reminder_sent) {
-            // Send reminder to player who did not vote yet
-            for (rf::Player* player : remaining_players) {
-                send_chat_line_packet("\xA6 Send message \"/vote yes\" or \"/vote no\" to vote.", player);
+            const auto current_player_list = get_current_player_list(false);
+
+            for (rf::Player* player : current_player_list) {
+                if (players_who_voted.find(player) == players_who_voted.end()) {
+                    send_chat_line_packet("\xA6 Send message \"/vote yes\" or \"/vote no\" to vote.", player);
+                }
             }
+
             reminder_sent = true;
         }
+
         return true;
     }
+
 
     bool try_cancel_vote(rf::Player* source)
     {
@@ -165,14 +164,35 @@ protected:
 
     bool check_for_early_vote_finish()
     {
-        if (num_votes_yes > num_votes_no + static_cast<int>(remaining_players.size())) {
+        const auto current_player_list = get_current_player_list(false);
+
+        // cancel the vote if the server clears out
+        if (current_player_list.empty()) {
+            return false;
+        }
+
+        const int remaining_players_count =
+            std::count_if(current_player_list.begin(), current_player_list.end(), [this](rf::Player* player) {
+                return players_who_voted.find(player) == players_who_voted.end();
+            });
+
+        const int yes_votes = std::count_if(players_who_voted.begin(), players_who_voted.end(), [](const auto& pair) {
+            return pair.second;
+        });
+
+        const int no_votes =
+            players_who_voted.size() - yes_votes;
+
+        if (yes_votes > no_votes + remaining_players_count) {
             finish_vote(true);
             return false;
         }
-        if (num_votes_no > num_votes_yes + static_cast<int>(remaining_players.size())) {
+
+        if (no_votes > yes_votes + remaining_players_count) {
             finish_vote(false);
             return false;
         }
+
         return true;
     }
 };
@@ -464,6 +484,11 @@ void handle_vote_command(std::string_view vote_name, std::string_view vote_arg, 
 void server_vote_do_frame()
 {
     g_vote_mgr.do_frame();
+}
+
+void server_vote_on_player_leave(rf::Player* player)
+{
+    g_vote_mgr.on_player_leave(player);
 }
 
 void server_vote_on_limbo_state_enter()

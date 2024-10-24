@@ -554,6 +554,20 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
     return true;
 }
 
+std::set<rf::Player*> get_current_player_list(bool include_browsers)
+{
+    std::set<rf::Player*> player_list;
+    auto linked_player_list = SinglyLinkedList{rf::player_list};
+
+    for (auto& player : linked_player_list) {
+        if (include_browsers || !get_player_additional_data(&player).is_browser) {
+            player_list.insert(&player);
+        }
+    }
+
+    return player_list;
+}
+
 FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
     0x00480820,
     [](rf::Player* player) {
