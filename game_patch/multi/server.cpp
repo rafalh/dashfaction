@@ -805,6 +805,12 @@ void server_reliable_socket_ready(rf::Player* player)
         auto msg = string_replace(g_additional_server_config.welcome_message, "$PLAYER", player->name.c_str());
         send_chat_line_packet(msg.c_str(), player);
     }
+    if (g_match_info.pre_match_active) {    
+        auto msg = std::format("\xA6 {}v{} match is queued and waiting for players! Use \"/ready\" to ready up.",
+            g_match_info.team_size, g_match_info.team_size);
+
+        send_chat_line_packet(msg.c_str(), nullptr);
+    }
 }
 
 CodeInjection multi_limbo_init_injection{
