@@ -75,24 +75,19 @@ public:
             auto msg = std::format("\xA6 Vote status: Yes: {} No: {} Waiting: {}", yes_votes, no_votes,
                                    current_player_list.size() - players_who_voted.size());
             send_chat_line_packet(msg.c_str(), nullptr);
-
             return check_for_early_vote_finish();
         }
-
         return true;
     }
-
 
     bool do_frame()
     {
         const auto& vote_config = get_config();
         std::time_t passed_time_sec = std::time(nullptr) - start_time;
-
         if (passed_time_sec >= vote_config.time_limit_seconds) {
             send_chat_line_packet("\xA6 Vote timed out!", nullptr);
             return false;
         }
-
         if (passed_time_sec >= vote_config.time_limit_seconds / 2 && !reminder_sent) {
             const auto current_player_list = get_current_player_list(false);
 
@@ -101,13 +96,10 @@ public:
                     send_chat_line_packet("\xA6 Send message \"/vote yes\" or \"/vote no\" to vote.", player);
                 }
             }
-
             reminder_sent = true;
         }
-
         return true;
     }
-
 
     bool try_cancel_vote(rf::Player* source)
     {
@@ -187,12 +179,10 @@ protected:
             finish_vote(true);
             return false;
         }
-
         if (no_votes > yes_votes + remaining_players_count) {
             finish_vote(false);
             return false;
         }
-
         return true;
     }
 };
