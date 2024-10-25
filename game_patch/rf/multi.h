@@ -5,6 +5,10 @@
 #include "os/timestamp.h"
 #include "os/string.h"
 #include "os/array.h"
+#include "object.h"
+#include "geometry.h"
+#include "ai.h"
+#include "gr/gr.h"
 
 namespace rf
 {
@@ -81,6 +85,22 @@ namespace rf
         Timestamp obj_update_timestamp;
     };
     static_assert(sizeof(PlayerNetData) == 0x9C8);
+
+    struct RespawnPoint
+    {
+        String name;
+        uint8_t team;
+#ifdef DASH_FACTION
+        bool dm_only;
+#endif
+        Vector3 position;
+        Matrix3 orientation;
+        bool red_team;
+        bool blue_team;
+        bool bot;
+        float dist_other_player;
+    };
+    static_assert(sizeof(RespawnPoint) == 0x44);
 
     enum NetGameType {
         NG_TYPE_DM = 0,
@@ -175,7 +195,10 @@ namespace rf
     static auto& simultaneous_ping = addr_as_ref<uint32_t>(0x00599CD8);
     static auto& tracker_addr = addr_as_ref<NetAddr>(0x006FC550);
 
-    static auto& multi_respawn_num_points = addr_as_ref<uint32_t>(0x006A1458);
+    //static auto& multi_respawn_points = addr_as_ref<RespawnPoint[32]>(0x006C6C40); // original game array, 32 max
+    //static auto& multi_respawn_num_points = addr_as_ref<uint32_t>(0x006A1458); // original game counter, unneeded
+    static auto& get_nearest_other_player_dist_sq = addr_as_ref<float(rf::Player*, const rf::Vector3*)>(0x00470220);
+
 
     enum ChatSayType {
         CHAT_SAY_GLOBAL = 0,

@@ -2,6 +2,7 @@
 
 #include <string_view>
 #include <string>
+#include <set>
 #include <map>
 #include <optional>
 #include <vector>
@@ -32,20 +33,10 @@ struct HitSoundsConfig
 struct NewSpawnLogicConfig
 {
     bool enabled = false;
-    bool try_avoid_last = true;
-    bool try_avoid_enemies = false;
-    bool respect_team_spawns = true;
-};
-
-struct RespawnPoint
-{
-    std::string name;
-    uint8_t team;
-    rf::Vector3 position;
-    rf::Matrix3 orientation;
-    bool redTeam;
-    bool blueTeam;
-    bool bot;
+    bool respect_team_spawns = true;    
+    bool try_avoid_enemies = true;
+    bool always_avoid_last = true;
+    bool always_use_furthest = false;
 };
 
 struct ServerAdditionalConfig
@@ -56,7 +47,7 @@ struct ServerAdditionalConfig
     VoteConfig vote_restart;
     VoteConfig vote_next;
     VoteConfig vote_previous;
-    NewSpawnLogicConfig random_spawns;
+    NewSpawnLogicConfig new_spawn_logic;
     int spawn_protection_duration_ms = 1500;
     std::optional<float> spawn_life;
     std::optional<float> spawn_armor;

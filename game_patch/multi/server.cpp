@@ -43,7 +43,9 @@ const char* g_rcon_cmd_whitelist[] = {
     "map_prev",
 };
 
-std::vector<std::shared_ptr<RespawnPoint>> respawn_points;
+//std::vector<std::shared_ptr<RespawnPoint>> respawn_points;
+
+std::vector<rf::RespawnPoint> new_multi_respawn_points; // new storage of spawn points to avoid hard limits
 
 ServerAdditionalConfig g_additional_server_config;
 std::string g_prev_level;
@@ -84,15 +86,18 @@ void load_additional_server_config(rf::Parser& parser)
     parse_vote_config("Vote Previous", g_additional_server_config.vote_previous, parser);
 
     if (parser.parse_optional("$DF Use New Spawn Logic:")) {
-        g_additional_server_config.random_spawns.enabled = parser.parse_bool();
-        if (parser.parse_optional("+Try Avoid Last:")) {
-            g_additional_server_config.random_spawns.try_avoid_last = parser.parse_bool();
-        }
-        if (parser.parse_optional("+Try Avoid Enemies:")) {
-            g_additional_server_config.random_spawns.try_avoid_enemies = parser.parse_bool();
-        }
+        g_additional_server_config.new_spawn_logic.enabled = parser.parse_bool();
         if (parser.parse_optional("+Respect Team Spawns:")) {
-            g_additional_server_config.random_spawns.respect_team_spawns = parser.parse_bool();
+            g_additional_server_config.new_spawn_logic.respect_team_spawns = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Try Avoid Players:")) {
+            g_additional_server_config.new_spawn_logic.try_avoid_enemies = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Always Avoid Last:")) {
+            g_additional_server_config.new_spawn_logic.always_avoid_last = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Always Use Furthest:")) {
+            g_additional_server_config.new_spawn_logic.always_use_furthest = parser.parse_bool();
         }
     }
 
@@ -577,7 +582,8 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
 }
 
 // add a new spawn point
-FunHook<void(const char*, uint8_t, const rf::Vector3*, rf::Matrix3*, bool, bool, bool)> multi_respawn_create_point_hook{
+/* FunHook<void(const char*, uint8_t, const rf::Vector3*, rf::Matrix3*, bool, bool, bool)>
+    oldmulti_respawn_create_point_hook{
     0x00470190,
     [](const char* name, uint8_t team, const rf::Vector3* pos, rf::Matrix3* orient, bool RedTeam, bool blue_team,
        bool bot) {
@@ -611,13 +617,13 @@ FunHook<void(const char*, uint8_t, const rf::Vector3*, rf::Matrix3*, bool, bool,
         }
         else {
             // if new spawn logic is off, maintain stock behaviour
-            multi_respawn_create_point_hook.call_target(name, team, pos, orient, RedTeam, blue_team, bot);
+            oldmulti_respawn_create_point_hook.call_target(name, team, pos, orient, RedTeam, blue_team, bot);
         }
     }
-};
+};*/
 
 // new spawn point selection logic
-std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
+/* std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
 {
     if (respawn_points.empty()) {
         xlog::warn("No spawn points are available!");
@@ -763,9 +769,10 @@ std::shared_ptr<RespawnPoint> select_respawn_point_new(rf::Player* pp)
 
     pdata.last_spawn_point_index = random_index;
     return {respawn_points[random_index]};
-}
+}*/
 
-CallHook<rf::Entity*(rf::Player*, int, rf::Vector3*, rf::Matrix3*, int)> player_create_entity_hook{
+//unused
+/* CallHook<rf::Entity*(rf::Player*, int, rf::Vector3*, rf::Matrix3*, int)> player_create_entity_hook{
     {
         0x0048087D, // in spawn_player_server_side, used by servers
         0x0045C807  // in load_level, used by single player and listen servers (initial spawn)
@@ -809,7 +816,21 @@ CallHook<rf::Entity*(rf::Player*, int, rf::Vector3*, rf::Matrix3*, int)> player_
 
         return player_create_entity_hook.call_target(pp, entity_type, pos, orient, mp_character);     
     }
-};
+};*/
+
+std::set<rf::Player*> get_current_player_list(bool include_browsers)
+{
+    std::set<rf::Player*> player_list;
+    auto linked_player_list = SinglyLinkedList{rf::player_list};
+
+    for (auto& player : linked_player_list) {
+        if (include_browsers || !get_player_additional_data(&player).is_browser) {
+            player_list.insert(&player);
+        }
+    }
+
+    return player_list;
+}
 
 FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
     0x00480820,
@@ -907,14 +928,129 @@ CodeInjection multi_limbo_init_injection{
         if (!rf::player_list) {
             xlog::trace("Wait between levels shortened because server is empty");
             addr_as_ref<int>(regs.esp) = 100;
-        }
-
-        // clear list of respawn points on map end
-        if (g_additional_server_config.random_spawns.enabled) {
-            respawn_points.clear();
-        }        
+        }     
     },
 };
+
+FunHook<int(const char*, uint8_t, const rf::Vector3*, const rf::Matrix3*, bool, bool, bool)> multi_respawn_create_point_hook{
+    0x00470190,
+    [](const char* name, uint8_t team, const rf::Vector3* pos, const rf::Matrix3* orient, bool red_team, bool blue_team, bool bot) 
+    {
+        constexpr size_t max_respawn_points = 2048; // limit 32 -> 2048
+        
+        if (new_multi_respawn_points.size() >= max_respawn_points) {
+            return -1;
+        }
+
+        bool dm_only = 0; // todo
+
+        new_multi_respawn_points.emplace_back(rf::RespawnPoint{
+            rf::String(name),
+            team, // unused
+            dm_only,
+            *pos,
+            *orient,
+            red_team,
+            blue_team,
+            bot
+        });
+
+        xlog::warn("New spawn point added! Name: {}, Team: {}, RedTeam: {}, BlueTeam: {}, Bot: {}", 
+            name, team, red_team, blue_team, bot);
+
+        if (pos) {
+            xlog::warn("Position: ({}, {}, {})", pos->x, pos->y, pos->z);
+        }
+
+        xlog::warn("Current number of spawn points: {}", new_multi_respawn_points.size());
+
+        return 0;
+    }
+};
+
+// clear spawn point array and reset last spawn index at level start
+FunHook<void()> multi_respawn_level_init_hook {
+    0x00470180,
+    []() {
+        new_multi_respawn_points.clear();
+        
+        auto player_list = get_current_player_list(false);
+        std::for_each(player_list.begin(), player_list.end(),
+            [](rf::Player* player) { get_player_additional_data(player).last_spawn_point_index = -1; });
+
+        multi_respawn_level_init_hook.call_target();
+    }
+};
+
+FunHook<int(rf::Vector3*, rf::Matrix3*, rf::Player*)> multi_respawn_get_next_point_hook{
+    0x00470300,
+    [](rf::Vector3* pos, rf::Matrix3* orient, rf::Player* player) {
+
+        // default return if map has no respawn points
+        if (new_multi_respawn_points.empty()) {
+            *pos = rf::level.player_start_pos;
+            *orient = rf::level.player_start_orient;
+            xlog::warn("No Multiplayer Respawn Points found. Spawning {} at the Player Start.", player->name);
+            return -1;
+        }
+
+        // default return if player is invalid (should never happen)
+        if (!player) {
+            std::uniform_int_distribution<int> dist(0, new_multi_respawn_points.size() - 1);
+            int index = dist(g_rng);
+            *pos = new_multi_respawn_points[index].position;
+            *orient = new_multi_respawn_points[index].orientation;
+            return 0;
+        }
+
+        auto& pdata = get_player_additional_data(player);
+        int team = player->team;
+        int last_index = pdata.last_spawn_point_index;
+        bool is_team_game = multi_is_team_game_type();
+        bool avoid_last = g_additional_server_config.new_spawn_logic.always_avoid_last;
+        bool avoid_enemies = g_additional_server_config.new_spawn_logic.try_avoid_enemies;
+        bool use_furthest = g_additional_server_config.new_spawn_logic.always_use_furthest;
+        bool respect_team_spawns = g_additional_server_config.new_spawn_logic.respect_team_spawns;
+
+        int valid_points = 0;
+        rf::NetGameType game_type = rf::multi_get_game_type();
+        std::vector<const rf::RespawnPoint*> available_points;
+
+        for (auto& point : new_multi_respawn_points) {
+            if (game_type == rf::NetGameType::NG_TYPE_CTF || game_type == rf::NetGameType::NG_TYPE_TEAMDM) {
+                if ((player->team == 1 && point.red_team) || (player->team == 0 && point.blue_team)) {
+                    continue;
+                }
+            }
+
+            float dist = rf::get_nearest_other_player_dist_sq(player, &point.position);
+            point.dist_other_player = dist;
+            available_points.push_back(&point);
+            ++valid_points;
+        }
+
+        if (valid_points == 0) {
+            std::uniform_int_distribution<int> dist(0, new_multi_respawn_points.size() - 1);
+            int index = dist(g_rng);
+            *pos = new_multi_respawn_points[index].position;
+            *orient = new_multi_respawn_points[index].orientation;
+            return 1;
+        }
+
+        std::sort(available_points.begin(), available_points.end(),
+                  [](const rf::RespawnPoint* a, const rf::RespawnPoint* b) {
+                      return a->dist_other_player < b->dist_other_player;
+                  });
+
+        std::uniform_real_distribution<double> real_dist(0.0, 1.0);
+        int selected_index = static_cast<int>(std::sqrt(real_dist(g_rng)) * (available_points.size() - 1) + 0.5);
+        *pos = available_points[selected_index]->position;
+        *orient = available_points[selected_index]->orientation;
+
+        return 1;
+    }
+};
+
 
 void server_init()
 {
@@ -968,8 +1104,9 @@ void server_init()
     AsmWriter(0x0047B061, 0x0047B064).add(asm_regs::esp, 0x14);
 
     // Support new spawn logic
+    multi_respawn_level_init_hook.install();
     multi_respawn_create_point_hook.install();
-    player_create_entity_hook.install();
+    multi_respawn_get_next_point_hook.install();
 
     // Support forcing player character
     multi_spawn_player_server_side_hook.install();
