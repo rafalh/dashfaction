@@ -99,6 +99,13 @@ namespace rf
         bool blue_team;
         bool bot;
         float dist_other_player;
+
+        bool operator==(const RespawnPoint& other) const
+        {
+            return (name == other.name && team == other.team && dm_only == other.dm_only &&
+                    position == other.position && orientation == other.orientation && red_team == other.red_team &&
+                    blue_team == other.blue_team && bot == other.bot);
+        }
     };
     static_assert(sizeof(RespawnPoint) == 0x44);
 

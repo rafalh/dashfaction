@@ -32,11 +32,11 @@ struct HitSoundsConfig
 
 struct NewSpawnLogicConfig
 {
-    bool enabled = false;
     bool respect_team_spawns = true;    
-    bool try_avoid_enemies = true;
-    bool always_avoid_last = true;
+    bool try_avoid_players = true;
+    bool always_avoid_last = false;
     bool always_use_furthest = false;
+    bool only_avoid_enemies = false;
 };
 
 struct ServerAdditionalConfig

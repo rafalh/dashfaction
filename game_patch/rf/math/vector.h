@@ -171,4 +171,5 @@ namespace rf
     };
 
     static auto& vec2_zero_vector = addr_as_ref<Vector2>(0x0173C370);
-}
+    static auto& vec_dist_squared = addr_as_ref<float(const rf::Vector3*, const rf::Vector3*)>(0x004FAF00);
+    }
