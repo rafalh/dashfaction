@@ -639,7 +639,7 @@ void update_pre_match_powerups(rf::Player* player)
 void start_match()
 {
     auto msg = std::format(
-        "\n=========== {}v{} MATCH STARTING NOW ===========\n"
+        "\n>>>>>>>>>>>>>>>>> {}v{} MATCH STARTING NOW <<<<<<<<<<<<<<<<<\n"
         "RED TEAM: {}\n"
         "BLUE TEAM: {}\n",
         g_match_info.team_size, g_match_info.team_size,
