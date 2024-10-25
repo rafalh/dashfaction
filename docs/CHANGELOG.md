@@ -45,6 +45,7 @@ Version 1.9.0 (not released yet)
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 - Make game spawn players at Player Start position if level has no respawn points
 - Add respawn point selection logic settings to dedicated server config
+- Raise limit on number of multiplayer respawn points per level from 32 to 2048
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
