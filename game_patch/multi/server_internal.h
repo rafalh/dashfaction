@@ -30,7 +30,7 @@ struct HitSoundsConfig
     int rate_limit = 10;
 };
 
-struct NewSpawnLogicConfig
+struct NewSpawnLogicConfig // defaults match stock game
 {
     bool respect_team_spawns = true;    
     bool try_avoid_players = true;

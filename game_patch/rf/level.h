@@ -86,8 +86,5 @@ namespace rf
 
     static auto& level = addr_as_ref<LevelInfo>(0x00645FD8);
     static auto& level_filename_to_load = addr_as_ref<String>(0x00646140);
-    static auto& get_player_start_position = addr_as_ref<rf::Vector3*>(0x00463D25);
-    static auto& get_player_start_orientation = addr_as_ref<rf::Matrix3*>(0x00463D38);
-
 
 }

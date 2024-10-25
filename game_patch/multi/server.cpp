@@ -43,17 +43,10 @@ const char* g_rcon_cmd_whitelist[] = {
     "map_prev",
 };
 
-//std::vector<std::shared_ptr<RespawnPoint>> respawn_points;
-
 std::vector<rf::RespawnPoint> new_multi_respawn_points; // new storage of spawn points to avoid hard limits
 
 ServerAdditionalConfig g_additional_server_config;
 std::string g_prev_level;
-
-static bool multi_is_team_game_type()
-{
-    return rf::multi_get_game_type() != rf::NG_TYPE_DM;
-}
 
 void parse_vote_config(const char* vote_name, VoteConfig& config, rf::Parser& parser)
 {
@@ -631,6 +624,11 @@ static float get_weapon_shot_stats_delta(rf::Weapon* wp)
     return 1.0f / num_projectiles;
 }
 
+static bool multi_is_team_game_type()
+{
+    return rf::multi_get_game_type() != rf::NG_TYPE_DM;
+}
+
 static void maybe_increment_weapon_hits_stat(int hit_obj_handle, rf::Weapon *wp)
 {
     rf::Entity* attacker_ep = rf::entity_from_handle(wp->parent_handle);
@@ -693,7 +691,7 @@ CodeInjection multi_limbo_init_injection{
         if (!rf::player_list) {
             xlog::trace("Wait between levels shortened because server is empty");
             addr_as_ref<int>(regs.esp) = 100;
-        }     
+        }
     },
 };
 
@@ -720,13 +718,14 @@ FunHook<int(const char*, uint8_t, const rf::Vector3*, const rf::Matrix3*, bool, 
             bot
         });
 
-        //xlog::warn("New spawn point added! Name: {}, Team: {}, RedTeam: {}, BlueTeam: {}, Bot: {}", name, team, red_team, blue_team, bot);
+        xlog::debug("New spawn point added! Name: {}, Team: {}, RedTeam: {}, BlueTeam: {}, Bot: {}",
+            name, team, red_team, blue_team, bot);
 
-        //if (pos) {
-        //    xlog::warn("Position: ({}, {}, {})", pos->x, pos->y, pos->z);
-        //}
+        if (pos) {
+            xlog::debug("Position: ({}, {}, {})", pos->x, pos->y, pos->z);
+        }
 
-        //xlog::warn("Current number of spawn points: {}", new_multi_respawn_points.size());
+        xlog::debug("Current number of spawn points: {}", new_multi_respawn_points.size());
 
         return 0;
     }
@@ -740,14 +739,16 @@ FunHook<void()> multi_respawn_level_init_hook {
         
         auto player_list = get_current_player_list(false);
         std::for_each(player_list.begin(), player_list.end(),
-            [](rf::Player* player) { get_player_additional_data(player).last_spawn_point_index = -1; });
+            [](rf::Player* player) { get_player_additional_data(player).last_spawn_point_index.reset(); });
+
 
         multi_respawn_level_init_hook.call_target();
     }
 };
 
-float get_nearest_other_player_new(const rf::Player* player, const rf::Vector3* spawn_pos,
-                                       rf::Vector3* other_player_pos_out, bool only_enemies = false)
+// more flexible replacement for get_nearest_other_player_dist_sq in stock game
+float get_nearest_other_player(const rf::Player* player, const rf::Vector3* spawn_pos,
+    rf::Vector3* other_player_pos_out, bool only_enemies = false)
 {
     float min_dist_sq = std::numeric_limits<float>::max();
     const bool is_team_game = multi_is_team_game_type();
@@ -798,7 +799,7 @@ FunHook<int(rf::Vector3*, rf::Matrix3*, rf::Player*)> multi_respawn_get_next_poi
 
         auto& pdata = get_player_additional_data(player);
         const int team = player->team;
-        const int last_index = pdata.last_spawn_point_index;
+        const int last_index = pdata.last_spawn_point_index.value_or(-1);
         const bool is_team_game = multi_is_team_game_type();
 
         const bool avoid_last = g_additional_server_config.new_spawn_logic.always_avoid_last;
@@ -816,7 +817,7 @@ FunHook<int(rf::Vector3*, rf::Matrix3*, rf::Player*)> multi_respawn_get_next_poi
                 }
             }
 
-            const float dist = get_nearest_other_player_new(player, &point.position, nullptr, only_enemies);
+            const float dist = get_nearest_other_player(player, &point.position, nullptr, only_enemies);
             point.dist_other_player = dist;
             available_points.push_back(&point);
         }
@@ -924,7 +925,7 @@ void server_init()
     multi_on_new_player_injection.install();
     AsmWriter(0x0047B061, 0x0047B064).add(asm_regs::esp, 0x14);
 
-    // Support new spawn logic
+    // DF respawn point selection logic
     multi_respawn_level_init_hook.install();
     multi_respawn_create_point_hook.install();
     multi_respawn_get_next_point_hook.install();
