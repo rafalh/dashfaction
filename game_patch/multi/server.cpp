@@ -812,7 +812,7 @@ FunHook<int(rf::Vector3*, rf::Matrix3*, rf::Player*)> multi_respawn_get_next_poi
 
         for (auto& point : new_multi_respawn_points) {
             if (is_team_game && respect_team_spawns) {
-                if ((team == 1 && point.red_team) || (team == 0 && point.blue_team)) {
+                if ((team == 0 && !point.red_team) || (team == 1 && !point.blue_team)) {
                     continue;
                 }
             }
