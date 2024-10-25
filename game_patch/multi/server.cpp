@@ -778,9 +778,11 @@ void match_do_frame()
         return;
     }
 
-    if ((g_match_info.match_active || g_match_info.pre_match_active) && rf::multi_num_players() <= 0) {
-        cancel_match();
-        return;
+    if (rf::multi_num_players() <= 0) {
+        if (g_match_info.match_active || g_match_info.pre_match_active) {
+            cancel_match();
+        }
+        return; // no reminders to an empty server
     }
 
     std::time_t current_time = std::time(nullptr);
