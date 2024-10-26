@@ -190,6 +190,10 @@ namespace rf
     static auto& multi_ctf_get_blue_flag_player = addr_as_ref<Player*()>(0x00474E70);
     static auto& multi_ctf_is_red_flag_in_base = addr_as_ref<bool()>(0x00474E80);
     static auto& multi_ctf_is_blue_flag_in_base = addr_as_ref<bool()>(0x00474EA0);
+    static auto& multi_ctf_get_blue_flag_pos = addr_as_ref<Vector3*(Vector3*)>(0x00474F40);
+    static auto& multi_ctf_get_red_flag_pos = addr_as_ref<Vector3*(Vector3*)>(0x00474EC0);
+    static auto& ctf_red_flag_item = addr_as_ref<Object*>(0x006C7560);
+    static auto& ctf_blue_flag_item = addr_as_ref<Object*>(0x006C7564);
     static auto& multi_tdm_get_red_team_score = addr_as_ref<int()>(0x004828F0); // returns ubyte in vanilla game
     static auto& multi_tdm_get_blue_team_score = addr_as_ref<int()>(0x00482900); // returns ubyte in vanilla game
     static auto& multi_num_players = addr_as_ref<int()>(0x00484830);

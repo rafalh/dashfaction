@@ -8,6 +8,7 @@
 #include <vector>
 #include "../rf/math/vector.h"
 #include "../rf/math/matrix.h"
+#include "../rf/os/string.h"
 
 // Forward declarations
 namespace rf
@@ -37,7 +38,7 @@ struct NewSpawnLogicConfig // defaults match stock game
     bool always_avoid_last = false;
     bool always_use_furthest = false;
     bool only_avoid_enemies = false;
-    std::vector<rf::String> allowed_respawn_item_names;
+    std::vector<std::string> allowed_respawn_item_names;
 };
 
 struct ServerAdditionalConfig

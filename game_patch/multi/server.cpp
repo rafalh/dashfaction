@@ -48,6 +48,8 @@ const char* g_rcon_cmd_whitelist[] = {
 
 std::vector<rf::RespawnPoint> new_multi_respawn_points; // new storage of spawn points to avoid hard limits
 
+std::vector<std::tuple<std::string, rf::Vector3, rf::Matrix3>> queued_item_spawn_points;
+
 ServerAdditionalConfig g_additional_server_config;
 std::string g_prev_level;
 
@@ -97,10 +99,14 @@ void load_additional_server_config(rf::Parser& parser)
         if (parser.parse_optional("+Only Avoid Enemies:")) {
             g_additional_server_config.new_spawn_logic.only_avoid_enemies = parser.parse_bool();
         }
-        if (parser.parse_optional("+Use Items As Spawn Points:")) {
+        while (parser.parse_optional("+Use Item As Spawn Points:")) {
             rf::String item_name;
-            while (parser.parse_string(&item_name)) {
+            if (parser.parse_string(&item_name)) {
                 g_additional_server_config.new_spawn_logic.allowed_respawn_item_names.emplace_back(item_name.c_str());
+                xlog::info("Added allowed spawn item: {}", item_name.c_str());
+            }
+            else {
+                xlog::warn("Failed to parse item name after '+Use Item As Spawn Points:'");
             }
         }
     }
@@ -744,12 +750,11 @@ FunHook<int(const char*, uint8_t, const rf::Vector3*, const rf::Matrix3*, bool, 
 FunHook<void()> multi_respawn_level_init_hook {
     0x00470180,
     []() {
-        new_multi_respawn_points.clear();
+        new_multi_respawn_points.clear();        
         
         auto player_list = get_current_player_list(false);
         std::for_each(player_list.begin(), player_list.end(),
-            [](rf::Player* player) { get_player_additional_data(player).last_spawn_point_index.reset(); });
-
+            [](rf::Player* player) { get_player_additional_data(player).last_spawn_point_index.reset(); });        
 
         multi_respawn_level_init_hook.call_target();
     }
@@ -884,13 +889,69 @@ FunHook<int(rf::Vector3*, rf::Matrix3*, rf::Player*)> multi_respawn_get_next_poi
     }
 };
 
+bool are_flags_initialized()
+{
+    return rf::ctf_red_flag_item != nullptr && rf::ctf_blue_flag_item != nullptr;
+}
+
+// returns 1 if closer to red, 0 if closer to blue, nullopt if no flags or flags are the same position
+std::optional<int> is_closer_to_red_flag(const rf::Vector3* pos)
+{
+    if (!are_flags_initialized()) {
+        return std::nullopt;
+    }
+
+    rf::Vector3 red_flag_pos, blue_flag_pos;
+    rf::multi_ctf_get_red_flag_pos(&red_flag_pos);
+    rf::multi_ctf_get_blue_flag_pos(&blue_flag_pos);
+
+    if (red_flag_pos.x == blue_flag_pos.x &&
+        red_flag_pos.y == blue_flag_pos.y &&
+        red_flag_pos.z == blue_flag_pos.z) {
+        return std::nullopt;
+    }
+
+    float dist_to_red_sq =  std::pow(pos->x - red_flag_pos.x, 2) +
+                            std::pow(pos->y - red_flag_pos.y, 2) +
+                            std::pow(pos->z - red_flag_pos.z, 2);
+
+    float dist_to_blue_sq = std::pow(pos->x - blue_flag_pos.x, 2) +
+                            std::pow(pos->y - blue_flag_pos.y, 2) +
+                            std::pow(pos->z - blue_flag_pos.z, 2);
+
+    return dist_to_red_sq < dist_to_blue_sq ? 1 : 0;
+}
+
+void create_spawn_point_from_item(const std::string& name, const rf::Vector3* pos, rf::Matrix3* orient)
+{
+    bool red_spawn = true;
+    bool blue_spawn = true;
+
+    if (multi_is_team_game_type()) {
+        if (auto is_closer_to_red = is_closer_to_red_flag(pos); is_closer_to_red.has_value()) {
+            red_spawn = *is_closer_to_red == 1;
+            blue_spawn = !red_spawn;
+        }
+    }
+
+    rf::multi_respawn_create_point(name.c_str(), 0, pos, orient, red_spawn, blue_spawn, false);
+}
+
+void process_queued_spawn_points_from_items()
+{
+    for (auto& [name, pos, orient] : queued_item_spawn_points) {
+        create_spawn_point_from_item(name, &pos, &orient);
+    }
+    queued_item_spawn_points.clear();
+}
+
 CallHook<rf::Item*(int, const char*, int, int, const rf::Vector3*, rf::Matrix3*, int, bool, bool)> item_create_hook{
     0x00465175,
     [](int type, const char* name, int count, int parent_handle, const rf::Vector3* pos, rf::Matrix3* orient,
        int respawn_time, bool permanent, bool from_packet) {
 
-        if (rf::is_dedicated_server) {
-            const auto allowed_types = [] {
+        if (rf::is_dedicated_server && !g_additional_server_config.new_spawn_logic.allowed_respawn_item_names.empty()) {
+            static const std::unordered_set<int> allowed_types = [] {
                 std::unordered_set<int> types;
                 for (const auto& item_name : g_additional_server_config.new_spawn_logic.allowed_respawn_item_names) {
                     if (int item_type = rf::item_lookup_type(item_name.c_str()); item_type >= 0) {
@@ -901,8 +962,9 @@ CallHook<rf::Item*(int, const char*, int, int, const rf::Vector3*, rf::Matrix3*,
             }();
 
             if (allowed_types.contains(type)) {
-                rf::multi_respawn_create_point(name, 0, pos, orient, true, true, true);
+                queued_item_spawn_points.emplace_back(std::string(name), *pos, *orient);
             }
+
         }
 
         return item_create_hook.call_target(
