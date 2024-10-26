@@ -47,8 +47,17 @@ const char* g_rcon_cmd_whitelist[] = {
 };
 
 std::vector<rf::RespawnPoint> new_multi_respawn_points; // new storage of spawn points to avoid hard limits
+std::vector<std::tuple<std::string, rf::Vector3, rf::Matrix3>> queued_item_spawn_points; // queued generated spawns
+std::optional<rf::Vector3> likely_position_of_central_item; // guess at the center of the map for generated spawns
+static const std::vector<std::string> possible_central_item_names = {
+    "Multi Damage Amplifier",
+    "Multi Invulnerability",
+    "Multi Super Armor",
+    "shoulder cannon",
+    "Multi Super Health"
+}; // prioritized list of common central items
+int current_center_item_priority = possible_central_item_names.size();
 
-std::vector<std::tuple<std::string, rf::Vector3, rf::Matrix3>> queued_item_spawn_points;
 
 ServerAdditionalConfig g_additional_server_config;
 std::string g_prev_level;
@@ -103,10 +112,6 @@ void load_additional_server_config(rf::Parser& parser)
             rf::String item_name;
             if (parser.parse_string(&item_name)) {
                 g_additional_server_config.new_spawn_logic.allowed_respawn_item_names.emplace_back(item_name.c_str());
-                xlog::info("Added allowed spawn item: {}", item_name.c_str());
-            }
-            else {
-                xlog::warn("Failed to parse item name after '+Use Item As Spawn Points:'");
             }
         }
     }
@@ -733,14 +738,14 @@ FunHook<int(const char*, uint8_t, const rf::Vector3*, const rf::Matrix3*, bool, 
             bot
         });
 
-        xlog::warn("New spawn point added! Name: {}, Team: {}, RedTeam: {}, BlueTeam: {}, Bot: {}",
+        xlog::debug("New spawn point added! Name: {}, Team: {}, RedTeam: {}, BlueTeam: {}, Bot: {}",
             name, team, red_team, blue_team, bot);
 
         if (pos) {
-            xlog::warn("Position: ({}, {}, {})", pos->x, pos->y, pos->z);
+            xlog::debug("Position: ({}, {}, {})", pos->x, pos->y, pos->z);
         }
 
-        xlog::warn("Current number of spawn points: {}", new_multi_respawn_points.size());
+        xlog::debug("Current number of spawn points: {}", new_multi_respawn_points.size());
 
         return 0;
     }
@@ -883,7 +888,7 @@ FunHook<int(rf::Vector3*, rf::Matrix3*, rf::Player*)> multi_respawn_get_next_poi
         *pos = new_multi_respawn_points[selected_index].position;
         *orient = new_multi_respawn_points[selected_index].orientation;
         pdata.last_spawn_point_index = selected_index;
-        xlog::warn("Player {} requested a spawn point. Giving them the spawn point with index {}", player->name, selected_index);
+        xlog::debug("Player {} requested a spawn point. Giving them index {}", player->name, selected_index);
 
         return 1;
     }
@@ -937,12 +942,43 @@ void create_spawn_point_from_item(const std::string& name, const rf::Vector3* po
     rf::multi_respawn_create_point(name.c_str(), 0, pos, orient, red_spawn, blue_spawn, false);
 }
 
+int get_item_priority(const std::string& item_name)
+{
+    auto it = std::find(possible_central_item_names.begin(), possible_central_item_names.end(), item_name);
+    return it != possible_central_item_names.end() ?
+        std::distance(possible_central_item_names.begin(), it) : possible_central_item_names.size();
+}
+
+void adjust_yaw_to_face_center(rf::Matrix3& orient, const rf::Vector3& pos, const rf::Vector3& center)
+{
+    rf::Vector3 direction = center - pos;
+    direction.normalize();
+    orient.fvec = direction;
+    orient.uvec = rf::Vector3{0.0f, 1.0f, 0.0f};
+    orient.rvec = orient.uvec.cross(orient.fvec);
+    orient.rvec.normalize();
+    orient.uvec = orient.fvec.cross(orient.rvec);
+    orient.uvec.normalize();
+}
+
 void process_queued_spawn_points_from_items()
 {
+    auto map_center = likely_position_of_central_item;
+
     for (auto& [name, pos, orient] : queued_item_spawn_points) {
-        create_spawn_point_from_item(name, &pos, &orient);
+        rf::Matrix3 adjusted_orient = orient;
+
+        if (map_center) {
+            adjust_yaw_to_face_center(adjusted_orient, pos, *map_center);
+        }
+
+        create_spawn_point_from_item(name, &pos, &adjusted_orient);
     }
+
+    //reset item generated spawn vars
     queued_item_spawn_points.clear();
+    likely_position_of_central_item.reset();
+    current_center_item_priority = possible_central_item_names.size();
 }
 
 CallHook<rf::Item*(int, const char*, int, int, const rf::Vector3*, rf::Matrix3*, int, bool, bool)> item_create_hook{
@@ -962,9 +998,17 @@ CallHook<rf::Item*(int, const char*, int, int, const rf::Vector3*, rf::Matrix3*,
             }();
 
             if (allowed_types.contains(type)) {
-                queued_item_spawn_points.emplace_back(std::string(name), *pos, *orient);
+                queued_item_spawn_points.emplace_back(std::string(name), *pos, *orient);                
             }
 
+            // take a guess at the center of the map
+            int item_priority = get_item_priority(name);
+            if (item_priority < possible_central_item_names.size()) {
+                if (!likely_position_of_central_item || item_priority < current_center_item_priority) {
+                    likely_position_of_central_item = *pos;
+                    current_center_item_priority = item_priority;
+                }
+            }
         }
 
         return item_create_hook.call_target(
@@ -974,8 +1018,6 @@ CallHook<rf::Item*(int, const char*, int, int, const rf::Vector3*, rf::Matrix3*,
 
 void server_init()
 {
-    item_create_hook.install();
-
     // Override rcon command whitelist
     write_mem_ptr(0x0046C794 + 1, g_rcon_cmd_whitelist);
     write_mem_ptr(0x0046C7D1 + 2, g_rcon_cmd_whitelist + std::size(g_rcon_cmd_whitelist));
@@ -1029,6 +1071,7 @@ void server_init()
     multi_respawn_level_init_hook.install();
     multi_respawn_create_point_hook.install();
     multi_respawn_get_next_point_hook.install();
+    item_create_hook.install();
 
     // Support forcing player character
     multi_spawn_player_server_side_hook.install();
