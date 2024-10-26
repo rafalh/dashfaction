@@ -2,8 +2,13 @@
 
 #include <string_view>
 #include <string>
+#include <set>
 #include <map>
 #include <optional>
+#include <vector>
+#include "../rf/math/vector.h"
+#include "../rf/math/matrix.h"
+#include "../rf/os/string.h"
 
 // Forward declarations
 namespace rf
@@ -26,6 +31,16 @@ struct HitSoundsConfig
     int rate_limit = 10;
 };
 
+struct NewSpawnLogicConfig // defaults match stock game
+{
+    bool respect_team_spawns = true;    
+    bool try_avoid_players = true;
+    bool always_avoid_last = false;
+    bool always_use_furthest = false;
+    bool only_avoid_enemies = false;
+    std::map<std::string, std::optional<int>> allowed_respawn_items;
+};
+
 struct ServerAdditionalConfig
 {
     VoteConfig vote_kick;
@@ -34,6 +49,7 @@ struct ServerAdditionalConfig
     VoteConfig vote_restart;
     VoteConfig vote_next;
     VoteConfig vote_previous;
+    NewSpawnLogicConfig new_spawn_logic;
     int spawn_protection_duration_ms = 1500;
     std::optional<float> spawn_life;
     std::optional<float> spawn_armor;

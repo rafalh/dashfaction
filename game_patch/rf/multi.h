@@ -5,6 +5,10 @@
 #include "os/timestamp.h"
 #include "os/string.h"
 #include "os/array.h"
+#include "object.h"
+#include "geometry.h"
+#include "ai.h"
+#include "gr/gr.h"
 
 namespace rf
 {
@@ -82,6 +86,30 @@ namespace rf
     };
     static_assert(sizeof(PlayerNetData) == 0x9C8);
 
+    struct RespawnPoint
+    {
+        String name;
+        uint8_t team;
+        Vector3 position;
+        Matrix3 orientation;
+        bool red_team;
+        bool blue_team;
+        bool bot;
+        float dist_other_player;
+
+        bool operator==(const RespawnPoint& other) const
+        {
+        return (name == other.name &&
+                team == other.team &&
+                position == other.position &&
+                orientation == other.orientation &&
+                red_team == other.red_team &&
+                blue_team == other.blue_team &&
+                bot == other.bot);
+        }
+    };
+    static_assert(sizeof(RespawnPoint) == 0x44);
+
     enum NetGameType {
         NG_TYPE_DM = 0,
         NG_TYPE_CTF = 1,
@@ -148,6 +176,10 @@ namespace rf
     static auto& multi_ctf_get_blue_flag_player = addr_as_ref<Player*()>(0x00474E70);
     static auto& multi_ctf_is_red_flag_in_base = addr_as_ref<bool()>(0x00474E80);
     static auto& multi_ctf_is_blue_flag_in_base = addr_as_ref<bool()>(0x00474EA0);
+    static auto& multi_ctf_get_blue_flag_pos = addr_as_ref<Vector3*(Vector3*)>(0x00474F40);
+    static auto& multi_ctf_get_red_flag_pos = addr_as_ref<Vector3*(Vector3*)>(0x00474EC0);
+    static auto& ctf_red_flag_item = addr_as_ref<Object*>(0x006C7560);
+    static auto& ctf_blue_flag_item = addr_as_ref<Object*>(0x006C7564);
     static auto& multi_tdm_get_red_team_score = addr_as_ref<int()>(0x004828F0); // returns ubyte in vanilla game
     static auto& multi_tdm_get_blue_team_score = addr_as_ref<int()>(0x00482900); // returns ubyte in vanilla game
     static auto& multi_num_players = addr_as_ref<int()>(0x00484830);
@@ -158,6 +190,8 @@ namespace rf
     static auto& multi_ping_player = addr_as_ref<void(Player*)>(0x00484D00);
     static auto& send_entity_create_packet = addr_as_ref<void(Entity *entity, Player* player)>(0x00475160);
     static auto& send_entity_create_packet_to_all = addr_as_ref<void(Entity *entity)>(0x00475110);
+    static auto& multi_respawn_create_point = addr_as_ref<int(const char* name, uint8_t team, const rf::Vector3* pos,
+        rf::Matrix3* orient, bool red_team, bool blue_team, bool bot)>(0x00470190);
     static auto& multi_find_character = addr_as_ref<int(const char *name)>(0x00476270);
     static auto& multi_chat_print = addr_as_ref<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
     static auto& multi_chat_say = addr_as_ref<void(const char *msg, bool is_team_msg)>(0x00444150);

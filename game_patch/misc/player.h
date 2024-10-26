@@ -1,5 +1,6 @@
 #include <functional>
 #include <map>
+#include <optional>
 #include <string>
 #include <common/utils/string-utils.h>
 #include "../rf/math/vector.h"
@@ -26,6 +27,7 @@ struct PlayerAdditionalData
     std::map<std::string, PlayerNetGameSaveData> saves;
     rf::Vector3 last_teleport_pos;
     rf::TimestampRealtime last_teleport_timestamp;
+    std::optional<int> last_spawn_point_index;
 };
 
 void find_player(const StringMatcher& query, std::function<void(rf::Player*)> consumer);

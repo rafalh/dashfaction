@@ -150,6 +150,21 @@ Configuration example:
     $DF Vote Next: true
     // Enable vote previous
     $DF Vote Previous: true
+    // Adjust setting related to player respawn logic (defaults match stock game)
+    $DF Player Respawn Logic:
+        // In team gamemodes (CTF/TeamDM), only spawn players at points associated with their team
+        +Respect Team Spawns: true
+        // Players are more likely to spawn at spawn points further away from other players
+        +Prefer Avoid Players: true
+        // Avoid spawning players at the same spawn point twice in a row
+        +Always Avoid Last: false
+        // Always spawn players at the furthest spawn point from other players (removes RNG)
+        +Always Use Furthest: false
+        // Ignore teammates when calculating the distance from spawn points to other players
+        +Only Avoid Enemies: false
+        // Create an additional respawn point at each "Medical Kit" item, if the level has less than 9 Multiplayer Respawn Points
+        // Specify "0" to always create them regardless of how many Multiplayer Respawn Points are in the level
+        +Use Item As Spawn Point: "Medical Kit" 9
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
     $DF Spawn Protection Duration: 1500
     // Initial player life (health) after spawn
@@ -196,16 +211,16 @@ Configuration example:
     //$DF Welcome Message: "Hello $PLAYER!"
     // Reward a player for a successful kill
     $DF Kill Reward:
-    // Increase player health or armor if health is full (armor delta is halved)
-    +Effective Health: 0
-    // Increase player health
-    +Health: 0
-    // Increase player armor
-    +Armor: 0
-    // Limit health reward to 200 instead of 100
-    +Health Is Super:
-    // Limit armor reward to 200 instead of 100
-    +Armor Is Super:
+        // Increase player health or armor if health is full (armor delta is halved)
+        +Effective Health: 0
+        // Increase player health
+        +Health: 0
+        // Increase player armor
+        +Armor: 0
+        // Limit health reward to 200 instead of 100
+        +Health Is Super:
+        // Limit armor reward to 200 instead of 100
+        +Armor Is Super:
 
 
 Building

@@ -10,6 +10,9 @@
 #include <algorithm>
 #include <limits>
 #include <format>
+#include <numeric>
+#include <unordered_set>
+#include <array>
 #include <windows.h>
 #include <winsock2.h>
 #include "server.h"
@@ -21,6 +24,7 @@
 #include <common/utils/list-utils.h>
 #include "../rf/player/player.h"
 #include "../rf/multi.h"
+#include "../rf/item.h"
 #include "../rf/parse.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
@@ -41,6 +45,18 @@ const char* g_rcon_cmd_whitelist[] = {
     "map_next",
     "map_prev",
 };
+
+std::vector<rf::RespawnPoint> new_multi_respawn_points; // new storage of spawn points to avoid hard limits
+std::vector<std::tuple<std::string, rf::Vector3, rf::Matrix3>> queued_item_spawn_points; // queued generated spawns
+std::optional<rf::Vector3> likely_position_of_central_item; // guess at the center of the map for generated spawns
+static const std::vector<std::string> possible_central_item_names = {
+    "Multi Damage Amplifier",
+    "Multi Invulnerability",
+    "Multi Super Armor",
+    "shoulder cannon",
+    "Multi Super Health"
+}; // prioritized list of common central items
+int current_center_item_priority = possible_central_item_names.size();
 
 ServerAdditionalConfig g_additional_server_config;
 std::string g_prev_level;
@@ -74,6 +90,33 @@ void load_additional_server_config(rf::Parser& parser)
     parse_vote_config("Vote Restart", g_additional_server_config.vote_restart, parser);
     parse_vote_config("Vote Next", g_additional_server_config.vote_next, parser);
     parse_vote_config("Vote Previous", g_additional_server_config.vote_previous, parser);
+
+    if (parser.parse_optional("$DF Player Respawn Logic:")) {
+        if (parser.parse_optional("+Respect Team Spawns:")) {
+            g_additional_server_config.new_spawn_logic.respect_team_spawns = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Prefer Avoid Players:")) {
+            g_additional_server_config.new_spawn_logic.try_avoid_players = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Always Avoid Last:")) {
+            g_additional_server_config.new_spawn_logic.always_avoid_last = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Always Use Furthest:")) {
+            g_additional_server_config.new_spawn_logic.always_use_furthest = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Only Avoid Enemies:")) {
+            g_additional_server_config.new_spawn_logic.only_avoid_enemies = parser.parse_bool();
+        }
+        while (parser.parse_optional("+Use Item As Spawn Point:")) {
+            rf::String item_name;
+            std::optional<int> threshold = std::nullopt;
+            if (parser.parse_string(&item_name)) {
+                threshold = parser.parse_int();
+                g_additional_server_config.new_spawn_logic.allowed_respawn_items[item_name.c_str()] = threshold;
+            }
+        }
+    }
+
     if (parser.parse_optional("$DF Spawn Protection Duration:")) {
         g_additional_server_config.spawn_protection_duration_ms = parser.parse_uint();
     }
@@ -554,6 +597,20 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
     return true;
 }
 
+std::set<rf::Player*> get_current_player_list(bool include_browsers)
+{
+    std::set<rf::Player*> player_list;
+    auto linked_player_list = SinglyLinkedList{rf::player_list};
+
+    for (auto& player : linked_player_list) {
+        if (include_browsers || !get_player_additional_data(&player).is_browser) {
+            player_list.insert(&player);
+        }
+    }
+
+    return player_list;
+}
+
 FunHook<void(rf::Player*)> multi_spawn_player_server_side_hook{
     0x00480820,
     [](rf::Player* player) {
@@ -659,6 +716,304 @@ CodeInjection multi_limbo_init_injection{
     },
 };
 
+FunHook<int(const char*, uint8_t, const rf::Vector3*, const rf::Matrix3*, bool, bool, bool)> multi_respawn_create_point_hook{
+    0x00470190,
+    [](const char* name, uint8_t team, const rf::Vector3* pos, const rf::Matrix3* orient, bool red_team, bool blue_team, bool bot) 
+    {
+        constexpr size_t max_respawn_points = 2048; // raise limit 32 -> 2048
+        
+        if (new_multi_respawn_points.size() >= max_respawn_points) {
+            return -1;
+        }
+
+        new_multi_respawn_points.emplace_back(rf::RespawnPoint{
+            rf::String(name),
+            team, // unused
+            *pos,
+            *orient,
+            red_team,
+            blue_team,
+            bot
+        });
+
+        xlog::debug("New spawn point added! Name: {}, Team: {}, RedTeam: {}, BlueTeam: {}, Bot: {}",
+            name, team, red_team, blue_team, bot);
+
+        if (pos) {
+            xlog::debug("Position: ({}, {}, {})", pos->x, pos->y, pos->z);
+        }
+
+        xlog::debug("Current number of spawn points: {}", new_multi_respawn_points.size());
+
+        return 0;
+    }
+};
+
+// clear spawn point array and reset last spawn index at level start
+FunHook<void()> multi_respawn_level_init_hook {
+    0x00470180,
+    []() {
+        new_multi_respawn_points.clear();        
+        
+        auto player_list = get_current_player_list(false);
+        std::for_each(player_list.begin(), player_list.end(),
+            [](rf::Player* player) { get_player_additional_data(player).last_spawn_point_index.reset(); });        
+
+        multi_respawn_level_init_hook.call_target();
+    }
+};
+
+// more flexible replacement for get_nearest_other_player_dist_sq in stock game
+float get_nearest_other_player(const rf::Player* player, const rf::Vector3* spawn_pos,
+    rf::Vector3* other_player_pos_out, bool only_enemies = false)
+{
+    float min_dist_sq = std::numeric_limits<float>::max();
+    const bool is_team_game = multi_is_team_game_type();
+    const int player_team = player->team;
+
+    auto player_list = get_current_player_list(false);
+
+    for (const auto* other_player : player_list) {
+        if (other_player == player || (only_enemies && is_team_game && other_player->team == player_team)) {
+            continue;
+        }
+
+        if (auto* other_entity = rf::entity_from_handle(other_player->entity_handle)) {
+            const float dist_sq = rf::vec_dist_squared(spawn_pos, &other_entity->pos);
+
+            if (dist_sq < min_dist_sq) {
+                min_dist_sq = dist_sq;
+                if (other_player_pos_out) {
+                    *other_player_pos_out = other_entity->pos;
+                }
+            }
+        }
+    }
+
+    return min_dist_sq;
+}
+
+FunHook<int(rf::Vector3*, rf::Matrix3*, rf::Player*)> multi_respawn_get_next_point_hook{
+    0x00470300,
+    [](rf::Vector3* pos, rf::Matrix3* orient, rf::Player* player) {
+
+        // if map has no respawn points
+        if (new_multi_respawn_points.empty()) {
+            *pos = rf::level.player_start_pos;
+            *orient = rf::level.player_start_orient;
+            xlog::warn("No Multiplayer Respawn Points found. Spawning {} at the Player Start.", player->name);
+            return -1;
+        }
+
+        // if player is invalid (should never happen)
+        if (!player) {
+            std::uniform_int_distribution<int> dist(0, new_multi_respawn_points.size() - 1);
+            int index = dist(g_rng);
+            *pos = new_multi_respawn_points[index].position;
+            *orient = new_multi_respawn_points[index].orientation;
+            return 0;
+        }
+
+        auto& pdata = get_player_additional_data(player);
+        const int team = player->team;
+        const int last_index = pdata.last_spawn_point_index.value_or(-1);
+        const bool is_team_game = multi_is_team_game_type();
+
+        const bool avoid_last = g_additional_server_config.new_spawn_logic.always_avoid_last;
+        const bool avoid_players = g_additional_server_config.new_spawn_logic.try_avoid_players;
+        const bool use_furthest = g_additional_server_config.new_spawn_logic.always_use_furthest;
+        const bool respect_team_spawns = g_additional_server_config.new_spawn_logic.respect_team_spawns;
+        const bool only_enemies = g_additional_server_config.new_spawn_logic.only_avoid_enemies;
+
+        std::vector<const rf::RespawnPoint*> available_points;
+
+        for (auto& point : new_multi_respawn_points) {
+            if (is_team_game && respect_team_spawns) {
+                if ((team == 0 && !point.red_team) || (team == 1 && !point.blue_team)) {
+                    continue;
+                }
+            }
+
+            const float dist = get_nearest_other_player(player, &point.position, nullptr, only_enemies);
+            point.dist_other_player = dist;
+            available_points.push_back(&point);
+        }
+
+        if (available_points.empty()) {
+            std::uniform_int_distribution<int> dist(0, new_multi_respawn_points.size() - 1);
+            const int index = dist(g_rng);
+            *pos = new_multi_respawn_points[index].position;
+            *orient = new_multi_respawn_points[index].orientation;
+            return 1;
+        }
+
+        if (avoid_players || use_furthest) {
+            std::sort(available_points.begin(), available_points.end(),
+                      [](const rf::RespawnPoint* a, const rf::RespawnPoint* b) {
+                          return a->dist_other_player > b->dist_other_player;
+                      });
+        }
+
+        int selected_index = 0;
+
+        if (use_furthest) {
+            selected_index = std::distance(
+                new_multi_respawn_points.begin(),
+                std::find(new_multi_respawn_points.begin(), new_multi_respawn_points.end(), *available_points[0]));
+
+            if (avoid_last && last_index == selected_index && available_points.size() > 1) {
+                selected_index = std::distance(
+                    new_multi_respawn_points.begin(),
+                    std::find(new_multi_respawn_points.begin(), new_multi_respawn_points.end(), *available_points[1]));
+            }
+        }
+        else {
+            std::uniform_real_distribution<double> real_dist(0.0, 1.0);
+            int random_index = static_cast<int>(std::sqrt(real_dist(g_rng)) * (available_points.size() - 1) + 0.5);
+
+            selected_index = std::distance(new_multi_respawn_points.begin(),
+                                           std::find(new_multi_respawn_points.begin(), new_multi_respawn_points.end(),
+                                                     *available_points[random_index]));
+
+            if (avoid_last && last_index == selected_index && available_points.size() > 1) {
+                selected_index =
+                    std::distance(new_multi_respawn_points.begin(),
+                                  std::find(new_multi_respawn_points.begin(), new_multi_respawn_points.end(),
+                                            *available_points[random_index == 0 ? 1 : 0]));
+            }
+        }
+
+        *pos = new_multi_respawn_points[selected_index].position;
+        *orient = new_multi_respawn_points[selected_index].orientation;
+        pdata.last_spawn_point_index = selected_index;
+        xlog::debug("Player {} requested a spawn point. Giving them index {}", player->name, selected_index);
+
+        return 1;
+    }
+};
+
+bool are_flags_initialized()
+{
+    return rf::ctf_red_flag_item != nullptr && rf::ctf_blue_flag_item != nullptr;
+}
+
+// returns 1 if closer to red, 0 if closer to blue, nullopt if no flags or flags are the same position
+std::optional<int> is_closer_to_red_flag(const rf::Vector3* pos)
+{
+    if (!are_flags_initialized()) {
+        return std::nullopt;
+    }
+
+    rf::Vector3 red_flag_pos, blue_flag_pos;
+    rf::multi_ctf_get_red_flag_pos(&red_flag_pos);
+    rf::multi_ctf_get_blue_flag_pos(&blue_flag_pos);
+
+    if (red_flag_pos.x == blue_flag_pos.x &&
+        red_flag_pos.y == blue_flag_pos.y &&
+        red_flag_pos.z == blue_flag_pos.z) {
+        return std::nullopt;
+    }
+
+    float dist_to_red_sq =  std::pow(pos->x - red_flag_pos.x, 2) +
+                            std::pow(pos->y - red_flag_pos.y, 2) +
+                            std::pow(pos->z - red_flag_pos.z, 2);
+
+    float dist_to_blue_sq = std::pow(pos->x - blue_flag_pos.x, 2) +
+                            std::pow(pos->y - blue_flag_pos.y, 2) +
+                            std::pow(pos->z - blue_flag_pos.z, 2);
+
+    return dist_to_red_sq < dist_to_blue_sq ? 1 : 0;
+}
+
+void create_spawn_point_from_item(const std::string& name, const rf::Vector3* pos, rf::Matrix3* orient)
+{
+    bool red_spawn = true;
+    bool blue_spawn = true;
+
+    if (multi_is_team_game_type()) {
+        if (auto is_closer_to_red = is_closer_to_red_flag(pos); is_closer_to_red.has_value()) {
+            red_spawn = *is_closer_to_red == 1;
+            blue_spawn = !red_spawn;
+        }
+    }
+
+    rf::multi_respawn_create_point(name.c_str(), 0, pos, orient, red_spawn, blue_spawn, false);
+}
+
+int get_item_priority(const std::string& item_name)
+{
+    auto it = std::find(possible_central_item_names.begin(), possible_central_item_names.end(), item_name);
+    return it != possible_central_item_names.end() ?
+        std::distance(possible_central_item_names.begin(), it) : possible_central_item_names.size();
+}
+
+void adjust_yaw_to_face_center(rf::Matrix3& orient, const rf::Vector3& pos, const rf::Vector3& center)
+{
+    rf::Vector3 direction = center - pos;
+    direction.normalize();
+    orient.fvec = direction;
+    orient.uvec = rf::Vector3{0.0f, 1.0f, 0.0f};
+    orient.rvec = orient.uvec.cross(orient.fvec);
+    orient.rvec.normalize();
+    orient.uvec = orient.fvec.cross(orient.rvec);
+    orient.uvec.normalize();
+}
+
+void process_queued_spawn_points_from_items()
+{
+    
+    if (g_additional_server_config.new_spawn_logic.allowed_respawn_items.empty()) {
+        return; // early return if no spawn points are to be generated
+    }
+
+    auto map_center = likely_position_of_central_item;
+
+    for (auto& [name, pos, orient] : queued_item_spawn_points) {
+        rf::Matrix3 adjusted_orient = orient;
+
+        if (map_center) {
+            adjust_yaw_to_face_center(adjusted_orient, pos, *map_center);
+        }
+
+        create_spawn_point_from_item(name, &pos, &adjusted_orient);
+    }
+
+    //reset item generated spawn vars
+    queued_item_spawn_points.clear();
+    likely_position_of_central_item.reset();
+    current_center_item_priority = possible_central_item_names.size();
+}
+
+CallHook<rf::Item*(int, const char*, int, int, const rf::Vector3*, rf::Matrix3*, int, bool, bool)> item_create_hook{
+    0x00465175,
+    [](int type, const char* name, int count, int parent_handle, const rf::Vector3* pos, rf::Matrix3* orient,
+       int respawn_time, bool permanent, bool from_packet) {
+
+        if (rf::is_dedicated_server && !g_additional_server_config.new_spawn_logic.allowed_respawn_items.empty()) {
+            const auto& allowed_items = g_additional_server_config.new_spawn_logic.allowed_respawn_items;
+
+            auto it = allowed_items.find(name);
+            if (it != allowed_items.end() &&
+                (!it->second || it->second == 0 || *it->second > static_cast<int>(new_multi_respawn_points.size()))) {
+
+                queued_item_spawn_points.emplace_back(std::string(name), *pos, *orient);                
+            }
+
+            // make best guess at the center of the map
+            int item_priority = get_item_priority(name);
+            if (item_priority < possible_central_item_names.size()) {
+                if (!likely_position_of_central_item || item_priority < current_center_item_priority) {
+                    likely_position_of_central_item = *pos;
+                    current_center_item_priority = item_priority;
+                }
+            }
+        }
+
+        return item_create_hook.call_target(
+            type, name, count, parent_handle, pos, orient, respawn_time, permanent, from_packet);
+    }
+};
+
 void server_init()
 {
     // Override rcon command whitelist
@@ -709,6 +1064,12 @@ void server_init()
     // Customized dedicated server console message when player joins
     multi_on_new_player_injection.install();
     AsmWriter(0x0047B061, 0x0047B064).add(asm_regs::esp, 0x14);
+
+    // DF respawn point selection logic
+    multi_respawn_level_init_hook.install();
+    multi_respawn_create_point_hook.install();
+    multi_respawn_get_next_point_hook.install();
+    item_create_hook.install();
 
     // Support forcing player character
     multi_spawn_player_server_side_hook.install();

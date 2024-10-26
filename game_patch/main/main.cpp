@@ -44,6 +44,15 @@
 GameConfig g_game_config;
 HMODULE g_hmodule;
 
+std::mt19937 g_rng;
+
+void initialize_random_generator()
+{
+    // seed rng with the current time
+    auto seed = std::chrono::steady_clock::now().time_since_epoch().count();
+    g_rng.seed(static_cast<unsigned long>(seed));
+}
+
 CallHook<void()> rf_init_hook{
     0x004B27CD,
     []() {
@@ -157,6 +166,7 @@ FunHook<void(bool)> level_init_post_hook{
     [](bool transition) {
         level_init_post_hook.call_target(transition);
         xlog::info("Level loaded: {}{}", rf::level.filename, transition ? " (transition)" : "");
+        process_queued_spawn_points_from_items();
     },
 };
 
@@ -337,6 +347,9 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
     // Init logging and crash dump support first
     init_logging();
     init_crash_handler();
+
+    // Init random number generator
+    initialize_random_generator();
 
     // Enable Data Execution Prevention
     if (!SetProcessDEPPolicy(PROCESS_DEP_ENABLE))
