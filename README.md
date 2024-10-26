@@ -162,8 +162,9 @@ Configuration example:
         +Always Use Furthest: false
         // Ignore teammates when calculating the distance from spawn points to other players
         +Only Avoid Enemies: false
-        // Create additional respawn points on items of this type (add a new line for each)
-        +Use Item As Spawn Point: "Medical Kit"
+        // Create an additional respawn point at each "Medical Kit" item, if the level has less than 9 Multiplayer Respawn Points
+        // Specify "0" to always create them regardless of how many Multiplayer Respawn Points are in the level
+        +Use Item As Spawn Point: "Medical Kit" 9
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
     $DF Spawn Protection Duration: 1500
     // Initial player life (health) after spawn

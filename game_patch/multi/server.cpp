@@ -109,8 +109,10 @@ void load_additional_server_config(rf::Parser& parser)
         }
         while (parser.parse_optional("+Use Item As Spawn Point:")) {
             rf::String item_name;
+            std::optional<int> threshold = std::nullopt;
             if (parser.parse_string(&item_name)) {
-                g_additional_server_config.new_spawn_logic.allowed_respawn_item_names.emplace_back(item_name.c_str());
+                threshold = parser.parse_int();
+                g_additional_server_config.new_spawn_logic.allowed_respawn_items[item_name.c_str()] = threshold;
             }
         }
     }
@@ -959,8 +961,9 @@ void adjust_yaw_to_face_center(rf::Matrix3& orient, const rf::Vector3& pos, cons
 
 void process_queued_spawn_points_from_items()
 {
-    if (g_additional_server_config.new_spawn_logic.allowed_respawn_item_names.empty()) {
-        return; // early return if not generating any spawns
+    
+    if (g_additional_server_config.new_spawn_logic.allowed_respawn_items.empty()) {
+        return; // early return if no spawn points are to be generated
     }
 
     auto map_center = likely_position_of_central_item;
@@ -986,18 +989,13 @@ CallHook<rf::Item*(int, const char*, int, int, const rf::Vector3*, rf::Matrix3*,
     [](int type, const char* name, int count, int parent_handle, const rf::Vector3* pos, rf::Matrix3* orient,
        int respawn_time, bool permanent, bool from_packet) {
 
-        if (rf::is_dedicated_server && !g_additional_server_config.new_spawn_logic.allowed_respawn_item_names.empty()) {
-            static const std::unordered_set<int> allowed_types = [] {
-                std::unordered_set<int> types;
-                for (const auto& item_name : g_additional_server_config.new_spawn_logic.allowed_respawn_item_names) {
-                    if (int item_type = rf::item_lookup_type(item_name.c_str()); item_type >= 0) {
-                        types.insert(item_type);
-                    }
-                }
-                return types;
-            }();
+        if (rf::is_dedicated_server && !g_additional_server_config.new_spawn_logic.allowed_respawn_items.empty()) {
+            const auto& allowed_items = g_additional_server_config.new_spawn_logic.allowed_respawn_items;
 
-            if (allowed_types.contains(type)) {
+            auto it = allowed_items.find(name);
+            if (it != allowed_items.end() &&
+                (!it->second || it->second == 0 || *it->second > static_cast<int>(new_multi_respawn_points.size()))) {
+
                 queued_item_spawn_points.emplace_back(std::string(name), *pos, *orient);                
             }
 
