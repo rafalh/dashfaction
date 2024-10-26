@@ -658,6 +658,9 @@ void start_match()
     g_match_info.ready_players_blue.clear();
 
     restart_current_level();
+
+    // restore time limit when starting match
+    rf::multi_time_limit = g_match_info.time_limit_on_pre_match_start.value_or(10.0f);
 }
 
 void cancel_match()
@@ -669,7 +672,7 @@ void cancel_match()
     else {
         // restore the level timer and limit if pre-match is canceled        
         rf::level.time = 0.0f;
-        rf::multi_time_limit = g_match_info.time_limit_on_pre_match_start;        
+        rf::multi_time_limit = g_match_info.time_limit_on_pre_match_start.value_or(10.0f);        
     }
 
     g_match_info.reset();

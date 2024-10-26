@@ -66,7 +66,7 @@ struct MatchInfo
     bool pre_match_queued = false;
     bool pre_match_active = false;
     std::time_t pre_match_start_time = 0;
-    float time_limit_on_pre_match_start = 0.0f;
+    std::optional<float> time_limit_on_pre_match_start;
     std::time_t last_ready_reminder_time = 0;
     bool everyone_ready = false;
     bool match_active = false;
@@ -82,7 +82,7 @@ struct MatchInfo
         pre_match_queued = false;
         pre_match_active = false;
         pre_match_start_time = 0;
-        time_limit_on_pre_match_start = 0.0f;
+        time_limit_on_pre_match_start.reset();
         last_ready_reminder_time = 0;
         everyone_ready = false;
         match_active = false;
