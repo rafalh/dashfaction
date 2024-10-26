@@ -11,6 +11,8 @@
 #include <limits>
 #include <format>
 #include <numeric>
+#include <unordered_set>
+#include <array>
 #include <windows.h>
 #include <winsock2.h>
 #include "server.h"
@@ -22,6 +24,7 @@
 #include <common/utils/list-utils.h>
 #include "../rf/player/player.h"
 #include "../rf/multi.h"
+#include "../rf/item.h"
 #include "../rf/parse.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
@@ -93,6 +96,12 @@ void load_additional_server_config(rf::Parser& parser)
         }
         if (parser.parse_optional("+Only Avoid Enemies:")) {
             g_additional_server_config.new_spawn_logic.only_avoid_enemies = parser.parse_bool();
+        }
+        if (parser.parse_optional("+Use Items As Spawn Points:")) {
+            rf::String item_name;
+            while (parser.parse_string(&item_name)) {
+                g_additional_server_config.new_spawn_logic.allowed_respawn_item_names.emplace_back(item_name.c_str());
+            }
         }
     }
 
@@ -718,14 +727,14 @@ FunHook<int(const char*, uint8_t, const rf::Vector3*, const rf::Matrix3*, bool, 
             bot
         });
 
-        xlog::debug("New spawn point added! Name: {}, Team: {}, RedTeam: {}, BlueTeam: {}, Bot: {}",
+        xlog::warn("New spawn point added! Name: {}, Team: {}, RedTeam: {}, BlueTeam: {}, Bot: {}",
             name, team, red_team, blue_team, bot);
 
         if (pos) {
-            xlog::debug("Position: ({}, {}, {})", pos->x, pos->y, pos->z);
+            xlog::warn("Position: ({}, {}, {})", pos->x, pos->y, pos->z);
         }
 
-        xlog::debug("Current number of spawn points: {}", new_multi_respawn_points.size());
+        xlog::warn("Current number of spawn points: {}", new_multi_respawn_points.size());
 
         return 0;
     }
@@ -869,13 +878,42 @@ FunHook<int(rf::Vector3*, rf::Matrix3*, rf::Player*)> multi_respawn_get_next_poi
         *pos = new_multi_respawn_points[selected_index].position;
         *orient = new_multi_respawn_points[selected_index].orientation;
         pdata.last_spawn_point_index = selected_index;
+        xlog::warn("Player {} requested a spawn point. Giving them the spawn point with index {}", player->name, selected_index);
 
         return 1;
     }
 };
 
+CallHook<rf::Item*(int, const char*, int, int, const rf::Vector3*, rf::Matrix3*, int, bool, bool)> item_create_hook{
+    0x00465175,
+    [](int type, const char* name, int count, int parent_handle, const rf::Vector3* pos, rf::Matrix3* orient,
+       int respawn_time, bool permanent, bool from_packet) {
+
+        if (rf::is_dedicated_server) {
+            const auto allowed_types = [] {
+                std::unordered_set<int> types;
+                for (const auto& item_name : g_additional_server_config.new_spawn_logic.allowed_respawn_item_names) {
+                    if (int item_type = rf::item_lookup_type(item_name.c_str()); item_type >= 0) {
+                        types.insert(item_type);
+                    }
+                }
+                return types;
+            }();
+
+            if (allowed_types.contains(type)) {
+                rf::multi_respawn_create_point(name, 0, pos, orient, true, true, true);
+            }
+        }
+
+        return item_create_hook.call_target(
+            type, name, count, parent_handle, pos, orient, respawn_time, permanent, from_packet);
+    }
+};
+
 void server_init()
 {
+    item_create_hook.install();
+
     // Override rcon command whitelist
     write_mem_ptr(0x0046C794 + 1, g_rcon_cmd_whitelist);
     write_mem_ptr(0x0046C7D1 + 2, g_rcon_cmd_whitelist + std::size(g_rcon_cmd_whitelist));

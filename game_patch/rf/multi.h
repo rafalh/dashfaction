@@ -200,6 +200,8 @@ namespace rf
     static auto& multi_ping_player = addr_as_ref<void(Player*)>(0x00484D00);
     static auto& send_entity_create_packet = addr_as_ref<void(Entity *entity, Player* player)>(0x00475160);
     static auto& send_entity_create_packet_to_all = addr_as_ref<void(Entity *entity)>(0x00475110);
+    static auto& multi_respawn_create_point = addr_as_ref<int(const char* name, uint8_t team, const rf::Vector3* pos,
+        rf::Matrix3* orient, bool red_team, bool blue_team, bool bot)>(0x00470190);
     static auto& multi_find_character = addr_as_ref<int(const char *name)>(0x00476270);
     static auto& multi_chat_print = addr_as_ref<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
     static auto& multi_chat_say = addr_as_ref<void(const char *msg, bool is_team_msg)>(0x00444150);

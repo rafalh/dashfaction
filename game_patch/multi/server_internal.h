@@ -37,6 +37,7 @@ struct NewSpawnLogicConfig // defaults match stock game
     bool always_avoid_last = false;
     bool always_use_furthest = false;
     bool only_avoid_enemies = false;
+    std::vector<rf::String> allowed_respawn_item_names;
 };
 
 struct ServerAdditionalConfig
