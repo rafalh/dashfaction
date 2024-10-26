@@ -58,7 +58,6 @@ static const std::vector<std::string> possible_central_item_names = {
 }; // prioritized list of common central items
 int current_center_item_priority = possible_central_item_names.size();
 
-
 ServerAdditionalConfig g_additional_server_config;
 std::string g_prev_level;
 
@@ -108,7 +107,7 @@ void load_additional_server_config(rf::Parser& parser)
         if (parser.parse_optional("+Only Avoid Enemies:")) {
             g_additional_server_config.new_spawn_logic.only_avoid_enemies = parser.parse_bool();
         }
-        while (parser.parse_optional("+Use Item As Spawn Points:")) {
+        while (parser.parse_optional("+Use Item As Spawn Point:")) {
             rf::String item_name;
             if (parser.parse_string(&item_name)) {
                 g_additional_server_config.new_spawn_logic.allowed_respawn_item_names.emplace_back(item_name.c_str());
@@ -725,12 +724,9 @@ FunHook<int(const char*, uint8_t, const rf::Vector3*, const rf::Matrix3*, bool, 
             return -1;
         }
 
-        bool dm_only = 0; // todo - will allow level designer to specify spawn points that are only used in DM
-
         new_multi_respawn_points.emplace_back(rf::RespawnPoint{
             rf::String(name),
             team, // unused
-            dm_only,
             *pos,
             *orient,
             red_team,
@@ -799,7 +795,7 @@ FunHook<int(rf::Vector3*, rf::Matrix3*, rf::Player*)> multi_respawn_get_next_poi
     0x00470300,
     [](rf::Vector3* pos, rf::Matrix3* orient, rf::Player* player) {
 
-        // default return if map has no respawn points
+        // if map has no respawn points
         if (new_multi_respawn_points.empty()) {
             *pos = rf::level.player_start_pos;
             *orient = rf::level.player_start_orient;
@@ -807,7 +803,7 @@ FunHook<int(rf::Vector3*, rf::Matrix3*, rf::Player*)> multi_respawn_get_next_poi
             return -1;
         }
 
-        // default return if player is invalid (should never happen)
+        // if player is invalid (should never happen)
         if (!player) {
             std::uniform_int_distribution<int> dist(0, new_multi_respawn_points.size() - 1);
             int index = dist(g_rng);
@@ -963,6 +959,10 @@ void adjust_yaw_to_face_center(rf::Matrix3& orient, const rf::Vector3& pos, cons
 
 void process_queued_spawn_points_from_items()
 {
+    if (g_additional_server_config.new_spawn_logic.allowed_respawn_item_names.empty()) {
+        return; // early return if not generating any spawns
+    }
+
     auto map_center = likely_position_of_central_item;
 
     for (auto& [name, pos, orient] : queued_item_spawn_points) {
@@ -1001,7 +1001,7 @@ CallHook<rf::Item*(int, const char*, int, int, const rf::Vector3*, rf::Matrix3*,
                 queued_item_spawn_points.emplace_back(std::string(name), *pos, *orient);                
             }
 
-            // take a guess at the center of the map
+            // make best guess at the center of the map
             int item_priority = get_item_priority(name);
             if (item_priority < possible_central_item_names.size()) {
                 if (!likely_position_of_central_item || item_priority < current_center_item_priority) {

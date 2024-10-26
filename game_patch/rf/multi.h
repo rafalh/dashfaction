@@ -90,9 +90,6 @@ namespace rf
     {
         String name;
         uint8_t team;
-#ifdef DASH_FACTION
-        bool dm_only;
-#endif
         Vector3 position;
         Matrix3 orientation;
         bool red_team;
@@ -102,16 +99,6 @@ namespace rf
 
         bool operator==(const RespawnPoint& other) const
         {
-#ifdef DASH_FACTION
-        return (name == other.name &&
-                team == other.team &&
-                dm_only == other.dm_only &&
-                position == other.position &&
-                orientation == other.orientation &&
-                red_team == other.red_team &&
-                blue_team == other.blue_team &&
-                bot == other.bot);
-#else
         return (name == other.name &&
                 team == other.team &&
                 position == other.position &&
@@ -119,7 +106,6 @@ namespace rf
                 red_team == other.red_team &&
                 blue_team == other.blue_team &&
                 bot == other.bot);
-#endif
         }
     };
     static_assert(sizeof(RespawnPoint) == 0x44);

@@ -163,7 +163,7 @@ Configuration example:
         // Ignore teammates when calculating the distance from spawn points to other players
         +Only Avoid Enemies: false
         // Create additional respawn points on items of this type (add a new line for each)
-        +Use Item As Spawn Points: "Medical Kit"
+        +Use Item As Spawn Point: "Medical Kit"
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
     $DF Spawn Protection Duration: 1500
     // Initial player life (health) after spawn
@@ -210,7 +210,7 @@ Configuration example:
     //$DF Welcome Message: "Hello $PLAYER!"
     // Reward a player for a successful kill
     $DF Kill Reward:
-    // Increase player health or armor if health is full (armor delta is halved)
+        // Increase player health or armor if health is full (armor delta is halved)
         +Effective Health: 0
         // Increase player health
         +Health: 0
