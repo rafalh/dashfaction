@@ -224,9 +224,9 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
         float explode_vclip_radius = 1.0f;
         const char* debris_filename = "df_meatchunks0.V3D";
 
-        int debris_max_lifetime = 7000; // ms
-        float debris_velocity = 8.5f;
-        float damage_scale = 1.0f;
+        static const int debris_max_lifetime = 7000; // ms
+        static const float debris_velocity = 8.5f;
+        static const float damage_scale = 1.0f;
         static rf::String cust_snd_set = "gib bounce";
 
         if (objp->type == rf::OT_ENTITY) {
