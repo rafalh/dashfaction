@@ -243,7 +243,7 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
         if (objp->type == rf::OT_ENTITY) { // use overrides from associated entity.tbl class if present
             rf::Entity* ep = static_cast<rf::Entity*>(objp);
 
-            explode_vclip_index = (ep->info->explode_vclip_index < 0)
+            explode_vclip_index = (ep->info->explode_vclip_index > 0)
 				? ep->info->explode_vclip_index : explode_vclip_index;
 
             explode_vclip_radius = (ep->info->explode_vclip_radius > 0.0f)
