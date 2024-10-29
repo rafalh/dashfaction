@@ -23,10 +23,11 @@ Contributors
 ---------------------------------
 
 Chris "Goober" Parsons:
+* code contributions
 * HUD textures for the big mode
 * symbol glyphs in ttf fonts
 * launcher header
-* code contribution
+* texture and mesh for gibs
 
 natalie <webmistress@natalie.ee>:
 * code contributions
