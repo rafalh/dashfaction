@@ -203,6 +203,17 @@ CodeInjection entity_process_pre_hide_riot_shield_injection{
     },
 };
 
+// initialize new AiInfo field used in `entity_damage` to store if on death, the last damage dealt was explosive
+CodeInjection ai_init_ai_info_injection{
+    0x00403022,
+    [](auto& regs) {
+        rf::AiInfo* aip = regs.esi;
+        if (aip) {
+            aip->explosive_last_damage = false;
+        }
+    }
+};
+
 bool consider_gibs() {
     return g_game_config.gibs && !rf::is_multi;
 }
@@ -229,7 +240,7 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
         static const float damage_scale = 1.0f;
         static rf::String cust_snd_set = "gib bounce";
 
-        if (objp->type == rf::OT_ENTITY) {
+        if (objp->type == rf::OT_ENTITY) { // use overrides from associated entity.tbl class if present
             rf::Entity* ep = static_cast<rf::Entity*>(objp);
 
             explode_vclip_index = (ep->info->explode_vclip_index < 0)
@@ -241,7 +252,7 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
             debris_filename = (!ep->info->debris_filename.empty())
                 ? ep->info->debris_filename.c_str() : debris_filename;
         }
-        else if (objp->type != rf::OT_CORPSE) {
+        else if (objp->type != rf::OT_CORPSE) { // do not gib anything except entities and corpses
             return;
         }
 
@@ -257,10 +268,9 @@ CodeInjection entity_damage_explosive_death_injection{
     0x0041A413,
     [](auto& regs) {        
         rf::Entity* ep = regs.esi;
+        int damage_type = regs.ebp;
+        ep->ai.explosive_last_damage = (damage_type == 3); // explosive damage
         if (consider_gibs() && ep) {
-            int damage_type = regs.ebp;
-            ep->ai.explosive_last_damage = (damage_type == 3); // explosive damage
-
             // using body temp > 90 (from entity.tbl class) as the determining factor for if an entity should gib
             // in stock game, this includes only humanoid enemies and reeper/baby reeper
             // in mods, this lets the mod author control which of their mod's entities gib
@@ -344,6 +354,7 @@ void entity_do_patch()
     entity_process_pre_hide_riot_shield_injection.install();
 
 	// Restore cut stock game feature for entities and corpses exploding into chunks
+    ai_init_ai_info_injection.install();
 	entity_blood_throw_gibs_hook.install();
     entity_damage_explosive_death_injection.install();
     entity_dying_frame_explode_injection.install();
