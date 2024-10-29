@@ -44,7 +44,7 @@ Version 1.9.0 (not released yet)
 - Add level filename to "Level Initializing" console message
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 - Fix crash when `verify_level` command is run without a level being loaded
-- Add gibbing when enemies die from explosives (enable with `toggle_gibs` command)
+- Add gibbing when enemies die from explosives (enable with `gibs` command)
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------

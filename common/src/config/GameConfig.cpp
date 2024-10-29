@@ -171,7 +171,7 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "Swap Assault Rifle Controls", swap_assault_rifle_controls);
     result &= visitor(dash_faction_key, "Swap Grenade Controls", swap_grenade_controls);
     result &= visitor(dash_faction_key, "Glares", glares);
-    result &= visitor(dash_faction_key, "Gibbing", gibbing);
+    result &= visitor(dash_faction_key, "Gibs", gibs);
     result &= visitor(dash_faction_key, "Linear Pitch", linear_pitch);
     result &= visitor(dash_faction_key, "Show Enemy Bullets", show_enemy_bullets);
     result &= visitor(dash_faction_key, "Keep Launcher Open", keep_launcher_open);

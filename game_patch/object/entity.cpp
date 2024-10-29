@@ -3,6 +3,7 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
+#include "../os/console.h"
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
 #include "../rf/multi.h"
@@ -202,51 +203,53 @@ CodeInjection entity_process_pre_hide_riot_shield_injection{
     },
 };
 
+bool consider_gibs() {
+    return g_game_config.gibs && !rf::is_multi;
+}
+
 FunHook<void(int)> entity_blood_throw_gibs_hook{
     0x0042E3C0, [](int handle) {
-        if (g_game_config.gibbing && !rf::is_multi) {
-            rf::Object* objp = rf::obj_from_handle(handle);
-
-            if (!objp) {
-                return; // invalid object
-            }
-
-            rf::Vector3 pos = objp->pos;
-            rf::GRoom* room = objp->room;
-            int explosion_vclip = 30;
-            int chunk_explosion_vclip = 30;
-            float explosion_vclip_radius = 1.0f;
-            rf::String debris_filename = "df_meatchunks0.V3D";
-
-            int debris_max_lifetime = 7000;
-            float debris_velocity = 8.5f;
-            float damage_scale = 1.0f;
-            rf::String cust_snd_set = "gib bounce";
-
-            if (objp->type == rf::OT_ENTITY) {
-                rf::Entity* ep = static_cast<rf::Entity*>(objp);
-
-                explosion_vclip = (ep->info->explode_vclip_index < 0)
-					? ep->info->explode_vclip_index : explosion_vclip;
-
-                explosion_vclip_radius = (ep->info->explode_vclip_radius > 0.0f)
-					? ep->info->explode_vclip_radius : explosion_vclip_radius;
-
-                debris_filename = (!ep->info->debris_filename.empty())
-					? ep->info->debris_filename : debris_filename;
-            }
-            else if (objp->type = rf::OT_CORPSE) {
-            }
-            else {
-                return;
-            }
-
-            rf::game_do_explosion(
-                explosion_vclip, room, 0, &pos, explosion_vclip_radius, damage_scale, 0);
-
-            rf::debris_spawn_from_object(
-                objp, debris_filename, chunk_explosion_vclip, debris_max_lifetime, debris_velocity, &cust_snd_set);
+        if (!consider_gibs()) {
+            return;
         }
+
+        rf::Object* objp = rf::obj_from_handle(handle);
+
+        if (!objp) {
+            return; // invalid object
+        }
+
+        int explode_vclip_index = rf::vclip_lookup("bloodsplat");
+        int chunk_explode_vclip_index = rf::vclip_lookup("bloodsplat");
+        float explode_vclip_radius = 1.0f;
+        const char* debris_filename = "df_meatchunks0.V3D";
+
+        int debris_max_lifetime = 7000; // ms
+        float debris_velocity = 8.5f;
+        float damage_scale = 1.0f;
+        static rf::String cust_snd_set = "gib bounce";
+
+        if (objp->type == rf::OT_ENTITY) {
+            rf::Entity* ep = static_cast<rf::Entity*>(objp);
+
+            explode_vclip_index = (ep->info->explode_vclip_index < 0)
+				? ep->info->explode_vclip_index : explode_vclip_index;
+
+            explode_vclip_radius = (ep->info->explode_vclip_radius > 0.0f)
+				? ep->info->explode_vclip_radius : explode_vclip_radius;
+
+            debris_filename = (!ep->info->debris_filename.empty())
+                ? ep->info->debris_filename.c_str() : debris_filename;
+        }
+        else if (objp->type != rf::OT_CORPSE) {
+            return;
+        }
+
+        rf::game_do_explosion(
+            explode_vclip_index, objp->room, 0, &objp->pos, explode_vclip_radius, damage_scale, 0);
+
+        rf::debris_spawn_from_object(
+            objp, debris_filename, chunk_explode_vclip_index, debris_max_lifetime, debris_velocity, &cust_snd_set);
     }
 };
 
@@ -254,11 +257,15 @@ CodeInjection entity_damage_explosive_death_injection{
     0x0041A413,
     [](auto& regs) {        
         rf::Entity* ep = regs.esi;
-        if (g_game_config.gibbing && !rf::is_multi && ep) {
+        if (consider_gibs() && ep) {
             int damage_type = regs.ebp;
-            ep->ai.explosive_last_damage = (damage_type == 3);
+            ep->ai.explosive_last_damage = (damage_type == 3); // explosive damage
+
+            // using body temp > 90 (from entity.tbl class) as the determining factor for if an entity should gib
+            // in stock game, this includes only humanoid enemies and reeper/baby reeper
+            // in mods, this lets the mod author control which of their mod's entities gib
             if (ep->ai.explosive_last_damage && ep->info->body_temp >= 90.0f) {
-                ep->death_anim_index = -1;
+                ep->death_anim_index = -1; // no death anim needed if entity is gibbing
             }
         }
     }
@@ -268,11 +275,20 @@ CodeInjection entity_dying_frame_explode_injection{
     0x0041EE4C,
     [](auto& regs) {
         rf::Entity* ep = regs.esi;
-        if (g_game_config.gibbing && !rf::is_multi && ep && ep->ai.explosive_last_damage &&
-			ep->info->body_temp >= 90.0f) {
+        if (consider_gibs() && ep && ep->ai.explosive_last_damage && ep->info->body_temp >= 90.0f) {
             regs.eip = 0x0041EE55;
         }
     },
+};
+
+ConsoleCommand2 gibs_cmd{
+    "gibs",
+    []() {
+        g_game_config.gibs = !g_game_config.gibs;
+        g_game_config.save();
+        rf::console::print("Gibs are {}.", g_game_config.gibs ? "enabled" : "disabled");
+    },
+    "Make enemies and corpses explode into chunks from explosives (single player only)",
 };
 
 void entity_do_patch()
@@ -331,4 +347,7 @@ void entity_do_patch()
 	entity_blood_throw_gibs_hook.install();
     entity_damage_explosive_death_injection.install();
     entity_dying_frame_explode_injection.install();
+
+    // Commands
+    gibs_cmd.register_cmd();
 }
