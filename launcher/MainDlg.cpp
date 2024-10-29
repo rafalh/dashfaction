@@ -154,9 +154,10 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wparam, LPARAM lparam)
         int result = MessageBoxA(chk_result.message.c_str(), "Dash Faction update is available!",
                                   MB_OKCANCEL | MB_ICONEXCLAMATION);
         if (result == IDOK) {
-            HINSTANCE exec_ret = ShellExecuteA(*this, "open", chk_result.url.c_str(), nullptr, nullptr, SW_SHOW);
-            if (reinterpret_cast<int>(exec_ret) <= 32) {
-                xlog::error("ShellExecuteA failed {}", static_cast<void*>(exec_ret));
+            HINSTANCE exec_res = ShellExecuteA(*this, "open", chk_result.url.c_str(), nullptr, nullptr, SW_SHOW);
+            auto exec_res_int = reinterpret_cast<INT_PTR>(exec_res);
+            if (exec_res_int <= 32) {
+                xlog::error("ShellExecuteA failed {}", exec_res_int);
             }
             EndDialog(0);
         }
@@ -197,9 +198,10 @@ void MainDlg::OnBnClickedEditorBtn()
 void MainDlg::OnSupportLinkClick()
 {
     xlog::info("Opening support channel");
-    HINSTANCE ret = ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", nullptr, nullptr, SW_SHOW);
-    if (reinterpret_cast<int>(ret) <= 32) {
-        xlog::error("ShellExecuteA failed {}", static_cast<void*>(ret));
+    HINSTANCE result = ShellExecuteA(*this, "open", "https://discord.gg/bC2WzvJ", nullptr, nullptr, SW_SHOW);
+    auto result_int = reinterpret_cast<INT_PTR>(result);
+    if (result_int <= 32) {
+        xlog::error("ShellExecuteA failed {}", result_int);
     }
 }
 

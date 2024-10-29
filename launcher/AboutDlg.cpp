@@ -69,8 +69,9 @@ void AboutDlg::OpenLicensingInfo()
     }
 
     std::wstring licensing_info_path = get_dir_from_path(buf) + L"\\licensing-info.txt";
-    HINSTANCE exec_result = ShellExecuteW(*this, L"open", licensing_info_path.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-    if (reinterpret_cast<int>(exec_result) <= 32) {
-        xlog::error("ShellExecuteA failed {}", static_cast<void*>(exec_result));
+    HINSTANCE exec_res = ShellExecuteW(*this, L"open", licensing_info_path.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+    auto exec_res_int = reinterpret_cast<INT_PTR>(exec_res);
+    if (exec_res_int <= 32) {
+        xlog::error("ShellExecute failed: {}", exec_res_int);
     }
 }

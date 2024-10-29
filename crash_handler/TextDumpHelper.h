@@ -133,10 +133,10 @@ private:
     {
         MEMORY_BASIC_INFORMATION mbi;
         std::vector<MEMORY_BASIC_INFORMATION> memory_map;
-        const char* addr = reinterpret_cast<const char*>(m_sys_info.lpMinimumApplicationAddress);
+        const void* addr = m_sys_info.lpMinimumApplicationAddress;
         while (VirtualQueryEx(process, addr, &mbi, sizeof(mbi)) && addr <= m_sys_info.lpMaximumApplicationAddress) {
             memory_map.push_back(mbi);
-            addr = reinterpret_cast<const char*>(mbi.BaseAddress) + mbi.RegionSize;
+            addr = reinterpret_cast<std::byte*>(mbi.BaseAddress) + mbi.RegionSize;
         }
         return memory_map;
     }
