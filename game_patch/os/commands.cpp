@@ -9,6 +9,7 @@
 #include <common/utils/list-utils.h>
 #include <algorithm>
 #include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 
 ConsoleCommand2 dot_cmd{
@@ -89,6 +90,18 @@ ConsoleCommand2 level_info_cmd{
 DcCommandAlias map_info_cmd{
     "map_info",
     level_info_cmd,
+};
+
+// only allow verify_level if a level is loaded (avoid a crash if command is run in menu)
+FunHook<void()> verify_level_cmd_hook{
+    0x0045E1F0,
+    []() {
+        if (rf::level.flags & rf::LEVEL_LOADED) {
+            verify_level_cmd_hook.call_target();
+        } else {
+            rf::console::print("No level loaded!");
+        }
+    }
 };
 
 static void register_builtin_command(const char* name, const char* description, uintptr_t addr)
@@ -192,4 +205,5 @@ void console_commands_init()
     map_cmd.register_cmd();
     level_info_cmd.register_cmd();
     map_info_cmd.register_cmd();
+    verify_level_cmd_hook.install();
 }
