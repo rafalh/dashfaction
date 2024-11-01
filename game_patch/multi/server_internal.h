@@ -37,6 +37,7 @@ struct ServerAdditionalConfig
     int spawn_protection_duration_ms = 1500;
     std::optional<float> spawn_life;
     std::optional<float> spawn_armor;
+    int ctf_flag_return_time_ms = 25000;
     HitSoundsConfig hit_sounds;
     std::map<std::string, std::string> item_replacements;
     std::string default_player_weapon;

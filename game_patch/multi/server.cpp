@@ -86,6 +86,10 @@ void load_additional_server_config(rf::Parser& parser)
         g_additional_server_config.spawn_armor = {parser.parse_float()};
     }
 
+    if (parser.parse_optional("$DF CTF Flag Return Time:")) {
+        g_additional_server_config.ctf_flag_return_time_ms = {parser.parse_int()};
+    }
+
     if (parser.parse_optional("$DF Hitsounds:")) {
         g_additional_server_config.hit_sounds.enabled = parser.parse_bool();
         if (parser.parse_optional("+Sound ID:")) {
