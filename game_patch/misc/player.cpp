@@ -8,7 +8,6 @@
 #include "../rf/weapon.h"
 #include "../rf/hud.h"
 #include "../rf/input.h"
-#include "../rf/os/frametime.h"
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../multi/multi.h"
@@ -247,19 +246,6 @@ FunHook<void()> players_do_frame_hook{
     },
 };
 
-FunHook<void(rf::Player*)> player_animate_entity_parent_hook{
-    0x004A77A0,
-    [](rf::Player* pp) {
-        rf::Entity* player_entity = rf::entity_from_handle(pp->entity_handle);
-        rf::VMesh* parent_vmesh = rf::get_player_entity_parent_vmesh(pp);
-
-        if (parent_vmesh) {
-            rf::vmesh_process(
-                parent_vmesh, rf::frametime, 0, &player_entity->eye_orient.fvec, &player_entity->eye_orient, 1);
-        }
-    }
-};
-
 FunHook<void()> player_do_damage_screen_flash_hook{
     0x004A7520,
     []() {
@@ -346,7 +332,7 @@ void player_do_patch()
     players_do_frame_hook.install();
 
     // Fix jeep cockpit not rendering for any jeeps entered after the first
-    player_animate_entity_parent_hook.install();
+    AsmWriter(0x004A77C3).jmp(0x004A77FB);
 
     // Make sure scanner bitmap is a render target in player_allocate
     write_mem<u8>(0x004A34BF + 1, rf::bm::FORMAT_RENDER_TARGET);
