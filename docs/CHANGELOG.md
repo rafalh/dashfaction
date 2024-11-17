@@ -93,6 +93,9 @@ Version 1.8.0 (released 2022-09-17)
 - Change default FPS limit to 120 to comply with the stock game
 - Fix loading a save game when player entity is out of level bounds
 - Fix possible freeze when burning entity is destroyed
+
+Contributions:
+
 - [@is-this-c](https://github.com/is-this-c)
   - Add version and date to `/info` server chat command
   - Fix particle damage on dedicated servers
