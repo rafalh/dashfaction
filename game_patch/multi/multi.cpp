@@ -338,8 +338,8 @@ void multi_do_patch()
     multi_start_injection.install();
 
     // Allow server to customize dropped flag return timer in ms
-    AsmWriter(0x00473B88).push(g_additional_server_config.ctf_flag_return_time_ms); // blue flag
-    AsmWriter(0x00473B28).push(g_additional_server_config.ctf_flag_return_time_ms); // red flag
+    AsmWriter{0x00473B88}.push(g_additional_server_config.ctf_flag_return_time_ms); // blue flag
+    AsmWriter{0x00473B28}.push(g_additional_server_config.ctf_flag_return_time_ms); // red flag
 
     // Fix CTF flag not returning to the base if the other flag was returned when the first one was waiting
     ctf_flag_return_fix.install();
