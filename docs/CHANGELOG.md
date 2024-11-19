@@ -44,7 +44,14 @@ Version 1.9.0 (not released yet)
 - Add level filename to "Level Initializing" console message
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 - Fix crash when `verify_level` command is run without a level being loaded
+- Fix cockpit not rendering for any jeeps after the first one entered each level load
+- Add `server_password` command
 - Add `$DF CTF Flag Return Time` option in dedicated server config
+
+Contributions:
+
+- [@is-this-c](https://github.com/is-this-c)
+  - Support `©` in TrueType fonts
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
