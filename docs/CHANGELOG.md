@@ -47,6 +47,11 @@ Version 1.9.0 (not released yet)
 - Fix cockpit not rendering for any jeeps after the first one entered each level load
 - Add `server_password` command
 
+Contributions:
+
+- [@is-this-c](https://github.com/is-this-c)
+  - Support `©` in TrueType fonts
+
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
 - Add autosave after a level transition
