@@ -6,11 +6,7 @@ Version 1.9.0 (not released yet)
 - Added experimental D3D11 renderer
 - Added option to switch between D3D8, D3D9 and D3D11 renderer
 - Fix possible crash when alt-tabbing in fullscreen mode before game is fully initialized
-- Simplify installation detection in setup and launcher
 - Fix writing corrupted save files when autosaving some levels
-- Add German and French RF 1.10 detection to setup
-- Text improvements to setup
-- Don't copy over the changelog during setup
 - Add `gamma` command
 - Fix holes in driller cockpit on a widescreen display
 - Change default 'Use' key to E
@@ -43,14 +39,20 @@ Version 1.9.0 (not released yet)
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
-- Fix crash when `verify_level` command is run without a level being loaded
-- Fix cockpit not rendering for any jeeps after the first one entered each level load
-- Add `server_password` command
 
 Contributions:
 
+- [@GooberRF](https://github.com/GooberRF)
+  - Fix crash when `verify_level` command is run without a level being loaded
+  - Fix cockpit not rendering for any jeeps after the first one entered each level load
+  - Add `server_password` command
 - [@is-this-c](https://github.com/is-this-c)
   - Support `©` in TrueType fonts
+- [@Mystyle-48](https://github.com/Mystyle-48)
+  - Simplify installation detection in setup and launcher
+  - Add German and French RF 1.10 detection to setup
+  - Text improvements to setup
+  - Don't copy over the changelog during setup
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
@@ -70,6 +72,8 @@ Version 1.8.0 (released 2022-09-17)
 - Change screenshot filename template (it now includes date, time and level filename)
 - Fix multiple out-of-bounds writes in save game code (fixes crash when saving the game in some custom levels)
 - Do not use TTF fonts in game menu if VF fonts are modded (should fix some unofficial game localizations)
+- Change transparency sorting algorithm to fix flamethrower particles rendering in rooms with liquid and/or
+  semi-transparent details
 - Optimize finding a new room for moving objects
 - Fix possible OOB write in waypoint list read code
 - Add server verification in update checker using Ed25519 signature
@@ -92,8 +96,6 @@ Contributions:
   - Add `.` command to make finding commands easier
   - Fix blurry fonts in the launcher on HiDPI monitors
 - [@Mystyle-48](https://github.com/Mystyle-48)
-  - Change transparency sorting algorithm to fix flamethrower particles rendering in rooms with liquid and/or
-  semi-transparent details
   - Allow start menu shortcut to be skipped in setup program
   - Simplify installation name in Windows control panel (no longer includes "version [version]")
   - Add icon for control panel entry
@@ -113,12 +115,11 @@ Contributions:
   - Change launcher window title
   - Allow autocomplete for `map` command
   - Enable `map` command in RCON
-  
+
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
 - Change maximal value of Max Kills dedicated server config to 999
 - Support Team DM scores above 255
-- Added additional textures from base game to level editor texture browser (contribution from Goober)
 - Display proper server name in the scoreboard when joining by link
 - Level auto-downloader has new UI and does its job without leaving the server
 - Use SSL for communication with FactionFiles in level auto-downloader
@@ -158,13 +159,17 @@ Version 1.7.0 (released 2021-06-05)
 - Optimize skeleton unlinking when character is destroyed
 - Fix rendering menu background if its height is lower than 480 (for example AQuest Speedrun Edition mod)
 
+Contributions:
+
+- [@GooberRF](https://github.com/GooberRF)
+  - Added additional textures from base game to level editor texture browser
+
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------
 - Improve tbl parsing error message
 - Bring back team icons in team scores HUD (left-bottom screen corner) in Team DM multiplayer game (1.5.0 regression)
 - Fixed rarely occuring client-side crash in multiplayer (regression from 1.6.1-beta)
 - Fix possible game freeze when scrolling the message log on a wide screen
-- Change launcher header image to one provided by Goober
 - Add `$DF UPnP Enabled` option in dedicated server config that allows to disable UPnP
 - Fix hit sound packet sometimes being sent from the client
 - Do not play hit sounds if player damages themselves
@@ -173,7 +178,12 @@ Version 1.6.1 (released 2021-02-20)
 - Fix drawing main menu background on some graphics cards/drivers (1.6.1-rc1 regression)
 - Change the key that crashes a frozen game process to Alt and change the minimal hold time to 1 second
 - Add `$DF Max FOV` option in dedicated server config that allows to limit FOV used by clients for level rendering
-- Add more textures from base game to the level editor texture browser (contribution from Goober)
+  
+Contributions:
+
+- [@GooberRF](https://github.com/GooberRF)
+  - Change launcher header image
+  - Add more textures from base game to the level editor texture browser
 
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------
@@ -269,7 +279,6 @@ Version 1.6.0-beta (released 2020-12-12)
 - allow opening a level in the level editor by using `-level` command line argument
 - add option to associate `rfl` file extension with Dash Faction level editor in the setup program
 - fix level editor crash randomly occuring when opening cutscene properties
-- add icon for EAX Effect objects in the level editor (icon provided by Goober)
 - add more textures from base game to the level editor texture browser
 - fix packing a level that contains a particle emitter with a default texture in the level editor
 - fix path node connections sometimes being rendered incorrectly in the level editor
@@ -309,6 +318,11 @@ Version 1.6.0-beta (released 2020-12-12)
 - optimize dynamic textures for Direct3D 9
 - send operating system version when checking for updates in the launcher
 
+Contributions:
+
+- [@GooberRF](https://github.com/GooberRF)
+  - add icon for EAX Effect objects in the level editor
+
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
 - increase object limit from 1024 to 65536
@@ -324,7 +338,6 @@ Version 1.5.0 (released 2020-09-05)
 - add '/save' and '/load' chat commands and quick save/load controls handling for saving and restoring player position
   in multiplayer (useful for runmap servers, can be enabled in dedicated_server.txt)
 - add 'Big HUD' option and 'bighud' command for making the HUD larger
-- add textures for big HUD contributed by Goober
 - add 'reticle_scale' command for changing reticle size
 - make texts in main menu and in HUD sharp by using TrueType fonts
 - log error when RFA cannot be loaded
@@ -414,6 +427,11 @@ Version 1.5.0 (released 2020-09-05)
 - fix dedicated server crash when loading level that uses directional light (RF bug)
 - fix heap corruption when loading a bitmap with corrupted header (RF bug)
 - fix stack corruption when loading a corrupted packfile (RF bug)
+  
+Contributions:
+
+- [@GooberRF](https://github.com/GooberRF)
+  - add textures for big HUD
 
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
