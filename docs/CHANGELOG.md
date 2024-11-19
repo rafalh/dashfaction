@@ -51,19 +51,7 @@ Version 1.8.0 (released 2022-09-17)
 - Fix "Wrong player ID" warnings when multiplayer quick save/load is used (client-side fix)
 - Restructure Options window
 - Add option to disable beep sound when new player joins multiplayer game and window is not focused
-- Ignore browsers when calculating player count for info requests
-- Fix Message event crash on dedicated server
-- Prevent browsers from voting
-- Add `swap_grenade_controls` command
-- Don't overwrite existing levels in `download_level` command
-- Add `download_level_force` command that overwrites existing levels
-- Allow the person who started a vote to cancel it
-- Allow setting max players server setting to 1
-- Change launcher window title
-- Allow autocomplete for `map` command
-- Enable `map` command in RCON
 - Change update checker URL
-- Add `fps_counter` command
 - Make editor window resizeable
 - Add `debug_event_msg` command that allows to track event messages in console
 - Do not panic when character animation cannot be loaded, instead fall back to the first animation - fixes
@@ -74,15 +62,7 @@ Version 1.8.0 (released 2022-09-17)
 - Change screenshot filename template (it now includes date, time and level filename)
 - Fix multiple out-of-bounds writes in save game code (fixes crash when saving the game in some custom levels)
 - Do not use TTF fonts in game menu if VF fonts are modded (should fix some unofficial game localizations)
-- Change transparency sorting algorithm to fix flamethrower particles rendering in rooms with liquid and/or
-  semi-transparent details
 - Optimize finding a new room for moving objects
-- Allow start menu shortcut to be skipped in setup program
-- Simplify installation name in Windows control panel (no longer includes "version [version]")
-- Add icon for control panel entry
-- Restore original Red Faction Launcher on uninstall if replaced with Dash Faction Launcher link
-- Add game installation path autofill for German GOG RF to setup program
-- Remove unnecessary "Unknown tables.vpp version" error from setup program (the launcher already displays an error for mismatched tables.vpp files)
 - Fix possible OOB write in waypoint list read code
 - Add server verification in update checker using Ed25519 signature
 - Fix opacity of Display_Fullscreen_Image being affected by previous drawing operations
@@ -96,12 +76,36 @@ Version 1.8.0 (released 2022-09-17)
 
 Contributions:
 
+- [@GooberRF](https://github.com/GooberRF)
+  - Add `fps_counter` command
 - [@is-this-c](https://github.com/is-this-c)
   - Add version and date to `/info` server chat command
   - Fix particle damage on dedicated servers
   - Add `.` command to make finding commands easier
   - Fix blurry fonts in the launcher on HiDPI monitors
-
+- [@Mystyle-48](https://github.com/Mystyle-48)
+  - Change transparency sorting algorithm to fix flamethrower particles rendering in rooms with liquid and/or
+  semi-transparent details
+  - Allow start menu shortcut to be skipped in setup program
+  - Simplify installation name in Windows control panel (no longer includes "version [version]")
+  - Add icon for control panel entry
+  - Restore original Red Faction Launcher on uninstall if replaced with Dash Faction Launcher link
+  - Add game installation path autofill for German GOG RF to setup program
+  - Remove unnecessary "Unknown tables.vpp version" error from setup program (the launcher already displays an error for mismatched tables.vpp files)
+- [@natarii](https://github.com/natarii)
+  - Ignore browsers when calculating player count for info requests
+  - Fix Message event crash on dedicated server
+  - Prevent browsers from voting
+  - Add browser detection for RfServerBrowser 5.1.4
+  - Add `swap_grenade_controls` command
+  - Don't overwrite existing levels in `download_level` command
+  - Add `download_level_force` command that overwrites existing levels
+  - Allow the person who started a vote to cancel it
+  - Allow setting max players server setting to 1
+  - Change launcher window title
+  - Allow autocomplete for `map` command
+  - Enable `map` command in RCON
+  
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
 - Change maximal value of Max Kills dedicated server config to 999
