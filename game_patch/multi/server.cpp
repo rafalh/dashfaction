@@ -87,7 +87,7 @@ void load_additional_server_config(rf::Parser& parser)
     }
 
     if (parser.parse_optional("$DF CTF Flag Return Time:")) {
-        g_additional_server_config.ctf_flag_return_time_ms = {parser.parse_int()};
+        g_additional_server_config.ctf_flag_return_time_ms = parser.parse_int();
     }
 
     if (parser.parse_optional("$DF Hitsounds:")) {
