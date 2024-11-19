@@ -39,9 +39,6 @@ Version 1.9.0 (not released yet)
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
-
-Contributions:
-
 - [@GooberRF](https://github.com/GooberRF)
   - Fix crash when `verify_level` command is run without a level being loaded
   - Fix cockpit not rendering for any jeeps after the first one entered each level load
@@ -85,9 +82,6 @@ Version 1.8.0 (released 2022-09-17)
 - Change default FPS limit to 120 to comply with the stock game
 - Fix loading a save game when player entity is out of level bounds
 - Fix possible freeze when burning entity is destroyed
-
-Contributions:
-
 - [@GooberRF](https://github.com/GooberRF)
   - Add `fps_counter` command
 - [@is-this-c](https://github.com/is-this-c)
@@ -158,9 +152,6 @@ Version 1.7.0 (released 2021-06-05)
 - Remove memory corruption when too many skeletons/animations are added to a single character
 - Optimize skeleton unlinking when character is destroyed
 - Fix rendering menu background if its height is lower than 480 (for example AQuest Speedrun Edition mod)
-
-Contributions:
-
 - [@GooberRF](https://github.com/GooberRF)
   - Added additional textures from base game to level editor texture browser
 
@@ -178,9 +169,6 @@ Version 1.6.1 (released 2021-02-20)
 - Fix drawing main menu background on some graphics cards/drivers (1.6.1-rc1 regression)
 - Change the key that crashes a frozen game process to Alt and change the minimal hold time to 1 second
 - Add `$DF Max FOV` option in dedicated server config that allows to limit FOV used by clients for level rendering
-  
-Contributions:
-
 - [@GooberRF](https://github.com/GooberRF)
   - Change launcher header image
   - Add more textures from base game to the level editor texture browser
@@ -317,9 +305,6 @@ Version 1.6.0-beta (released 2020-12-12)
 - use Direct3D 9 rendering API
 - optimize dynamic textures for Direct3D 9
 - send operating system version when checking for updates in the launcher
-
-Contributions:
-
 - [@GooberRF](https://github.com/GooberRF)
   - add icon for EAX Effect objects in the level editor
 
@@ -427,9 +412,6 @@ Version 1.5.0 (released 2020-09-05)
 - fix dedicated server crash when loading level that uses directional light (RF bug)
 - fix heap corruption when loading a bitmap with corrupted header (RF bug)
 - fix stack corruption when loading a corrupted packfile (RF bug)
-  
-Contributions:
-
 - [@GooberRF](https://github.com/GooberRF)
   - add textures for big HUD
 
