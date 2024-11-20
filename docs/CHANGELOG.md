@@ -46,6 +46,7 @@ Version 1.9.0 (not released yet)
 - Fix crash when `verify_level` command is run without a level being loaded
 - Fix cockpit not rendering for any jeeps after the first one entered each level load
 - Add `server_password` command
+- Add `$DF CTF Flag Return Time` option in dedicated server config
 
 Contributions:
 
