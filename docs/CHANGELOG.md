@@ -188,6 +188,7 @@ Version 1.6.1 (released 2021-02-20)
 
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------
+[@rafalh](https://github.com/rafalh)
 - Fix background image being scrolled too fast in multiplayer menu
 - Make sure CTF flag does not spin after level change if it was in dropped state in the previous level
 - Make main menu background image scroll animation smooth on high resolution displays
