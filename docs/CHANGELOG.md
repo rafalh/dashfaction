@@ -52,7 +52,7 @@ Contributions:
 
 - [@is-this-c](https://github.com/is-this-c)
   - Support `©` in TrueType fonts
-  - Improve frag message
+  - Improve frag messages
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
