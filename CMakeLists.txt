@@ -61,6 +61,8 @@ endif()
 macro(enable_warnings target)
     if(NOT MSVC)
         target_compile_options(${target} PRIVATE -Wall -Wextra -Wundef)
+    else()
+        target_compile_options(${target} PRIVATE /W3)
     endif()
 endmacro()
 
