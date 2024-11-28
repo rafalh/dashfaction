@@ -14,11 +14,16 @@
 
 ConsoleCommand2 dot_cmd{
     ".",
-    [](std::string pattern) {
+    [] (const std::string pattern) {
         for (i32 i = 0; i < rf::console::num_commands; ++i) {
-            rf::console::Command* cmd = g_commands_buffer[i];
-            if (string_contains_ignore_case(cmd->name, pattern)) {
-                rf::console::print("{}", cmd->name);
+            const rf::console::Command* cmd = g_commands_buffer[i];
+            if (string_contains_ignore_case(cmd->name, pattern)
+                || (cmd->help && string_contains_ignore_case(cmd->help, pattern))) {    
+                if (cmd->help) {   
+                    rf::console::print("{} - {}", cmd->name, cmd->help);        
+                } else { 
+                    rf::console::print("{}", cmd->name);
+                }
             }
         }
     },
