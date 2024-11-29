@@ -45,8 +45,6 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(MSVC)
-    # `Zc:threadSafeInit-` is required by Windows XP.
-    # add_compile_options(/Zc:threadSafeInit-)   
     add_compile_options(/arch:IA32)
     # Statically link Microsoft's CRT.
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
