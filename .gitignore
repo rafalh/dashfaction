@@ -21,7 +21,7 @@ ipch
 CMakeSettings.json
 
 # Closed-source Pure Faction anti-cheat support code
-/game_patch/purefaction/*secret*
+/game_patch/purefaction/ac/
 
 # Experimental code
 /game_patch/experimental

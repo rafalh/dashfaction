@@ -1,17 +1,5 @@
 file(GLOB EXPERIMENTAL_SRCS experimental/*.cpp experimental/*.h)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/pf_secret.cpp")
-    set(PF_AC_SRCS
-        purefaction/pf_secret_packets.h
-        purefaction/pf_secret.cpp
-    )
-else()
-    set(PF_AC_SRCS
-        purefaction/pf_ac_stubs.cpp
-    )
-endif()
-
-
 set(SRCS
     main/main.cpp
     main/main.h
@@ -177,7 +165,6 @@ set(SRCS
     purefaction/pf.h
     purefaction/pf_ac.h
     purefaction/pf_packets.h
-    ${PF_AC_SRCS}
     ${EXPERIMENTAL_SRCS}
 )
 
@@ -227,6 +214,7 @@ target_link_libraries(DashFaction
     Xlog
     Common
     CrashHandlerStub
+    PureFactionAntiCheat
     xxhash
     gdi32
     winmm
@@ -236,3 +224,10 @@ target_link_libraries(DashFaction
     stb_vorbis
 )
 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/ac")
+    set(PF_AC_SRCS "")
+    add_subdirectory(purefaction/ac)
+    target_link_libraries(DashFaction PureFactionAntiCheat)
+else()
+    target_sources(DashFaction purefaction/pf_ac_stubs.cpp)
+endif()
