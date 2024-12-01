@@ -45,8 +45,9 @@ private:
         if (it == m_page_cache.end()) {
             SIZE_T bytes_read;
             auto page_buf = std::make_unique<uint32_t[]>(m_page_size / sizeof(uint32_t));
-            bool read_success = ReadProcessMemory(m_process, reinterpret_cast<void*>(page_addr), page_buf.get(),
-                m_page_size, &bytes_read);
+            bool read_success = ReadProcessMemory(
+                m_process, reinterpret_cast<void*>(page_addr), page_buf.get(), m_page_size, &bytes_read
+            );
             if (!read_success || !bytes_read) {
                 return nullptr;
             }

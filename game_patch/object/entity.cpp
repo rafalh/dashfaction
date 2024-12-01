@@ -98,22 +98,21 @@ CallHook<bool(rf::Object*)> entity_update_liquid_status_obj_is_player_hook{
         0x0042932A,
         0x004293F4,
     },
-    [](rf::Object* obj) {
-        return obj == rf::local_player_entity;
-    },
+    [](rf::Object* obj) { return obj == rf::local_player_entity; },
 };
 
-CallHook<bool(const rf::Vector3&, const rf::Vector3&, rf::PhysicsData*, rf::PCollisionOut*)> entity_maybe_stop_crouching_collide_spheres_world_hook{
-    0x00428AB9,
-    [](const rf::Vector3& p1, const rf::Vector3& p2, rf::PhysicsData* pd, rf::PCollisionOut* collision) {
-        // Temporarly disable collisions with liquid faces
-        auto collision_flags = pd->collision_flags;
-        pd->collision_flags &= ~0x1000;
-        bool result = entity_maybe_stop_crouching_collide_spheres_world_hook.call_target(p1, p2, pd, collision);
-        pd->collision_flags = collision_flags;
-        return result;
-    },
-};
+CallHook<bool(const rf::Vector3&, const rf::Vector3&, rf::PhysicsData*, rf::PCollisionOut*)>
+    entity_maybe_stop_crouching_collide_spheres_world_hook{
+        0x00428AB9,
+        [](const rf::Vector3& p1, const rf::Vector3& p2, rf::PhysicsData* pd, rf::PCollisionOut* collision) {
+            // Temporarly disable collisions with liquid faces
+            auto collision_flags = pd->collision_flags;
+            pd->collision_flags &= ~0x1000;
+            bool result = entity_maybe_stop_crouching_collide_spheres_world_hook.call_target(p1, p2, pd, collision);
+            pd->collision_flags = collision_flags;
+            return result;
+        },
+    };
 
 CodeInjection entity_process_post_hidden_injection{
     0x0041E4C8,
@@ -161,7 +160,9 @@ CodeInjection waypoints_read_nodes_oob_fix{
         int node_index = regs.eax + 1;
         int& num_nodes = *static_cast<int*>(regs.ebp);
         if (node_index >= max_waypoint_list_nodes && node_index < num_nodes) {
-            xlog::error("Too many waypoint list nodes (limit is {})! Overwritting the last endpoint.", max_waypoint_list_nodes);
+            xlog::error(
+                "Too many waypoint list nodes (limit is {})! Overwritting the last endpoint.", max_waypoint_list_nodes
+            );
             // reduce count by one and keep node index unchanged
             --num_nodes;
             // Set EAX and ECX based on skipped instructions but do not update EBX to fix OOB write
@@ -180,7 +181,8 @@ CodeInjection entity_fire_update_all_freeze_fix{
         if (fire == next_fire) {
             // only one object was on the list and it got deleted so exit the loop
             regs.eip = 0x0042F2AF;
-        } else {
+        }
+        else {
             // go to the next object
             regs.esi = next_fire;
         }

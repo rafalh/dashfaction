@@ -49,8 +49,9 @@ struct ColorChannelConverter
 {
     constexpr ColorChannel<DST_BITS> operator()(ColorChannel<SRC_BITS> src)
     {
-        return {(src.value * ColorChannel<DST_BITS>::max + ColorChannel<SRC_BITS>::max / 2)
-            / ColorChannel<SRC_BITS>::max};
+        return {
+            (src.value * ColorChannel<DST_BITS>::max + ColorChannel<SRC_BITS>::max / 2) / ColorChannel<SRC_BITS>::max
+        };
     }
 };
 
@@ -109,9 +110,9 @@ struct PixelFormatTrait<rf::bm::FORMAT_8888_ARGB>
     using PaletteEntry = void;
 
     using Alpha = ChannelBitOffsetTrait<8, 24>;
-    using Red   = ChannelBitOffsetTrait<8, 16>;
+    using Red = ChannelBitOffsetTrait<8, 16>;
     using Green = ChannelBitOffsetTrait<8, 8>;
-    using Blue  = ChannelBitOffsetTrait<8, 0>;
+    using Blue = ChannelBitOffsetTrait<8, 0>;
 };
 
 template<>
@@ -121,9 +122,9 @@ struct PixelFormatTrait<rf::bm::FORMAT_888_RGB>
     using PaletteEntry = void;
 
     using Alpha = ChannelIndexTrait<0, 0>;
-    using Red   = ChannelIndexTrait<8, 2>;
+    using Red = ChannelIndexTrait<8, 2>;
     using Green = ChannelIndexTrait<8, 1>;
-    using Blue  = ChannelIndexTrait<8, 0>;
+    using Blue = ChannelIndexTrait<8, 0>;
 };
 
 template<>
@@ -133,9 +134,9 @@ struct PixelFormatTrait<rf::bm::FORMAT_1555_ARGB>
     using PaletteEntry = void;
 
     using Alpha = ChannelBitOffsetTrait<1, 15>;
-    using Red   = ChannelBitOffsetTrait<5, 10>;
+    using Red = ChannelBitOffsetTrait<5, 10>;
     using Green = ChannelBitOffsetTrait<5, 5>;
-    using Blue  = ChannelBitOffsetTrait<5, 0>;
+    using Blue = ChannelBitOffsetTrait<5, 0>;
 };
 
 template<>
@@ -145,9 +146,9 @@ struct PixelFormatTrait<rf::bm::FORMAT_565_RGB>
     using PaletteEntry = void;
 
     using Alpha = ChannelBitOffsetTrait<0, 0>;
-    using Red   = ChannelBitOffsetTrait<5, 11>;
+    using Red = ChannelBitOffsetTrait<5, 11>;
     using Green = ChannelBitOffsetTrait<6, 5>;
-    using Blue  = ChannelBitOffsetTrait<5, 0>;
+    using Blue = ChannelBitOffsetTrait<5, 0>;
 };
 
 template<>
@@ -157,9 +158,9 @@ struct PixelFormatTrait<rf::bm::FORMAT_4444_ARGB>
     using PaletteEntry = void;
 
     using Alpha = ChannelBitOffsetTrait<4, 12>;
-    using Red   = ChannelBitOffsetTrait<4, 8>;
+    using Red = ChannelBitOffsetTrait<4, 8>;
     using Green = ChannelBitOffsetTrait<4, 4>;
-    using Blue  = ChannelBitOffsetTrait<4, 0>;
+    using Blue = ChannelBitOffsetTrait<4, 0>;
 };
 
 template<>
@@ -169,9 +170,9 @@ struct PixelFormatTrait<rf::bm::FORMAT_8_ALPHA>
     using PaletteEntry = void;
 
     using Alpha = ChannelBitOffsetTrait<8, 0>;
-    using Red   = ChannelBitOffsetTrait<0, 0>;
+    using Red = ChannelBitOffsetTrait<0, 0>;
     using Green = ChannelBitOffsetTrait<0, 0>;
-    using Blue  = ChannelBitOffsetTrait<0, 0>;
+    using Blue = ChannelBitOffsetTrait<0, 0>;
 };
 
 template<>
@@ -193,9 +194,9 @@ struct PixelFormatTrait<rf::bm::FORMAT_888_BGR>
     using PaletteEntry = void;
 
     using Alpha = ChannelIndexTrait<0, 0>;
-    using Red   = ChannelIndexTrait<8, 0>;
+    using Red = ChannelIndexTrait<8, 0>;
     using Green = ChannelIndexTrait<8, 1>;
-    using Blue  = ChannelIndexTrait<8, 2>;
+    using Blue = ChannelIndexTrait<8, 2>;
 };
 
 template<>
@@ -205,9 +206,9 @@ struct PixelFormatTrait<rf::bm::FORMAT_DXT1>
     using PaletteEntry = void;
 
     using Alpha = ChannelTrait<1>;
-    using Red   = ChannelBitOffsetTrait<5, 11>;
+    using Red = ChannelBitOffsetTrait<5, 11>;
     using Green = ChannelBitOffsetTrait<6, 5>;
-    using Blue  = ChannelBitOffsetTrait<5, 0>;
+    using Blue = ChannelBitOffsetTrait<5, 0>;
 
     struct Block
     {
@@ -223,9 +224,9 @@ struct PixelFormatTrait<rf::bm::FORMAT_DXT3>
     using PaletteEntry = void;
 
     using Alpha = ChannelTrait<4>;
-    using Red   = ChannelBitOffsetTrait<5, 11>;
+    using Red = ChannelBitOffsetTrait<5, 11>;
     using Green = ChannelBitOffsetTrait<6, 5>;
-    using Blue  = ChannelBitOffsetTrait<5, 0>;
+    using Blue = ChannelBitOffsetTrait<5, 0>;
 
     struct Block
     {
@@ -242,9 +243,9 @@ struct PixelFormatTrait<rf::bm::FORMAT_DXT5>
     using PaletteEntry = void;
 
     using Alpha = ChannelTrait<8>;
-    using Red   = ChannelBitOffsetTrait<5, 11>;
+    using Red = ChannelBitOffsetTrait<5, 11>;
     using Green = ChannelBitOffsetTrait<6, 5>;
-    using Blue  = ChannelBitOffsetTrait<5, 0>;
+    using Blue = ChannelBitOffsetTrait<5, 0>;
 
     struct Block
     {
@@ -294,7 +295,7 @@ template<typename CH, typename T>
 ColorChannel<CH::bits> unpack_color_channel(T val)
 {
     if constexpr (CH::bits == 0) {
-        (void) val; // unused
+        (void)val; // unused
         return {0};
     }
     else if constexpr (std::is_array_v<T>) {
@@ -341,18 +342,26 @@ public:
         auto lut_val = (block_->lut >> (index * 2)) & 3;
         if (c0_u16 > c1_u16) {
             switch (lut_val) {
-                case 0: return c0;
-                case 1: return c1;
-                case 2: return (c0 * 2 + c1) / 3;
-                case 3: return (c0 + c1 * 2) / 3;
+                case 0:
+                    return c0;
+                case 1:
+                    return c1;
+                case 2:
+                    return (c0 * 2 + c1) / 3;
+                case 3:
+                    return (c0 + c1 * 2) / 3;
             }
         }
         else {
             switch (lut_val) {
-                case 0: return c0;
-                case 1: return c1;
-                case 2: return (c0 + c1) / 2;
-                case 3: return {}; // transparent
+                case 0:
+                    return c0;
+                case 1:
+                    return c1;
+                case 2:
+                    return (c0 + c1) / 2;
+                case 3:
+                    return {}; // transparent
             }
         }
         // unreachable...
@@ -385,10 +394,14 @@ private:
         auto c1 = unpack_color<rf::bm::FORMAT_565_RGB>(block_->color[1]);
         auto lut_val = (block_->lut >> (index * 2)) & 3;
         switch (lut_val) {
-            case 0: return c0;
-            case 1: return c1;
-            case 2: return (c0 * 2 + c1) / 3;
-            case 3: return (c0 + c1 * 2) / 3;
+            case 0:
+                return c0;
+            case 1:
+                return c1;
+            case 2:
+                return (c0 * 2 + c1) / 3;
+            case 3:
+                return (c0 + c1 * 2) / 3;
         }
         // unreachable...
         return {};
@@ -418,32 +431,48 @@ private:
     {
         auto a0 = block_->alpha[0];
         auto a1 = block_->alpha[1];
-        auto alpha_lut_64 = static_cast<uint64_t>(block_->alpha_lut[2]) << 32
-            | (static_cast<uint64_t>(block_->alpha_lut[1]) << 16)
-            | static_cast<uint64_t>(block_->alpha_lut[0]);
+        auto alpha_lut_64 = static_cast<uint64_t>(block_->alpha_lut[2]) << 32 |
+                            (static_cast<uint64_t>(block_->alpha_lut[1]) << 16) |
+                            static_cast<uint64_t>(block_->alpha_lut[0]);
         auto lut_val = (alpha_lut_64 >> (index * 3)) & 7;
         if (a0 > a1) {
             switch (lut_val) {
-                case 0: return {a0};
-                case 1: return {a1};
-                case 2: return {(6 * a0 + 1 * a1) / 7};
-                case 3: return {(5 * a0 + 2 * a1) / 7};
-                case 4: return {(4 * a0 + 3 * a1) / 7};
-                case 5: return {(3 * a0 + 4 * a1) / 7};
-                case 6: return {(2 * a0 + 5 * a1) / 7};
-                case 7: return {(1 * a0 + 6 * a1) / 7};
+                case 0:
+                    return {a0};
+                case 1:
+                    return {a1};
+                case 2:
+                    return {(6 * a0 + 1 * a1) / 7};
+                case 3:
+                    return {(5 * a0 + 2 * a1) / 7};
+                case 4:
+                    return {(4 * a0 + 3 * a1) / 7};
+                case 5:
+                    return {(3 * a0 + 4 * a1) / 7};
+                case 6:
+                    return {(2 * a0 + 5 * a1) / 7};
+                case 7:
+                    return {(1 * a0 + 6 * a1) / 7};
             }
         }
         else {
             switch (lut_val) {
-                case 0: return {a0};
-                case 1: return {a1};
-                case 2: return {(4 * a0 + 1 * a1) / 5};
-                case 3: return {(3 * a0 + 2 * a1) / 5};
-                case 4: return {(2 * a0 + 3 * a1) / 5};
-                case 5: return {(1 * a0 + 4 * a1) / 5};
-                case 6: return {0};
-                case 7: return {255};
+                case 0:
+                    return {a0};
+                case 1:
+                    return {a1};
+                case 2:
+                    return {(4 * a0 + 1 * a1) / 5};
+                case 3:
+                    return {(3 * a0 + 2 * a1) / 5};
+                case 4:
+                    return {(2 * a0 + 3 * a1) / 5};
+                case 5:
+                    return {(1 * a0 + 4 * a1) / 5};
+                case 6:
+                    return {0};
+                case 7:
+                    return {255};
             }
         }
         // unreachable...
@@ -456,10 +485,14 @@ private:
         auto c1 = unpack_color<rf::bm::FORMAT_565_RGB>(block_->color[1]);
         auto lut_val = (block_->lut >> (index * 2)) & 3;
         switch (lut_val) {
-            case 0: return c0;
-            case 1: return c1;
-            case 2: return (c0 * 2 + c1) / 3;
-            case 3: return (c0 + c1 * 2) / 3;
+            case 0:
+                return c0;
+            case 1:
+                return c1;
+            case 2:
+                return (c0 * 2 + c1) / 3;
+            case 3:
+                return (c0 + c1 * 2) / 3;
         }
         // unreachable...
         return {};
@@ -523,10 +556,8 @@ class PixelsReader
     PixelColor<PF> get_color(const T& val)
     {
         return {
-            get_channel<typename PFT::Alpha>(val),
-            get_channel<typename PFT::Red>(val),
-            get_channel<typename PFT::Green>(val),
-            get_channel<typename PFT::Blue>(val)
+            get_channel<typename PFT::Alpha>(val), get_channel<typename PFT::Red>(val),
+            get_channel<typename PFT::Green>(val), get_channel<typename PFT::Blue>(val)
         };
     }
 
@@ -549,7 +580,7 @@ public:
 };
 
 // Silence bogus stringop-overflow warnings in GCC 10 (they seem to be fixed in GCC 11)
-#if defined(__GNUC__) &&  __GNUC__ == 10
+#if defined(__GNUC__) && __GNUC__ == 10
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
 #endif
@@ -561,7 +592,7 @@ class PixelsWriter
     typename PixelFormatTrait<PF>::Pixel* ptr_;
 
     template<typename CH>
-    void set_channel([[ maybe_unused ]] ColorChannel<CH::bits> val)
+    void set_channel([[maybe_unused]] ColorChannel<CH::bits> val)
     {
         if constexpr (CH::bits == 0) {
             // nothing to do
@@ -572,19 +603,14 @@ class PixelsWriter
     }
 
 public:
-    PixelsWriter(void* ptr) :
-        ptr_(reinterpret_cast<typename PixelFormatTrait<PF>::Pixel*>(ptr))
-    {}
+    PixelsWriter(void* ptr) : ptr_(reinterpret_cast<typename PixelFormatTrait<PF>::Pixel*>(ptr)) {}
 
-    void write([[ maybe_unused ]] PixelColor<PF> color)
+    void write([[maybe_unused]] PixelColor<PF> color)
     {
         if constexpr (std::is_void_v<typename PFT::PaletteEntry>) {
             if constexpr (!std::is_array_v<typename PFT::Pixel>) {
-                *ptr_ =
-                    (color.a.value << PFT::Alpha::offset) |
-                    (color.r.value << PFT::Red::offset) |
-                    (color.g.value << PFT::Green::offset) |
-                    (color.b.value << PFT::Blue::offset);
+                *ptr_ = (color.a.value << PFT::Alpha::offset) | (color.r.value << PFT::Red::offset) |
+                        (color.g.value << PFT::Green::offset) | (color.b.value << PFT::Blue::offset);
             }
             else {
                 set_channel<typename PFT::Alpha>(color.a);
@@ -600,7 +626,7 @@ public:
     }
 };
 
-#if defined(__GNUC__) &&  __GNUC__ == 10
+#if defined(__GNUC__) && __GNUC__ == 10
 #pragma GCC diagnostic pop
 #endif
 
@@ -616,7 +642,10 @@ class SurfacePixelFormatConverter
     const void* src_palette_;
 
 public:
-    SurfacePixelFormatConverter(const void* src_ptr, void* dst_ptr, size_t src_pitch, size_t dst_pitch, size_t w, size_t h, const void* src_palette) :
+    SurfacePixelFormatConverter(
+        const void* src_ptr, void* dst_ptr, size_t src_pitch, size_t dst_pitch, size_t w, size_t h,
+        const void* src_palette
+    ) :
         src_ptr_(reinterpret_cast<const uint8_t*>(src_ptr)), dst_ptr_(reinterpret_cast<uint8_t*>(dst_ptr)),
         src_pitch_(src_pitch), dst_pitch_(dst_pitch), w_(w), h_(h), src_palette_(src_palette)
     {}
@@ -631,11 +660,8 @@ public:
             PixelsWriter<DST_FMT> wrt{dst_ptr_};
             PixelColor<SRC_FMT> delta;
             for (size_t x = 0; x < w_; ++x) {
-                PixelColor<SRC_FMT> old_clr = rdr.read()
-                    + delta                  * 7 / 16
-                    + prev_row_deltas[x]     * 3 / 16
-                    + prev_row_deltas[x + 1] * 5 / 16
-                    + prev_row_deltas[x + 2] * 1 / 16;
+                PixelColor<SRC_FMT> old_clr = rdr.read() + delta * 7 / 16 + prev_row_deltas[x] * 3 / 16 +
+                                              prev_row_deltas[x + 1] * 5 / 16 + prev_row_deltas[x + 2] * 1 / 16;
                 // TODO: make sure values are in range?
                 PixelColor<DST_FMT> new_clr = old_clr;
                 delta = old_clr - static_cast<PixelColor<SRC_FMT>>(new_clr);
@@ -661,7 +687,6 @@ public:
 #endif
     }
 };
-
 
 template<rf::bm::Format FMT>
 struct PixelFormatHolder
@@ -694,7 +719,8 @@ void call_with_format(rf::bm::Format format, F handler)
         case rf::bm::FORMAT_8_PALETTED:
             if constexpr (HandlePaletted) {
                 handler(PixelFormatHolder<rf::bm::FORMAT_8_PALETTED>());
-            } else {
+            }
+            else {
                 throw std::runtime_error{"Unexpected paletted pixel format"};
             }
             return;

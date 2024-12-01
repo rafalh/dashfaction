@@ -34,8 +34,8 @@ static bool is_vpp_filename(const char* filename)
     return string_ends_with_ignore_case(filename, ".vpp");
 }
 
-static std::vector<std::string> unzip(const char* path, const char* output_dir,
-    std::function<bool(const char*)> filename_filter)
+static std::vector<std::string>
+unzip(const char* path, const char* output_dir, std::function<bool(const char*)> filename_filter)
 {
     unzFile archive = unzOpen(path);
     if (!archive) {
@@ -78,7 +78,8 @@ static std::vector<std::string> unzip(const char* path, const char* output_dir,
                 break;
             }
 
-            while ((code = unzReadCurrentFile(archive, buf, sizeof(buf))) > 0) file.write(buf, code);
+            while ((code = unzReadCurrentFile(archive, buf, sizeof(buf))) > 0)
+                file.write(buf, code);
 
             if (code < 0) {
                 xlog::error("unzReadCurrentFile failed - error {}, path {}", code, path);
@@ -105,8 +106,8 @@ static std::vector<std::string> unzip(const char* path, const char* output_dir,
     return extracted_files;
 }
 
-static std::vector<std::string> unrar(const char* path, const char* output_dir,
-    std::function<bool(const char*)> filename_filter)
+static std::vector<std::string>
+unrar(const char* path, const char* output_dir, std::function<bool(const char*)> filename_filter)
 {
     char cmt_buf[16384];
 
@@ -124,7 +125,8 @@ static std::vector<std::string> unrar(const char* path, const char* output_dir,
     }
 
     std::vector<std::string> extracted_files;
-    struct RARHeaderData header_data{};
+    struct RARHeaderData header_data
+    {};
     header_data.CmtBuf = nullptr;
 
     while (true) {
@@ -182,8 +184,7 @@ public:
     };
 
     LevelDownloadWorker(std::string level_filename, std::shared_ptr<SharedData> shared_data) :
-        level_filename_{std::move(level_filename)},
-        shared_data_{std::move(shared_data)}
+        level_filename_{std::move(level_filename)}, shared_data_{std::move(shared_data)}
     {}
 
     std::vector<std::string> operator()();
@@ -268,8 +269,8 @@ public:
     struct Listener
     {
         virtual ~Listener() = default;
-        virtual void on_progress([[ maybe_unused ]] LevelDownloadOperation& operation) {}
-        virtual void on_finish([[ maybe_unused ]] LevelDownloadOperation& operation, [[ maybe_unused ]] bool success) {}
+        virtual void on_progress([[maybe_unused]] LevelDownloadOperation& operation) {}
+        virtual void on_finish([[maybe_unused]] LevelDownloadOperation& operation, [[maybe_unused]] bool success) {}
     };
 
 private:
@@ -389,7 +390,8 @@ public:
         }
     }
 
-    LevelDownloadOperation& start(std::string level_filename, std::unique_ptr<LevelDownloadOperation::Listener>&& listener)
+    LevelDownloadOperation&
+    start(std::string level_filename, std::unique_ptr<LevelDownloadOperation::Listener>&& listener)
     {
         xlog::info("Starting level download: {}", level_filename);
         return operation_.emplace(std::move(level_filename), std::move(listener));
@@ -424,9 +426,10 @@ public:
         if (operation.get_state() == LevelDownloadState::fetching_data) {
             auto now = std::chrono::system_clock::now();
             if (now - last_progress_print_ >= std::chrono::seconds{2}) {
-                rf::console::print("Download progress: {:.2f} MB / {:.2f} MB",
-                    operation.get_bytes_received() / 1000000.0f,
-                    operation.get_level_info().size_in_bytes / 1000000.0f);
+                rf::console::print(
+                    "Download progress: {:.2f} MB / {:.2f} MB", operation.get_bytes_received() / 1000000.0f,
+                    operation.get_level_info().size_in_bytes / 1000000.0f
+                );
                 last_progress_print_ = now;
             }
         }
@@ -489,7 +492,7 @@ void multi_level_download_handle_input(int key)
         rf::multi_chat_say_handle_key(key);
     }
     else if (key == rf::KEY_ESC) {
-         rf::gameseq_push_state(rf::GS_MAIN_MENU, false, false);
+        rf::gameseq_push_state(rf::GS_MAIN_MENU, false, false);
     }
 }
 
@@ -559,10 +562,15 @@ void multi_level_download_do_frame()
         rf::gr::string(info_x, y, created_by_str.c_str(), medium_font);
         y += info_spacing;
 
-        rf::gr::string(info_x, y, std::format("{:.2f} MB / {:.2f} MB ({:.2f} MB/s)",
-            bytes_received / 1000.0f / 1000.0f,
-            info.size_in_bytes / 1000.0f / 1000.0f,
-            bytes_per_sec / 1000.0f / 1000.0f).c_str(), medium_font);
+        rf::gr::string(
+            info_x, y,
+            std::format(
+                "{:.2f} MB / {:.2f} MB ({:.2f} MB/s)", bytes_received / 1000.0f / 1000.0f,
+                info.size_in_bytes / 1000.0f / 1000.0f, bytes_per_sec / 1000.0f / 1000.0f
+            )
+                .c_str(),
+            medium_font
+        );
         y += info_spacing;
 
         if (bytes_per_sec > 0) {
@@ -599,7 +607,8 @@ CallHook<void(rf::GameState, bool)> process_enter_limbo_packet_gameseq_set_next_
         if (rf::gameseq_get_state() == rf::GS_MULTI_LEVEL_DOWNLOAD) {
             // Level changes before we finish downloading the previous one
             // Do not enter the limbo game state because it would crash the game if there is currently no level loaded
-            // Instead stay in the level download state until we get the leave limbo packet and download the correct level
+            // Instead stay in the level download state until we get the leave limbo packet and download the correct
+            // level
             LevelDownloadManager::instance().abort();
         }
         else {
@@ -614,8 +623,9 @@ CallHook<void(rf::GameState, bool)> process_leave_limbo_packet_gameseq_set_next_
         xlog::trace("Leave limbo - next level: {}", rf::level.next_level_filename);
         if (!next_level_exists()) {
             rf::gameseq_set_state(rf::GS_MULTI_LEVEL_DOWNLOAD, false);
-            LevelDownloadManager::instance().start(rf::level.next_level_filename,
-                std::make_unique<SetNewLevelStateDownloadListener>());
+            LevelDownloadManager::instance().start(
+                rf::level.next_level_filename, std::make_unique<SetNewLevelStateDownloadListener>()
+            );
         }
         else {
             process_leave_limbo_packet_gameseq_set_next_state_hook.call_target(state, force);
@@ -628,8 +638,9 @@ CallHook<void(rf::GameState, bool)> game_new_game_gameseq_set_next_state_hook{
     [](rf::GameState state, bool force) {
         if (rf::is_multi && !rf::is_server && !next_level_exists()) {
             rf::gameseq_set_state(rf::GS_MULTI_LEVEL_DOWNLOAD, false);
-            LevelDownloadManager::instance().start(rf::level.next_level_filename,
-                std::make_unique<SetNewLevelStateDownloadListener>());
+            LevelDownloadManager::instance().start(
+                rf::level.next_level_filename, std::make_unique<SetNewLevelStateDownloadListener>()
+            );
         }
         else {
             game_new_game_gameseq_set_next_state_hook.call_target(state, force);
@@ -639,9 +650,7 @@ CallHook<void(rf::GameState, bool)> game_new_game_gameseq_set_next_state_hook{
 
 CodeInjection join_failed_injection{
     0x0047C4EC,
-    []() {
-        set_jump_to_multi_server_list(true);
-    },
+    []() { set_jump_to_multi_server_list(true); },
 };
 
 static void do_download_level(std::string filename, bool force)
@@ -657,25 +666,20 @@ static void do_download_level(std::string filename, bool force)
             xlog::error("Level already exists on disk! Use download_level_force to download anyway.");
             return;
         }
-        LevelDownloadManager::instance().start(filename,
-            std::make_unique<ConsoleReportingDownloadListener>());
+        LevelDownloadManager::instance().start(filename, std::make_unique<ConsoleReportingDownloadListener>());
     }
 }
 
 ConsoleCommand2 download_level_cmd{
     "download_level",
-    [](std::string filename) {
-        do_download_level(filename, false);
-    },
+    [](std::string filename) { do_download_level(filename, false); },
     "Downloads level from FactionFiles.com",
     "download_level <rfl_name>",
 };
 
 ConsoleCommand2 download_level_force_cmd{
     "download_level_force",
-    [](std::string filename) {
-        do_download_level(filename, true);
-    },
+    [](std::string filename) { do_download_level(filename, true); },
 };
 
 void level_download_do_patch()

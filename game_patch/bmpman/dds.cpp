@@ -45,8 +45,8 @@ rf::bm::Format get_bm_format_from_dds_pixel_format(DDS_PIXELFORMAT& ddspf)
     return rf::bm::FORMAT_NONE;
 }
 
-rf::bm::Type read_dds_header(rf::File& file, int *width_out, int *height_out, rf::bm::Format *format_out,
-    int *num_levels_out)
+rf::bm::Type
+read_dds_header(rf::File& file, int* width_out, int* height_out, rf::bm::Format* format_out, int* num_levels_out)
 {
     auto magic = file.read<uint32_t>();
     if (magic != DDS_MAGIC) {

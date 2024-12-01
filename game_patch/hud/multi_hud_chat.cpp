@@ -17,7 +17,7 @@ bool g_all_players_muted = false;
 
 constexpr int chat_msg_max_len = 224;
 constexpr int chatbox_border_alpha = 0x30; // default is 77
-constexpr int chatbox_bg_alpha = 0x40; // default is 128
+constexpr int chatbox_bg_alpha = 0x40;     // default is 128
 
 FunHook<void(uint16_t)> multi_chat_say_add_char_hook{
     0x00444740,
@@ -116,9 +116,7 @@ FunHook<void()> multi_hud_render_chat_hook{0x004773D0, multi_hud_render_chat};
 
 CodeInjection multi_hud_add_chat_line_max_width_injection{
     0x004788E3,
-    [](auto& regs) {
-        regs.esi = rf::gr::screen_width() - (g_big_chatbox ? 620 : 320);
-    },
+    [](auto& regs) { regs.esi = rf::gr::screen_width() - (g_big_chatbox ? 620 : 320); },
 };
 
 void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod msg_pod)
@@ -141,7 +139,7 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
     int input_box_content_h = font_h + 3;
     int input_box_h = input_box_content_h + 2 * border;
     int input_box_y = hist_box_y + hist_box_h; // 116
-    int input_box_x = (clip_w - box_w) / 2; // 157
+    int input_box_x = (clip_w - box_w) / 2;    // 157
 
     rf::String msg_shortened{msg};
     int msg_w, msg_h;
@@ -187,9 +185,11 @@ void multi_hud_render_chat_inputbox(rf::String::Pod label_pod, rf::String::Pod m
     }
 }
 
-FunHook<void(rf::String::Pod, rf::String::Pod)> multi_hud_render_chat_inputbox_hook{0x00478CA0, multi_hud_render_chat_inputbox};
+FunHook<void(rf::String::Pod, rf::String::Pod)> multi_hud_render_chat_inputbox_hook{
+    0x00478CA0, multi_hud_render_chat_inputbox
+};
 
-static bool is_muted_player(rf::Player *pp)
+static bool is_muted_player(rf::Player* pp)
 {
     if (g_all_players_muted) {
         return true;
@@ -206,7 +206,7 @@ CodeInjection process_chat_line_packet_injection{
         int mode = regs.edx;
         if (is_muted_player(pp)) {
             // Messages from muted players only show up in the console
-            const char *team_str = mode == 1 ? rf::strings::team : "";
+            const char* team_str = mode == 1 ? rf::strings::team : "";
             rf::console::print("{}{} (MUTED): {}", pp->name, team_str, message);
             regs.eip = 0x00444958;
         }

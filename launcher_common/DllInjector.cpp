@@ -45,7 +45,7 @@ static intptr_t get_exported_fun_offset_from_module_base(const char* dll_filenam
 DWORD DllInjector::run_remote_fun(FARPROC fun_ptr, void* arg, int timeout)
 {
     // Note: double cast is needed to fix cast-function-type GCC warning
-    auto casted_fun_ptr = reinterpret_cast<LPTHREAD_START_ROUTINE>(reinterpret_cast<void(*)()>(fun_ptr));
+    auto casted_fun_ptr = reinterpret_cast<LPTHREAD_START_ROUTINE>(reinterpret_cast<void (*)()>(fun_ptr));
     Thread thread = m_process.create_remote_thread(casted_fun_ptr, arg);
     thread.wait(timeout);
     return thread.get_exit_code();

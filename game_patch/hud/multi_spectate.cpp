@@ -442,7 +442,10 @@ void multi_spectate_render()
     rf::gr::set_color(0xFF, 0xFF, 0xFF, 0xFF);
     rf::gr::string_aligned(rf::gr::ALIGN_CENTER, bar_x + bar_w / 2, bar_y + padding_y, "Spectating:", small_font);
     rf::gr::set_color(0xFF, 0x88, 0x22, 0xFF);
-    rf::gr::string_aligned(rf::gr::ALIGN_CENTER, bar_x + bar_w / 2, bar_y + padding_y + small_font_h, g_spectate_mode_target->name, large_font);
+    rf::gr::string_aligned(
+        rf::gr::ALIGN_CENTER, bar_x + bar_w / 2, bar_y + padding_y + small_font_h, g_spectate_mode_target->name,
+        large_font
+    );
 
     rf::Entity* entity = rf::entity_from_handle(g_spectate_mode_target->entity_handle);
     if (!entity) {
@@ -450,8 +453,10 @@ void multi_spectate_render()
         static int blood_bm = rf::bm::load("bloodsmear07_A.tga", -1, true);
         int blood_w, blood_h;
         rf::bm::get_dimensions(blood_bm, &blood_w, &blood_h);
-        rf::gr::bitmap_scaled(blood_bm, (scr_w - blood_w * 2) / 2, (scr_h - blood_h * 2) / 2, blood_w * 2,
-                             blood_h * 2, 0, 0, blood_w, blood_h, false, false, rf::gr::bitmap_clamp_mode);
+        rf::gr::bitmap_scaled(
+            blood_bm, (scr_w - blood_w * 2) / 2, (scr_h - blood_h * 2) / 2, blood_w * 2, blood_h * 2, 0, 0, blood_w,
+            blood_h, false, false, rf::gr::bitmap_clamp_mode
+        );
 
         rf::Color dead_clr{0xF0, 0x20, 0x10, 0xC0};
         draw_with_shadow(scr_w / 2, scr_h / 2, 2, 2, dead_clr, shadow_clr, [=](int x, int y) {

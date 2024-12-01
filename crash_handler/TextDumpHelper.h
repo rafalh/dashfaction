@@ -12,7 +12,8 @@
 #include <cstddef>
 #include "ProcessMemoryCache.h"
 
-class TextDumpHelper {
+class TextDumpHelper
+{
 private:
     SYSTEM_INFO m_sys_info;
     std::vector<MEMORY_BASIC_INFORMATION> m_memory_map;
@@ -28,7 +29,8 @@ private:
     std::vector<ModuleInfo> m_modules;
 
 public:
-    TextDumpHelper(HANDLE process) : m_mem_cache(process) {
+    TextDumpHelper(HANDLE process) : m_mem_cache(process)
+    {
         GetSystemInfo(&m_sys_info);
     }
 
@@ -116,7 +118,8 @@ private:
         out << "  ExceptionFlags = " << std::format("{:08X}", exc_rec.ExceptionFlags) << "\n";
         out << "  ExceptionAddress = " << std::format("{}", exc_rec.ExceptionAddress) << "\n";
         for (unsigned i = 0; i < exc_rec.NumberParameters; ++i)
-            out << "  ExceptionInformation[" << i << "] = " << std::format("{:08X}", exc_rec.ExceptionInformation[i]) << "\n";
+            out << "  ExceptionInformation[" << i << "] = " << std::format("{:08X}", exc_rec.ExceptionInformation[i])
+                << "\n";
         out << std::endl;
     }
 
@@ -144,10 +147,12 @@ private:
     void write_memory_map(std::ostream& out)
     {
         out << "Memory map:\n";
-        for (auto& mbi: m_memory_map) {
-            out << std::format("{}: State {:08X} Protect {:08X} Type {:08X} RegionSize {:08X}\n",
-                mbi.BaseAddress, mbi.State, mbi.Protect, mbi.Type, mbi.RegionSize);
-            //out << std::format("  AllocBase {:x} AllocProtect {:x}\n", mbi.AllocationBase, mbi.AllocationProtect);
+        for (auto& mbi : m_memory_map) {
+            out << std::format(
+                "{}: State {:08X} Protect {:08X} Type {:08X} RegionSize {:08X}\n", mbi.BaseAddress, mbi.State,
+                mbi.Protect, mbi.Type, mbi.RegionSize
+            );
+            // out << std::format("  AllocBase {:x} AllocProtect {:x}\n", mbi.AllocationBase, mbi.AllocationProtect);
         }
         out << std::endl;
     }
@@ -162,10 +167,8 @@ private:
             return false;
         }
         auto protect = mem_map_it->Protect;
-        return protect == PAGE_EXECUTE
-            || protect == PAGE_EXECUTE_READ
-            || protect == PAGE_EXECUTE_READWRITE
-            || protect == PAGE_EXECUTE_WRITECOPY;
+        return protect == PAGE_EXECUTE || protect == PAGE_EXECUTE_READ || protect == PAGE_EXECUTE_READWRITE ||
+               protect == PAGE_EXECUTE_WRITECOPY;
     }
 
     void write_ebp_based_backtrace(std::ostream& out, const CONTEXT& ctx)
@@ -220,7 +223,8 @@ private:
         size_t stack_size = stack_max_addr - addr;
         auto stack_buf = std::make_unique<uint32_t[]>(stack_size / sizeof(uint32_t));
 
-        bool read_success = ReadProcessMemory(process, reinterpret_cast<void*>(addr), stack_buf.get(), stack_size, &bytes_read);
+        bool read_success =
+            ReadProcessMemory(process, reinterpret_cast<void*>(addr), stack_buf.get(), stack_size, &bytes_read);
         if (!read_success || !bytes_read) {
             out << "(error " << GetLastError() << ")\n\n";
             return;
@@ -330,7 +334,8 @@ private:
         out << "Stack dump:\n";
 
         auto buf = std::make_unique<uint32_t[]>(stack_size / sizeof(uint32_t));
-        bool read_success = ReadProcessMemory(process, reinterpret_cast<void*>(addr), buf.get(), stack_size, &bytes_read);
+        bool read_success =
+            ReadProcessMemory(process, reinterpret_cast<void*>(addr), buf.get(), stack_size, &bytes_read);
         if (!read_success || !bytes_read) {
             out << "(error " << GetLastError() << ")\n\n";
             return;

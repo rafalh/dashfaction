@@ -3,10 +3,7 @@
 #include "LauncherApp.h"
 #include <wxx_commondlg.h>
 
-OptionsMultiplayerDlg::OptionsMultiplayerDlg(GameConfig& conf)
-	: CDialog(IDD_OPTIONS_MULTIPLAYER), m_conf(conf)
-{
-}
+OptionsMultiplayerDlg::OptionsMultiplayerDlg(GameConfig& conf) : CDialog(IDD_OPTIONS_MULTIPLAYER), m_conf(conf) {}
 
 BOOL OptionsMultiplayerDlg::OnInitDialog()
 {
@@ -27,7 +24,10 @@ void OptionsMultiplayerDlg::InitToolTip()
 {
     m_tool_tip.Create(*this);
     m_tool_tip.AddTool(GetDlgItem(IDC_TRACKER_EDIT), "Hostname of tracker used to find avaliable Multiplayer servers");
-    m_tool_tip.AddTool(GetDlgItem(IDC_RATE_EDIT), "Internet connection speed in bytes/s (default value - 200000 - should work fine for all modern setups)");
+    m_tool_tip.AddTool(
+        GetDlgItem(IDC_RATE_EDIT),
+        "Internet connection speed in bytes/s (default value - 200000 - should work fine for all modern setups)"
+    );
     m_tool_tip.AddTool(GetDlgItem(IDC_FORCE_PORT_CHECK), "If not checked automatic port is used");
 }
 
@@ -45,12 +45,12 @@ BOOL OptionsMultiplayerDlg::OnCommand(WPARAM wparam, LPARAM lparam)
 
     UINT id = LOWORD(wparam);
     switch (id) {
-    case IDC_RESET_TRACKER_BTN:
-        OnBnClickedResetTrackerBtn();
-        return TRUE;
-    case IDC_FORCE_PORT_CHECK:
-        OnForcePortClick();
-        return TRUE;
+        case IDC_RESET_TRACKER_BTN:
+            OnBnClickedResetTrackerBtn();
+            return TRUE;
+        case IDC_FORCE_PORT_CHECK:
+            OnForcePortClick();
+            return TRUE;
     }
 
     return FALSE;

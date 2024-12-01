@@ -17,19 +17,19 @@ namespace rf
         char v3d_filename[65];
         int version;
         int num_meshes;
-        V3dMesh *meshes;
+        V3dMesh* meshes;
         int num_lod_meshes;
-        LodMesh *lod_meshes;
+        LodMesh* lod_meshes;
         int num_navpoints;
-        void *navpoints;
+        void* navpoints;
         int num_cspheres;
-        V3DCSphere *cspheres;
+        V3DCSphere* cspheres;
         int total_vertices_count_ccrunch_zeroed;
         int unk_vertices_array_ccrunch_zeroed;
         int total_triangles_count_ccrunch_zeroed;
         int unk_triangle_array_ccrunch_zeroed;
         int num_mesh_materials;
-        MaterialClass *mesh_materials;
+        MaterialClass* mesh_materials;
         int hdr_field_14_ccrunch_zeroed;
         int unk_array_hdr_field_14_ccrunch_zeroed;
         int field_88;
@@ -42,8 +42,8 @@ namespace rf
         char name[65];
         char parent_name[65];
         int num_materials;
-        MaterialClass *materials;
-        VifLodMesh *vu;
+        MaterialClass* materials;
+        VifLodMesh* vu;
     };
     static_assert(sizeof(V3dMesh) == 0x90);
 
@@ -64,15 +64,15 @@ namespace rf
     struct VifChunk
     {
         gr::Mode mode;
-        Vector3 *vecs;
-        Vector3 *norms;
-        Vector2 *uvs;
-        Plane *face_planes;
-        VifFace *faces;
-        short *same_vertex_offsets;
-        WeightIndexArray *wi;
+        Vector3* vecs;
+        Vector3* norms;
+        Vector2* uvs;
+        Plane* face_planes;
+        VifFace* faces;
+        short* same_vertex_offsets;
+        WeightIndexArray* wi;
         int texture_idx;
-        short *orig_map;
+        short* orig_map;
         ushort num_vecs;
         ushort num_faces;
         ushort vecs_alloc;
@@ -93,10 +93,10 @@ namespace rf
     struct VifMesh
     {
         int data_block_size;
-        void *data_block;
-        VifChunk *chunks;
+        void* data_block;
+        VifChunk* chunks;
         ushort num_chunks;
-        VifPropPoint *prop_points;
+        VifPropPoint* prop_points;
         int num_prop_points;
         ubyte tex_ids[7];
         int tex_handles[7];
@@ -105,7 +105,7 @@ namespace rf
         int num_original_vecs;
         int unk_field_from_v3d_file;
 #ifdef DASH_FACTION
-        void *render_cache;
+        void* render_cache;
 #endif
     };
 
@@ -114,14 +114,14 @@ namespace rf
     struct VifLodMesh
     {
         int num_levels;
-        VifMesh *meshes[3];
+        VifMesh* meshes[3];
         float distances[3];
         Vector3 center;
         float radius;
         Vector3 bbox_min;
         Vector3 bbox_max;
 #ifdef DASH_FACTION
-        void *render_cache;
+        void* render_cache;
 #endif
     };
 
@@ -131,10 +131,10 @@ namespace rf
         int lod_level;
         int alpha;
         gr::Color self_illum; // unused
-        int *alt_tex;
+        int* alt_tex;
         float field_14_unk_fire;
         gr::Color field_18;
-        ubyte *vertex_colors;
+        ubyte* vertex_colors;
         int powerup_bitmaps[2];
         gr::Color ambient_color;
         Matrix3 orient;

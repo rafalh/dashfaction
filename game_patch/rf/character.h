@@ -21,14 +21,14 @@ namespace rf
         bool internally_allocated = 0;
         int base_usage_count = 0;
         int instance_usage_count = 0;
-        void *animation_data = nullptr;
+        void* animation_data = nullptr;
 
         bool has_morph_vertices() const
         {
             return AddrCaller{0x0053A820}.this_call<bool>(this);
         }
 
-        void morph(rf::Vector3 *morphed_vecs, int num_vecs, int time, short *orig_vecs_map, int num_orig_vecs) const
+        void morph(rf::Vector3* morphed_vecs, int num_vecs, int time, short* orig_vecs_map, int num_orig_vecs) const
         {
             AddrCaller{0x0053A370}.this_call(this, morphed_vecs, num_vecs, time, orig_vecs_map, num_orig_vecs);
         }
@@ -53,7 +53,7 @@ namespace rf
 
     struct CharacterTag
     {
-        const char *name;
+        const char* name;
         Matrix43 trans;
         int parent_index;
     };
@@ -68,7 +68,7 @@ namespace rf
     struct CharacterMesh
     {
         V3d v3d_file;
-        V3dMesh *mesh;
+        V3dMesh* mesh;
     };
 
     struct Character
@@ -79,7 +79,7 @@ namespace rf
         Bone bones[50];
         ubyte bone_order_list[50];
         int num_anims;
-        Skeleton *animations[172];
+        Skeleton* animations[172];
         bool anim_is_state[172];
         int num_tags;
         CharacterTag tags[32];
@@ -113,12 +113,12 @@ namespace rf
         bool state_trigger_elapsed[2];
         int dominant_state_index;
         bool holding_last_action_frame;
-        Character *base_character;
-        CharacterInstance *next;
-        CharacterInstance *prev;
+        Character* base_character;
+        CharacterInstance* next;
+        CharacterInstance* prev;
     };
 
-    static auto& skeleton_link_base = addr_as_ref<Skeleton *__cdecl(const char *filename)>(0x00539D00);
-    static auto& skeleton_unlink_base = addr_as_ref<void __cdecl(Skeleton *s, bool force_unload)>(0x00539D20);
-    static auto& skeleton_page_in = addr_as_ref<bool __cdecl(const char *filename, void *data_block)>(0x0053A980);
+    static auto& skeleton_link_base = addr_as_ref<Skeleton* __cdecl(const char* filename)>(0x00539D00);
+    static auto& skeleton_unlink_base = addr_as_ref<void __cdecl(Skeleton* s, bool force_unload)>(0x00539D20);
+    static auto& skeleton_page_in = addr_as_ref<bool __cdecl(const char* filename, void* data_block)>(0x0053A980);
 }

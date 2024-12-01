@@ -43,7 +43,7 @@ static void send_pf_announce_player_packet(rf::Player* player, pf_pure_status pu
     }
 }
 
-static void process_pf_player_announce_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NetAddr& addr)
+static void process_pf_player_announce_packet(const void* data, size_t len, [[maybe_unused]] const rf::NetAddr& addr)
 {
     // Receive: client <- server
     if (rf::is_server) {
@@ -66,10 +66,10 @@ static void process_pf_player_announce_packet(const void* data, size_t len, [[ m
     xlog::trace("PF player_announce packet: player {} is_pure {}", announce_packet.player_id, announce_packet.is_pure);
 
     if (announce_packet.player_id == rf::local_player->net_data->player_id) {
-        static const char* pf_verification_status_names[] = { "none", "blue", "gold", "red" };
-        const auto* pf_verification_status =
-            announce_packet.is_pure < std::size(pf_verification_status_names)
-            ? pf_verification_status_names[announce_packet.is_pure] : "unknown";
+        static const char* pf_verification_status_names[] = {"none", "blue", "gold", "red"};
+        const auto* pf_verification_status = announce_packet.is_pure < std::size(pf_verification_status_names)
+                                                 ? pf_verification_status_names[announce_packet.is_pure]
+                                                 : "unknown";
         xlog::info("PF Verification Status: {} ({})", pf_verification_status, announce_packet.is_pure);
     }
 }
@@ -122,7 +122,7 @@ static void send_pf_player_stats_packet(rf::Player* player)
     pf_send_reliable_packet(player, packet_buf, packet_len);
 }
 
-static void process_pf_player_stats_packet(const void* data, size_t len, [[ maybe_unused ]] const rf::NetAddr& addr)
+static void process_pf_player_stats_packet(const void* data, size_t len, [[maybe_unused]] const rf::NetAddr& addr)
 {
     // Receive: client <- server
     if (rf::is_server) {
@@ -166,7 +166,9 @@ static void process_pf_player_stats_packet(const void* data, size_t len, [[ mayb
     }
 }
 
-static void process_pf_players_request_packet([[ maybe_unused ]] const void* data, [[ maybe_unused ]] size_t len, const rf::NetAddr& addr)
+static void process_pf_players_request_packet(
+    [[maybe_unused]] const void* data, [[maybe_unused]] size_t len, const rf::NetAddr& addr
+)
 {
     xlog::trace("PF players_request packet");
 
@@ -212,8 +214,7 @@ bool pf_process_packet(const void* data, int len, const rf::NetAddr& addr, rf::P
     std::memcpy(&header, data, sizeof(header));
     auto packet_type = static_cast<pf_packet_type>(header.type);
 
-    switch (packet_type)
-    {
+    switch (packet_type) {
         case pf_packet_type::announce_player:
             process_pf_player_announce_packet(data, len, addr);
             break;
@@ -248,7 +249,7 @@ bool pf_process_raw_unreliable_packet(const void* data, int len, const rf::NetAd
     return false;
 }
 
-void pf_player_init([[ maybe_unused ]] rf::Player* player)
+void pf_player_init([[maybe_unused]] rf::Player* player)
 {
     assert(rf::is_server);
     pf_ac_init_player(player);
@@ -277,9 +278,13 @@ int pf_get_player_ac_level(rf::Player* player)
 {
     pf_pure_status status = pf_ac_get_pure_status(player);
     switch (status) {
-        case pf_pure_status::blue: return 2;
-        case pf_pure_status::gold: return 3;
-        case pf_pure_status::fail: return 1;
-        default: return 0;
+        case pf_pure_status::blue:
+            return 2;
+        case pf_pure_status::gold:
+            return 3;
+        case pf_pure_status::fail:
+            return 1;
+        default:
+            return 0;
     }
 }

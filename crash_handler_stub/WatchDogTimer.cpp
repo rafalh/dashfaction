@@ -23,8 +23,7 @@ class WatchDogTimer::Impl
     bool m_running = false;
 
 public:
-    Impl(std::chrono::milliseconds timeout) : m_timeout(timeout)
-    {}
+    Impl(std::chrono::milliseconds timeout) : m_timeout(timeout) {}
 
     void start()
     {
@@ -33,8 +32,10 @@ public:
             return;
         }
 
-        if (!DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &m_observed_thread_handle, 0,
-            FALSE, DUPLICATE_SAME_ACCESS)) {
+        if (!DuplicateHandle(
+                GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &m_observed_thread_handle, 0, FALSE,
+                DUPLICATE_SAME_ACCESS
+            )) {
             xlog::warn("DuplicateHandle failed");
         }
         m_observed_thread_id = GetCurrentThreadId();
@@ -96,7 +97,8 @@ private:
             crash_observed_thread();
         }
         else {
-            xlog::info("Process is not responding! Hold the Alt key for a few seconds to kill the process and generate a crash report that will allow to debug the problem...");
+            xlog::info("Process is not responding! Hold the Alt key for a few seconds to kill the process and generate "
+                       "a crash report that will allow to debug the problem...");
         }
     }
 
@@ -125,11 +127,11 @@ private:
     }
 };
 
-WatchDogTimer::WatchDogTimer(unsigned timeout_ms) : m_impl(new WatchDogTimer::Impl(std::chrono::milliseconds{timeout_ms}))
-{
-}
+WatchDogTimer::WatchDogTimer(unsigned timeout_ms) :
+    m_impl(new WatchDogTimer::Impl(std::chrono::milliseconds{timeout_ms}))
+{}
 
-WatchDogTimer::~WatchDogTimer() 
+WatchDogTimer::~WatchDogTimer()
 {
     if (is_running()) {
         stop();

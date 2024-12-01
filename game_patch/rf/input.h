@@ -1,7 +1,7 @@
 #pragma once
 
 // RF uses DirectInput 8
-#define DIRECTINPUT_VERSION	0x0800
+#define DIRECTINPUT_VERSION 0x0800
 
 #include <dinput.h>
 #include <patch_common/MemUtils.h>
@@ -117,7 +117,7 @@ namespace rf
         KEY_CTRLED = 0x4000,
     };
 
-    static auto& mouse_get_pos = addr_as_ref<int(int &x, int &y, int &z)>(0x0051E450);
+    static auto& mouse_get_pos = addr_as_ref<int(int& x, int& y, int& z)>(0x0051E450);
     static auto& mouse_was_button_pressed = addr_as_ref<int(int btn_idx)>(0x0051E5D0);
     static auto& mouse_set_visible = addr_as_ref<void(bool visible)>(0x0051E680);
     static auto& key_process_event = addr_as_ref<void(int scan_code, int key_down, int delta_time)>(0x0051E6C0);

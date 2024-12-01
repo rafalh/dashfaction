@@ -27,7 +27,8 @@ IDirect3DSurface8* get_cached_depth_stencil_surface()
     if (!g_depth_stencil_surface) {
         auto hr = rf::gr::d3d::device->CreateDepthStencilSurface(
             rf::gr::d3d::pp.BackBufferWidth, rf::gr::d3d::pp.BackBufferHeight, rf::gr::d3d::pp.AutoDepthStencilFormat,
-            D3DMULTISAMPLE_NONE, &g_depth_stencil_surface);
+            D3DMULTISAMPLE_NONE, &g_depth_stencil_surface
+        );
         if (FAILED(hr)) {
             ERR_ONCE("IDirect3DDevice8::CreateDepthStencilSurface failed 0x{:X}", hr);
             return nullptr;
@@ -158,8 +159,7 @@ CallHook<rf::bm::Format(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer
         }
 
         int bytes_per_pixel = bm_bytes_per_pixel(pixel_fmt);
-        std::byte* src_ptr =
-            static_cast<std::byte*>(locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
+        std::byte* src_ptr = static_cast<std::byte*>(locked_rect.pBits) + y * locked_rect.Pitch + x * bytes_per_pixel;
         std::byte* dst_ptr = buffer;
 
         for (int i = 0; i < height; ++i) {

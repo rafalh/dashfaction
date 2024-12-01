@@ -83,7 +83,8 @@ namespace df::gr::d3d11
         {
             bool alpha_test = mode.get_zbuffer_type() == gr::ZBUFFER_TYPE_FULL_ALPHA_TEST;
             bool fog_allowed = mode.get_fog_type() != gr::FOG_NOT_ALLOWED;
-            if (force_update_ || current_alpha_test_ != alpha_test || current_fog_allowed_ != fog_allowed || current_color_ != color) {
+            if (force_update_ || current_alpha_test_ != alpha_test || current_fog_allowed_ != fog_allowed ||
+                current_color_ != color) {
                 current_alpha_test_ = alpha_test;
                 current_fog_allowed_ = fog_allowed;
                 current_color_ = color;
@@ -133,11 +134,8 @@ namespace df::gr::d3d11
     {
     public:
         RenderContext(
-            ComPtr<ID3D11Device> device,
-            ComPtr<ID3D11DeviceContext> device_context,
-            StateManager& state_manager,
-            ShaderManager& shader_manager,
-            TextureManager& texture_manager
+            ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> device_context, StateManager& state_manager,
+            ShaderManager& shader_manager, TextureManager& texture_manager
         );
 
         ID3D11Device* device() const
@@ -175,8 +173,7 @@ namespace df::gr::d3d11
                     set_sampler_states(sampler_states);
                 }
                 if (!current_mode_ || current_mode_.value().get_alpha_blend() != mode.get_alpha_blend()) {
-                    ID3D11BlendState* blend_state =
-                        state_manager_.lookup_blend_state(mode.get_alpha_blend());
+                    ID3D11BlendState* blend_state = state_manager_.lookup_blend_state(mode.get_alpha_blend());
                     set_blend_state(blend_state);
                 }
                 if (!current_mode_ || current_mode_.value().get_zbuffer_type() != mode.get_zbuffer_type()) {
@@ -224,13 +221,13 @@ namespace df::gr::d3d11
         {
             render_target_view_ = render_target_view;
             depth_stencil_view_ = depth_stencil_view;
-            ID3D11RenderTargetView* render_targets[] = { render_target_view };
+            ID3D11RenderTargetView* render_targets[] = {render_target_view};
             device_context_->OMSetRenderTargets(std::size(render_targets), render_targets, depth_stencil_view);
         }
 
         void bind_vs_cbuffer(int index, ID3D11Buffer* cbuffer)
         {
-            ID3D11Buffer* vs_cbuffers[] = { cbuffer };
+            ID3D11Buffer* vs_cbuffers[] = {cbuffer};
             device_context_->VSSetConstantBuffers(index, std::size(vs_cbuffers), vs_cbuffers);
         }
 
@@ -259,8 +256,8 @@ namespace df::gr::d3d11
             assert(slot < vertex_buffer_slots);
             if (current_vertex_buffers_[slot] != vertex_buffer) {
                 current_vertex_buffers_[slot] = vertex_buffer;
-                UINT offsets[] = { 0 };
-                ID3D11Buffer* vertex_buffers[] = { vertex_buffer };
+                UINT offsets[] = {0};
+                ID3D11Buffer* vertex_buffers[] = {vertex_buffer};
                 device_context_->IASetVertexBuffers(slot, std::size(vertex_buffers), vertex_buffers, &stride, offsets);
             }
         }
@@ -317,7 +314,9 @@ namespace df::gr::d3d11
                 current_cull_mode_ = cull_mode;
                 zbias_changed_ = false;
                 depth_clip_enabled_changed_ = false;
-                set_rasterizer_state(state_manager_.lookup_rasterizer_state(current_cull_mode_, zbias_, depth_clip_enabled_));
+                set_rasterizer_state(
+                    state_manager_.lookup_rasterizer_state(current_cull_mode_, zbias_, depth_clip_enabled_)
+                );
             }
         }
 

@@ -11,9 +11,7 @@ private:
 public:
     Win32Handle() = default;
 
-    Win32Handle(HANDLE handle) :
-        m_handle(handle)
-    {}
+    Win32Handle(HANDLE handle) : m_handle(handle) {}
 
     ~Win32Handle()
     {
@@ -21,7 +19,7 @@ public:
             CloseHandle(m_handle);
     }
 
-    Win32Handle(const Win32Handle&) = delete; // copy constructor
+    Win32Handle(const Win32Handle&) = delete;            // copy constructor
     Win32Handle& operator=(const Win32Handle&) = delete; // assignment operator
 
     Win32Handle(Win32Handle&& other) noexcept : // move constructor
@@ -34,7 +32,7 @@ public:
         return *this;
     }
 
-    Win32Handle &operator=(HANDLE handle)
+    Win32Handle& operator=(HANDLE handle)
     {
         if (m_handle)
             CloseHandle(m_handle);

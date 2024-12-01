@@ -33,7 +33,8 @@ public:
         zip_fileinfo zfi{};
         get_file_time(path, &zfi.tmz_date, &zfi.dosDate);
 
-        int err = zipOpenNewFileInZip(m_zf, name_in_zip, &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
+        int err =
+            zipOpenNewFileInZip(m_zf, name_in_zip, &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
         if (err != ZIP_OK)
             throw std::runtime_error("zipOpenNewFileInZip failed");
 
@@ -57,7 +58,8 @@ public:
     {
         zip_fileinfo zfi{};
 
-        int err = zipOpenNewFileInZip(m_zf, name_in_zip, &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
+        int err =
+            zipOpenNewFileInZip(m_zf, name_in_zip, &zfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
         if (err != ZIP_OK)
             throw std::runtime_error("zipOpenNewFileInZip failed");
 

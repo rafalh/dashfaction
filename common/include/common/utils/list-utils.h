@@ -21,9 +21,7 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = int;
 
-        Iterator(pointer first) :
-            current(first), first(first)
-        {}
+        Iterator(pointer first) : current(first), first(first) {}
 
         self_type operator++()
         {
@@ -57,8 +55,7 @@ public:
         }
     };
 
-    SinglyLinkedList(T*& list) : m_list(list)
-    {}
+    SinglyLinkedList(T*& list) : m_list(list) {}
 
     Iterator begin()
     {
@@ -89,9 +86,7 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = int;
 
-        Iterator(pointer current) :
-            current(current)
-        {}
+        Iterator(pointer current) : current(current) {}
 
         self_type operator++()
         {
@@ -125,8 +120,7 @@ public:
         }
     };
 
-    DoublyLinkedList(T& list) : m_list(list)
-    {}
+    DoublyLinkedList(T& list) : m_list(list) {}
 
     Iterator begin()
     {

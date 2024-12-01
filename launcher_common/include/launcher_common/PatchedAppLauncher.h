@@ -28,7 +28,8 @@ class FileHashVerificationException : public std::runtime_error
 {
 public:
     FileHashVerificationException(std::string file_name, std::string sha1) :
-        std::runtime_error("file hash sum verification failed"), m_file_name(std::move(file_name)), m_sha1(std::move(sha1))
+        std::runtime_error("file hash sum verification failed"), m_file_name(std::move(file_name)),
+        m_sha1(std::move(sha1))
     {}
 
     [[nodiscard]] const std::string& get_file_name() const
@@ -61,9 +62,7 @@ public:
 class PatchedAppLauncher
 {
 public:
-    PatchedAppLauncher(const char* patch_dll_name) :
-        m_patch_dll_name(patch_dll_name)
-    {}
+    PatchedAppLauncher(const char* patch_dll_name) : m_patch_dll_name(patch_dll_name) {}
     void check_installation();
     void launch();
 
@@ -120,7 +119,6 @@ public:
 private:
     GameConfig m_conf;
 };
-
 
 inline std::string get_dir_from_path(const std::string& path)
 {

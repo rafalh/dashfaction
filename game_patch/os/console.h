@@ -114,8 +114,7 @@ private:
         T m_handler;
 
     public:
-        HandlerWrapper(T handler) : m_handler(handler)
-        {}
+        HandlerWrapper(T handler) : m_handler(handler) {}
 
         void operator()()
         {
@@ -129,10 +128,8 @@ private:
     const char* m_usage_text;
 
 public:
-    ConsoleCommand2(const char* name, T handler, const char* description = nullptr,
-               const char* usage_text = nullptr) :
-        BaseCommand(name, description),
-        m_handler_wrapper(handler), m_usage_text(usage_text)
+    ConsoleCommand2(const char* name, T handler, const char* description = nullptr, const char* usage_text = nullptr) :
+        BaseCommand(name, description), m_handler_wrapper(handler), m_usage_text(usage_text)
     {}
 
 private:
@@ -177,7 +174,7 @@ public:
 private:
     void handler() override
     {
-        auto handler_fun = reinterpret_cast<void(__thiscall *)(rf::console::Command*)>(m_target_cmd.func);
+        auto handler_fun = reinterpret_cast<void(__thiscall*)(rf::console::Command*)>(m_target_cmd.func);
         handler_fun(&m_target_cmd);
     }
 };

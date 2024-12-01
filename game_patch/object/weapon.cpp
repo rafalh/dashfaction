@@ -56,9 +56,9 @@ FunHook<void(rf::Weapon*)> weapon_move_one_hook{
         bool has_gravity_flag = weapon->p_data.flags & 1;
         bool check_y_axis = !(has_gravity_flag || weapon->info->thrust_lifetime_seconds > 0.0f);
         auto& pos = weapon->pos;
-        if (pos.x < level_aabb_min.x - margin || pos.x > level_aabb_max.x + margin
-        || pos.z < level_aabb_min.z - margin || pos.z > level_aabb_max.z + margin
-        || (check_y_axis && (pos.y < level_aabb_min.y - margin || pos.y > level_aabb_max.y + margin))) {
+        if (pos.x < level_aabb_min.x - margin || pos.x > level_aabb_max.x + margin ||
+            pos.z < level_aabb_min.z - margin || pos.z > level_aabb_max.z + margin ||
+            (check_y_axis && (pos.y < level_aabb_min.y - margin || pos.y > level_aabb_max.y + margin))) {
             // Weapon is outside the level - delete it
             rf::obj_flag_dead(weapon);
         }
@@ -122,7 +122,9 @@ CallHook<void(rf::Vector3&, float, float, int, int)> weapon_hit_wall_obj_apply_r
     [](rf::Vector3& epicenter, float damage, float radius, int killer_handle, int damage_type) {
         auto& collide_out = *reinterpret_cast<rf::PCollisionOut*>(&epicenter);
         auto new_epicenter = epicenter + collide_out.hit_normal * 0.0001f;
-        weapon_hit_wall_obj_apply_radius_damage_hook.call_target(new_epicenter, damage, radius, killer_handle, damage_type);
+        weapon_hit_wall_obj_apply_radius_damage_hook.call_target(
+            new_epicenter, damage, radius, killer_handle, damage_type
+        );
     },
 };
 

@@ -38,9 +38,12 @@ inline void print_exception(const std::exception& e, std::string& buf, int level
     buf += '\n';
     try {
         std::rethrow_if_nested(e);
-    } catch(const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         print_exception(e, buf, level + 1);
-    } catch(...) {}
+    }
+    catch (...) {
+    }
 }
 
 inline std::string generate_message_for_exception(const std::exception& e)

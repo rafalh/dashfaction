@@ -39,8 +39,7 @@ namespace rf
             AddrCaller{0x004FF410}.this_call(this, &str);
         }
 
-        String(Pod pod) : m_pod(pod)
-        {}
+        String(Pod pod) : m_pod(pod) {}
 
         ~String()
         {
@@ -86,10 +85,7 @@ namespace rf
 
         [[nodiscard]] bool operator==(const String& other) const
         {
-            return std::strcmp(
-                m_pod.buf ? m_pod.buf : "",
-                other.m_pod.buf ? other.m_pod.buf : ""
-            ) == 0;
+            return std::strcmp(m_pod.buf ? m_pod.buf : "", other.m_pod.buf ? other.m_pod.buf : "") == 0;
         }
 
         [[nodiscard]] bool operator==(const char* other) const
@@ -97,7 +93,7 @@ namespace rf
             return std::strcmp(m_pod.buf ? m_pod.buf : "", other) == 0;
         }
 
-        [[nodiscard]] const char *c_str() const
+        [[nodiscard]] const char* c_str() const
         {
             return AddrCaller{0x004FF480}.this_call<const char*>(this);
         }
@@ -142,14 +138,16 @@ namespace rf
     static_assert(sizeof(String) == 8);
 }
 
-template <>
-struct std::formatter<rf::String> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+template<>
+struct std::formatter<rf::String>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
         return ctx.begin();
     }
 
-    auto format(const rf::String& s, std::format_context& ctx) const {
+    auto format(const rf::String& s, std::format_context& ctx) const
+    {
         return std::format_to(ctx.out(), "{}", s.c_str());
     }
 };
-

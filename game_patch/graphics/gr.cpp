@@ -26,7 +26,10 @@ namespace df::gr::d3d11
 {
     bool set_render_target(int bm_handle);
     void update_window_mode();
-    void bitmap_float(int bitmap_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::gr::Mode mode);
+    void bitmap_float(
+        int bitmap_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x,
+        bool flip_y, rf::gr::Mode mode
+    );
 }
 
 float gr_lod_dist_scale = 1.0f;
@@ -177,8 +180,10 @@ bool gr_set_render_target(int bm_handle)
     return false;
 }
 
-void gr_bitmap_scaled_float(int bitmap_handle, float x, float y, float w, float h,
-                            float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::gr::Mode mode)
+void gr_bitmap_scaled_float(
+    int bitmap_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x,
+    bool flip_y, rf::gr::Mode mode
+)
 {
     if (rf::gr::screen.mode == rf::gr::DIRECT3D) {
         if (g_game_config.renderer == GameConfig::Renderer::d3d11) {
@@ -214,16 +219,12 @@ void gr_update_texture_filtering()
 
 ConsoleCommand2 fullscreen_cmd{
     "fullscreen",
-    []() {
-        gr_set_window_mode(rf::gr::FULLSCREEN);
-    },
+    []() { gr_set_window_mode(rf::gr::FULLSCREEN); },
 };
 
 ConsoleCommand2 windowed_cmd{
     "windowed",
-    []() {
-        gr_set_window_mode(rf::gr::WINDOWED);
-    },
+    []() { gr_set_window_mode(rf::gr::WINDOWED); },
 };
 
 ConsoleCommand2 nearest_texture_filtering_cmd{
@@ -232,7 +233,9 @@ ConsoleCommand2 nearest_texture_filtering_cmd{
         g_game_config.nearest_texture_filtering = !g_game_config.nearest_texture_filtering;
         g_game_config.save();
         gr_update_texture_filtering();
-        rf::console::print("Nearest texture filtering is {}", g_game_config.nearest_texture_filtering ? "enabled" : "disabled");
+        rf::console::print(
+            "Nearest texture filtering is {}", g_game_config.nearest_texture_filtering ? "enabled" : "disabled"
+        );
     },
     "Toggle nearest texture filtering",
 };

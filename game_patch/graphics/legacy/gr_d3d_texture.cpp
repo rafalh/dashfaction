@@ -33,8 +33,9 @@ class D3DTextureFormatSelector
     D3DFORMAT find_best_format(D3DFORMAT (&&allowed)[N])
     {
         for (auto d3d_fmt : allowed) {
-            auto hr = rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat, 0,
-                D3DRTYPE_TEXTURE, d3d_fmt);
+            auto hr = rf::gr::d3d::d3d->CheckDeviceFormat(
+                rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat, 0, D3DRTYPE_TEXTURE, d3d_fmt
+            );
             if (SUCCEEDED(hr)) {
                 return d3d_fmt;
             }
@@ -95,11 +96,12 @@ public:
 D3DTextureFormatSelector g_texture_format_selector;
 
 using GrD3DSetTextureData_Type =
-    int(int, const std::byte*, const uint8_t*, int, int, rf::bm::Format, rf::gr::d3d::TextureSection*, int, int, IDirect3DTexture8*);
+    int(int, const std::byte*, const uint8_t*, int, int, rf::bm::Format, rf::gr::d3d::TextureSection*, int, int,
+        IDirect3DTexture8*);
 FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
     0x0055BA10,
-    [](int level, const std::byte* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h,
-        rf::bm::Format format, rf::gr::d3d::TextureSection* section, int tex_w, int tex_h, IDirect3DTexture8* texture) {
+    [](int level, const std::byte* src_bits_ptr, const uint8_t* palette, int bm_w, int bm_h, rf::bm::Format format,
+       rf::gr::d3d::TextureSection* section, int tex_w, int tex_h, IDirect3DTexture8* texture) {
         xlog::trace("gr_d3d_set_texture_data_hook");
 
         D3DSURFACE_DESC desc;
@@ -112,8 +114,9 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         auto tex_pixel_fmt = get_bm_format_from_d3d_format(desc.Format);
         if (!bm_is_compressed_format(tex_pixel_fmt) && bm_bytes_per_pixel(tex_pixel_fmt) == 2) {
             // original code can handle only 16 bit surfaces
-            return gr_d3d_set_texture_data_hook.call_target(level, src_bits_ptr, palette, bm_w, bm_h, format, section,
-                                                           tex_w, tex_h, texture);
+            return gr_d3d_set_texture_data_hook.call_target(
+                level, src_bits_ptr, palette, bm_w, bm_h, format, section, tex_w, tex_h, texture
+            );
         }
 
         D3DLOCKED_RECT locked_rect;
@@ -125,8 +128,10 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
 
         bool success = true;
         if (bm_is_compressed_format(format)) {
-            xlog::trace("Writing texture in compressed format level {} src {} bm {}x{} tex {}x{} section {} {}",
-                level, src_bits_ptr, bm_w, bm_h, tex_w, tex_h, section->x, section->y);
+            xlog::trace(
+                "Writing texture in compressed format level {} src {} bm {}x{} tex {}x{} section {} {}", level,
+                src_bits_ptr, bm_w, bm_h, tex_w, tex_h, section->x, section->y
+            );
             auto src_pitch = bm_calculate_pitch(bm_w, format);
             auto num_src_rows = bm_calculate_rows(bm_h, format);
 
@@ -147,11 +152,14 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         }
         else {
             auto bm_pitch = bm_bytes_per_pixel(format) * bm_w;
-            success = bm_convert_format(locked_rect.pBits, tex_pixel_fmt,
-                                                src_bits_ptr, format, bm_w, bm_h, locked_rect.Pitch,
-                                                bm_pitch, palette);
+            success = bm_convert_format(
+                locked_rect.pBits, tex_pixel_fmt, src_bits_ptr, format, bm_w, bm_h, locked_rect.Pitch, bm_pitch, palette
+            );
             if (!success)
-                xlog::warn("Color conversion failed (format {} -> {})", static_cast<int>(format), static_cast<int>(tex_pixel_fmt));
+                xlog::warn(
+                    "Color conversion failed (format {} -> {})", static_cast<int>(format),
+                    static_cast<int>(tex_pixel_fmt)
+                );
         }
 
         texture->UnlockRect(level);
@@ -187,7 +195,10 @@ FunHook<int(rf::bm::Format, int, int, int, IDirect3DTexture8**)> gr_d3d_create_v
             }
         }
 
-        xlog::trace("Creating texture bm_format 0x{:x} d3d_format 0x{:x}", static_cast<int>(format), static_cast<int>(d3d_format));
+        xlog::trace(
+            "Creating texture bm_format 0x{:x} d3d_format 0x{:x}", static_cast<int>(format),
+            static_cast<int>(d3d_format)
+        );
         auto hr = rf::gr::d3d::device->CreateTexture(width, height, levels, usage, d3d_format, d3d_pool, texture_out);
         if (FAILED(hr)) {
             xlog::error("Failed to create texture {}x{} in format {}", width, height, static_cast<int>(d3d_format));
@@ -237,7 +248,6 @@ FunHook<void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
             int y = std::lround(v * lock.h);
             *out_color = bm_get_pixel(lock.data, lock.format, lock.stride_in_bytes, x, y);
 
-
             rf::gr::unlock(&lock);
         }
         else {
@@ -248,7 +258,8 @@ FunHook<void(int, float, float, rf::Color*)> gr_d3d_get_texel_hook{
 
 extern FunHook<int(int, rf::gr::d3d::Texture&)> gr_d3d_create_texture_hook;
 
-int gr_d3d_create_texture(int bm_handle, rf::gr::d3d::Texture& tslot) {
+int gr_d3d_create_texture(int bm_handle, rf::gr::d3d::Texture& tslot)
+{
     g_currently_creating_texture_for_bitmap = bm_handle;
     auto result = gr_d3d_create_texture_hook.call_target(bm_handle, tslot);
     g_currently_creating_texture_for_bitmap = -1;
@@ -282,7 +293,8 @@ FunHook<void(rf::gr::d3d::Texture&)> gr_d3d_free_texture_hook{
     },
 };
 
-bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo *lock) {
+bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo* lock)
+{
     xlog::trace("gr_d3d_lock");
     auto& tslot = rf::gr::d3d::textures[rf::bm::get_cache_slot(bm_handle)];
     if (tslot.num_sections < 1 || tslot.bm_handle != bm_handle) {
@@ -324,7 +336,7 @@ bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo *lock) {
     return true;
 }
 
-static FunHook<bool(int, int, rf::gr::LockInfo *)> gr_d3d_lock_hook{0x0055CE00, gr_d3d_lock};
+static FunHook<bool(int, int, rf::gr::LockInfo*)> gr_d3d_lock_hook{0x0055CE00, gr_d3d_lock};
 
 // FunHook<void(rf::gr::Mode, int, int)> gr_d3d_set_state_and_texture_hook{
 //     0x00550850,
@@ -349,8 +361,9 @@ bool gr_d3d_is_texture_format_supported(rf::bm::Format format)
         return false;
     }
 
-    HRESULT hr = rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL,
-        rf::gr::d3d::pp.BackBufferFormat, 0, D3DRTYPE_TEXTURE, d3d_fmt);
+    HRESULT hr = rf::gr::d3d::d3d->CheckDeviceFormat(
+        rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat, 0, D3DRTYPE_TEXTURE, d3d_fmt
+    );
     return SUCCEEDED(hr);
 }
 
@@ -373,7 +386,7 @@ void gr_d3d_texture_apply_patch()
     gr_d3d_get_texel_hook.install();
     gr_d3d_create_texture_hook.install();
     gr_d3d_free_texture_hook.install();
-    //gr_d3d_set_state_and_texture_hook.install();
+    // gr_d3d_set_state_and_texture_hook.install();
     gr_d3d_lock_hook.install();
     gr_d3d_mark_texture_dirty_hook.install();
 

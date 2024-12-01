@@ -12,9 +12,7 @@ private:
     HANDLE m_process;
 
 public:
-    RemoteMemoryPtr(void* ptr, HANDLE process) :
-        m_ptr(ptr), m_process(process)
-    {}
+    RemoteMemoryPtr(void* ptr, HANDLE process) : m_ptr(ptr), m_process(process) {}
 
     ~RemoteMemoryPtr()
     {
@@ -22,12 +20,11 @@ public:
             VirtualFreeEx(m_process, m_ptr, 0, MEM_RELEASE);
     }
 
-    RemoteMemoryPtr(const RemoteMemoryPtr&) = delete; // copy constructor
+    RemoteMemoryPtr(const RemoteMemoryPtr&) = delete;            // copy constructor
     RemoteMemoryPtr& operator=(const RemoteMemoryPtr&) = delete; // assignment operator
 
     RemoteMemoryPtr(RemoteMemoryPtr&& other) : // move constructor
-        m_ptr(std::exchange(other.m_ptr, nullptr)),
-        m_process(std::exchange(other.m_process, nullptr))
+        m_ptr(std::exchange(other.m_ptr, nullptr)), m_process(std::exchange(other.m_process, nullptr))
     {}
 
     RemoteMemoryPtr& operator=(RemoteMemoryPtr&& other) // move assignment operator
@@ -85,8 +82,7 @@ public:
 
     Thread create_remote_thread(LPTHREAD_START_ROUTINE fun_ptr, void* arg)
     {
-        Win32Handle thread_handle =
-        ::CreateRemoteThread(m_handle, nullptr, 0, fun_ptr, arg, 0, nullptr);
+        Win32Handle thread_handle = ::CreateRemoteThread(m_handle, nullptr, 0, fun_ptr, arg, 0, nullptr);
         if (!thread_handle)
             THROW_WIN32_ERROR();
 
@@ -132,6 +128,6 @@ public:
             std::fprintf(stderr, "VirtualProtectEx failed to unprotect memory: %ld\n", GetLastError());
     }
 
-    ProcessMemoryProtection(const ProcessMemoryProtection&) = delete; // copy constructor
+    ProcessMemoryProtection(const ProcessMemoryProtection&) = delete;            // copy constructor
     ProcessMemoryProtection& operator=(const ProcessMemoryProtection&) = delete; // assignment operator
 };

@@ -15,9 +15,7 @@
 
 #define WM_UPDATE_CHECK (WM_USER + 10)
 
-MainDlg::MainDlg() : CDialog(IDD_MAIN)
-{
-}
+MainDlg::MainDlg() : CDialog(IDD_MAIN) {}
 
 BOOL MainDlg::OnInitDialog()
 {
@@ -35,7 +33,6 @@ BOOL MainDlg::OnInitDialog()
     // Set header bitmap
     auto* hbm = static_cast<HBITMAP>(GetApp()->LoadImage(MAKEINTRESOURCE(IDB_HEADER), IMAGE_BITMAP, 0, 0, 0));
     m_picture.SetBitmap(hbm);
-
 
     // Fill mod selector
     RefreshModSelector();
@@ -62,31 +59,31 @@ BOOL MainDlg::OnCommand(WPARAM wparam, LPARAM lparam)
 
     UINT id = LOWORD(wparam);
     switch (id) {
-    case IDC_OPTIONS_BTN:
-        OnBnClickedOptionsBtn();
-        return TRUE;
-    case IDC_EDITOR_BTN:
-        OnBnClickedEditorBtn();
-        return TRUE;
+        case IDC_OPTIONS_BTN:
+            OnBnClickedOptionsBtn();
+            return TRUE;
+        case IDC_EDITOR_BTN:
+            OnBnClickedEditorBtn();
+            return TRUE;
     }
 
     return FALSE;
 }
 
-LRESULT MainDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
+LRESULT MainDlg::OnNotify([[maybe_unused]] WPARAM wparam, LPARAM lparam)
 {
     auto& nmhdr = *reinterpret_cast<LPNMHDR>(lparam);
     switch (nmhdr.code) {
-    case NM_CLICK:
-        // fall through
-    case NM_RETURN:
-        if (nmhdr.idFrom == IDC_ABOUT_LINK) {
-            OnAboutLinkClick();
-        }
-        else if (nmhdr.idFrom == IDC_SUPPORT_LINK) {
-            OnSupportLinkClick();
-        }
-        break;
+        case NM_CLICK:
+            // fall through
+        case NM_RETURN:
+            if (nmhdr.idFrom == IDC_ABOUT_LINK) {
+                OnAboutLinkClick();
+            }
+            else if (nmhdr.idFrom == IDC_SUPPORT_LINK) {
+                OnSupportLinkClick();
+            }
+            break;
     }
     return 0;
 }
@@ -151,8 +148,9 @@ LRESULT MainDlg::OnUpdateCheck(WPARAM wparam, LPARAM lparam)
         m_update_status.SetWindowText("No update is available.");
     else {
         m_update_status.SetWindowText("New version available!");
-        int result = MessageBoxA(chk_result.message.c_str(), "Dash Faction update is available!",
-                                  MB_OKCANCEL | MB_ICONEXCLAMATION);
+        int result = MessageBoxA(
+            chk_result.message.c_str(), "Dash Faction update is available!", MB_OKCANCEL | MB_ICONEXCLAMATION
+        );
         if (result == IDOK) {
             HINSTANCE exec_res = ShellExecuteA(*this, "open", chk_result.url.c_str(), nullptr, nullptr, SW_SHOW);
             auto exec_res_int = reinterpret_cast<INT_PTR>(exec_res);

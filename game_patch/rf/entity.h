@@ -166,13 +166,13 @@ namespace rf
         int force_launch_sound;
         int num_state_anims;
         int num_action_anims;
-        EntityAnimInfo *state_anims;
-        EntityAnimInfo *action_anims;
+        EntityAnimInfo* state_anims;
+        EntityAnimInfo* action_anims;
         float fov_dot;
         int num_state_weapon_anims[64];
         int num_action_weapon_anims[64];
-        EntityAnimInfo *state_weapon_anims[64];
-        EntityAnimInfo *action_weapon_anims[64];
+        EntityAnimInfo* state_weapon_anims[64];
+        EntityAnimInfo* action_weapon_anims[64];
         FArray<EntityCollisionSphereOverride, 8> csphere_overrides;
         FArray<EntityCollisionSphere, 8> collision_spheres;
         FArray<EntityCollisionSphere, 8> crouch_collision_spheres;
@@ -244,11 +244,11 @@ namespace rf
 
     struct Entity : Object
     {
-        Entity *next;
-        Entity *prev;
-        EntityInfo *info;
+        Entity* next;
+        Entity* prev;
+        EntityInfo* info;
         int info_index;
-        EntityInfo *info2;
+        EntityInfo* info2;
         AiInfo ai;
         Vector3 eye_pos;
         Matrix3 eye_orient;
@@ -269,12 +269,12 @@ namespace rf
         int custom_death_anim_index;
         float fov_cos;
         int engine_rev_sound_handle;
-        VMesh *primary_warmup_vfx_handle;
-        VMesh *cockpit_vfx_handle;
+        VMesh* primary_warmup_vfx_handle;
+        VMesh* cockpit_vfx_handle;
         int nano_shield;
         int damage_sound_instance;
-        MoveMode *move_mode;
-        Matrix3 *move_parent_orient;
+        MoveMode* move_mode;
+        Matrix3* move_parent_orient;
         EntityControlData control_data;
         float max_vel;
         EntitySpeed current_speed;
@@ -285,8 +285,8 @@ namespace rf
         EntityAnim action_anims[45];
         EntityAnim default_state_anims[23];
         EntityAnim default_action_anims[45];
-        EntityAnim *state_weapon_anims[64];
-        EntityAnim *action_weapon_anims[64];
+        EntityAnim* state_weapon_anims[64];
+        EntityAnim* action_weapon_anims[64];
         int last_idle_anim_index_maybe_unused;
         int last_cust_anim_index_maybe_unused;
         Timestamp primary_muzzle_timestamp;
@@ -315,24 +315,24 @@ namespace rf
         int driller_sound_handle;
         int flame_handle;
         EntityFireInfo* entity_fire_handle;
-        Vector3 *collision_sphere_current_pos;
+        Vector3* collision_sphere_current_pos;
         Vector3 board_vehicle_local_pos;
-        ClimbRegion *ignored_climb_region;
-        ClimbRegion *current_climb_region;
+        ClimbRegion* ignored_climb_region;
+        ClimbRegion* current_climb_region;
         int mouth_tag;
-        ParticleEmitter *breath_emitter;
+        ParticleEmitter* breath_emitter;
         Timestamp last_fired_timestamp;
         int voice_handle;
         int last_voice_anim_index;
         float speech_duration;
         Timestamp play_next_speech_anim;
-        VMesh *helmet_v3d_handle;
+        VMesh* helmet_v3d_handle;
         Timestamp next_splash_allowed;
         VArray<Glare*> glares;
         int tracer_countdown;
         int weapon_custom_mode_bitmap;
         int weapon_silencer_bitfield;
-        Player *local_player;
+        Player* local_player;
         Vector3 min_rel_eye_phb;
         Vector3 max_rel_eye_phb;
         int killer_handle;
@@ -350,14 +350,14 @@ namespace rf
         int mp_character_id;
         int powerup_light_handle;
         int field_1488;
-        VMesh *respawn_vfx_handle;
+        VMesh* respawn_vfx_handle;
         Timestamp field_1490;
     };
     static_assert(sizeof(Entity) == 0x1494);
 
     struct EntityFireInfo
     {
-        ParticleEmitter *emitters[4];
+        ParticleEmitter* emitters[4];
         int parent_hobj;
         int lower_leg_l_bone;
         int lower_leg_r_bone;
@@ -368,14 +368,14 @@ namespace rf
         bool time_limited;
         float time;
         int field_34;
-        EntityFireInfo *next;
-        EntityFireInfo *prev;
+        EntityFireInfo* next;
+        EntityFireInfo* prev;
     };
 
     struct ShadowInfo
     {
         float radius;
-        VMesh *vmesh_handle;
+        VMesh* vmesh_handle;
         int root_bone_index;
         Vector3 pos;
         Matrix3 orient;
@@ -399,32 +399,39 @@ namespace rf
     };
 
     static auto& entity_from_handle = addr_as_ref<Entity*(int handle)>(0x00426FC0);
-    static auto& entity_create =
-        addr_as_ref<Entity*(int entity_type, const char* name, int parent_handle, const Vector3& pos,
-        const Matrix3& orient, int create_flags, int mp_character)>(0x00422360);
-    static auto& entity_is_dying = addr_as_ref<bool(Entity *ep)>(0x00427020);
-    static auto& entity_in_vehicle = addr_as_ref<bool(Entity *ep)>(0x004290D0);
-    static auto& entity_is_jeep_driver = addr_as_ref<bool(Entity *ep)>(0x0042AC80);
-    static auto& entity_is_jeep_gunner = addr_as_ref<bool(Entity *ep)>(0x0042ACD0);
-    static auto& entity_is_driller = addr_as_ref<bool(Entity *ep)>(0x0042D780);
-    static auto& entity_is_sub = addr_as_ref<bool(Entity *ep)>(0x0040A270);
-    static auto& entity_is_jeep = addr_as_ref<bool(Entity *ep)>(0x0040A2F0);
-    static auto& entity_is_fighter = addr_as_ref<bool(Entity *ep)>(0x0040A210);
-    static auto& entity_is_carrying_corpse = addr_as_ref<bool(Entity *ep)>(0x00429D20);
-    static auto& entity_fire_init_bones = addr_as_ref<bool(EntityFireInfo *efi, Object *objp)>(0x0042EB20);
+    static auto& entity_create = addr_as_ref<Entity*(
+        int entity_type, const char* name, int parent_handle, const Vector3& pos, const Matrix3& orient,
+        int create_flags, int mp_character
+    )>(0x00422360);
+    static auto& entity_is_dying = addr_as_ref<bool(Entity* ep)>(0x00427020);
+    static auto& entity_in_vehicle = addr_as_ref<bool(Entity* ep)>(0x004290D0);
+    static auto& entity_is_jeep_driver = addr_as_ref<bool(Entity* ep)>(0x0042AC80);
+    static auto& entity_is_jeep_gunner = addr_as_ref<bool(Entity* ep)>(0x0042ACD0);
+    static auto& entity_is_driller = addr_as_ref<bool(Entity* ep)>(0x0042D780);
+    static auto& entity_is_sub = addr_as_ref<bool(Entity* ep)>(0x0040A270);
+    static auto& entity_is_jeep = addr_as_ref<bool(Entity* ep)>(0x0040A2F0);
+    static auto& entity_is_fighter = addr_as_ref<bool(Entity* ep)>(0x0040A210);
+    static auto& entity_is_carrying_corpse = addr_as_ref<bool(Entity* ep)>(0x00429D20);
+    static auto& entity_fire_init_bones = addr_as_ref<bool(EntityFireInfo* efi, Object* objp)>(0x0042EB20);
     static auto& entity_is_swimming = addr_as_ref<bool(Entity* ep)>(0x0042A0A0);
     static auto& entity_is_falling = addr_as_ref<bool(Entity* ep)>(0x0042A020);
     static auto& entity_can_swim = addr_as_ref<bool(Entity* ep)>(0x00427FF0);
     static auto& entity_update_liquid_status = addr_as_ref<void(Entity* ep)>(0x00429100);
     static auto& entity_is_playing_action_animation = addr_as_ref<bool(Entity* entity, int action)>(0x00428D10);
-    static auto& entity_set_next_state_anim = addr_as_ref<void(Entity* entity, int state, float transition_time)>(0x0042A580);
-    static auto& entity_play_action_animation = addr_as_ref<void(Entity* entity, int action, float transition_time, bool hold_last_frame, bool with_sound)>(0x00428C90);
+    static auto& entity_set_next_state_anim =
+        addr_as_ref<void(Entity* entity, int state, float transition_time)>(0x0042A580);
+    static auto& entity_play_action_animation =
+        addr_as_ref<void(Entity* entity, int action, float transition_time, bool hold_last_frame, bool with_sound)>(
+            0x00428C90
+        );
     static auto& entity_is_reloading = addr_as_ref<bool(Entity* entity)>(0x00425250);
     static auto& entity_weapon_is_on = addr_as_ref<bool(int entity_handle, int weapon_type)>(0x0041A830);
-    static auto& entity_reload_current_primary = addr_as_ref<bool __cdecl(Entity *entity, bool no_sound, bool is_reload_packet)>(0x00425280);
-    static auto& entity_turn_weapon_on = addr_as_ref<void __cdecl(int entity_handle, int weapon_type, bool alt_fire)>(0x0041A870);
+    static auto& entity_reload_current_primary =
+        addr_as_ref<bool __cdecl(Entity* entity, bool no_sound, bool is_reload_packet)>(0x00425280);
+    static auto& entity_turn_weapon_on =
+        addr_as_ref<void __cdecl(int entity_handle, int weapon_type, bool alt_fire)>(0x0041A870);
     static auto& entity_turn_weapon_off = addr_as_ref<void __cdecl(int entity_handle, int weapon_type)>(0x0041AE70);
-    static auto& entity_restore_mesh = addr_as_ref<void(Entity *ep, const char *mesh_name)>(0x0042C570);
+    static auto& entity_restore_mesh = addr_as_ref<void(Entity* ep, const char* mesh_name)>(0x0042C570);
 
     static auto& entity_list = addr_as_ref<Entity>(0x005CB060);
     static auto& local_player_entity = addr_as_ref<Entity*>(0x005CB054);

@@ -29,7 +29,8 @@ namespace rf
     };
     static_assert(sizeof(ObjLight) == 0x18);
 
-    enum WeaponInfoType {
+    enum WeaponInfoType
+    {
         WEAPON_PRIMARY = 0,
         WEAPON_SECONDARY = 1,
     };
@@ -43,12 +44,12 @@ namespace rf
         String embedded_vmesh_filename;
         int ammo_type;
         String third_person_vmesh_filename;
-        VMesh *third_person_vmesh_handle;
+        VMesh* third_person_vmesh_handle;
         int third_person_muzzle_tag;
         int third_person_grip_tag;
         int third_person_muzzle_flash_glare_index;
         String first_person_vmesh_filename;
-        VMesh *mesh;
+        VMesh* mesh;
         Vector3 first_person_offset;
         Vector3 first_person_offset_ss;
         int first_person_muzzle_flash_bitmap;
@@ -179,10 +180,10 @@ namespace rf
         float shake_camera_distance;
         float shake_camera_time;
         String silencer_v3d_name;
-        VMesh *silencer_v3d;
+        VMesh* silencer_v3d;
         int silencer_fp_tag;
         String spark_vfx_name;
-        VMesh *spark_vfx;
+        VMesh* spark_vfx;
         int spark_fp_tag;
         int spark_fp_flash_bitmap;
         float ai_max_range_single;
@@ -198,7 +199,7 @@ namespace rf
         float fine_aim_region_factor;
         float fine_aim_region_factor_ss;
         String tracer_mesh_filename;
-        VMesh *tracer_mesh_handle;
+        VMesh* tracer_mesh_handle;
         float multi_bbox_size_factor;
     };
     static_assert(sizeof(WeaponInfo) == 0x550);
@@ -239,9 +240,9 @@ namespace rf
     };
     struct Weapon : Object
     {
-        Weapon *next;
-        Weapon *prev;
-        WeaponInfo *info;
+        Weapon* next;
+        Weapon* prev;
+        WeaponInfo* info;
         int info_index;
         float lifeleft_seconds;
         int fly_sound_handle;
@@ -290,5 +291,5 @@ namespace rf
     static auto& weapon_is_melee = addr_as_ref<bool(int weapon_type)>(0x004C91B0);
     static auto& weapon_uses_clip = addr_as_ref<bool(int weapon_type)>(0x004C86E0);
     static auto& weapon_get_fire_wait_ms = addr_as_ref<int __cdecl(int weapon_type, bool alt_fire)>(0x004C8710);
-    static auto& weapon_restore_mesh = addr_as_ref<void(Weapon *wp, const char *mesh_filename)>(0x004C8140);
+    static auto& weapon_restore_mesh = addr_as_ref<void(Weapon* wp, const char* mesh_filename)>(0x004C8140);
 }

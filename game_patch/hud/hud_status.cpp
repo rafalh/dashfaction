@@ -14,7 +14,7 @@ bool g_big_health_armor_hud = false;
 
 FunHook<void(rf::Player*)> hud_status_render_hook{
     0x00439D80,
-    [](rf::Player *player) {
+    [](rf::Player* player) {
         if (!g_big_health_armor_hud) {
             hud_status_render_hook.call_target(player);
             return;
@@ -52,12 +52,14 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
                 rf::gr::set_color(255, 255, 255, 120);
                 auto [driller_x, driller_y] = hud_scale_coords(rf::hud_coords[rf::hud_driller], scale);
                 hud_scaled_bitmap(rf::hud_health_driller_bmh, driller_x, driller_y, scale);
-                auto [driller_frame_x, driller_frame_y] = hud_scale_coords(rf::hud_coords[rf::hud_driller_frame], scale);
+                auto [driller_frame_x, driller_frame_y] =
+                    hud_scale_coords(rf::hud_coords[rf::hud_driller_frame], scale);
                 hud_scaled_bitmap(rf::hud_health_veh_frame_bmh, driller_frame_x, driller_frame_y, scale);
                 auto veh_life = std::max(static_cast<int>(vehicle->life), 1);
                 auto veh_life_str = std::to_string(veh_life);
                 rf::gr::set_color(rf::hud_full_color);
-                auto [driller_value_x, driller_value_y] = hud_scale_coords(rf::hud_coords[rf::hud_driller_value], scale);
+                auto [driller_value_x, driller_value_y] =
+                    hud_scale_coords(rf::hud_coords[rf::hud_driller_value], scale);
                 rf::gr::string(driller_value_x, driller_value_y, veh_life_str.c_str(), font_id);
             }
         }
@@ -78,15 +80,20 @@ FunHook<void(rf::Player*)> hud_status_render_hook{
             auto health_str = std::to_string(health);
             int text_w, text_h;
             rf::gr::get_string_size(&text_w, &text_h, health_str.c_str(), -1, font_id);
-            auto [health_value_x, health_value_y] = hud_scale_coords(rf::hud_coords[rf::hud_health_value_ul_corner], scale);
+            auto [health_value_x, health_value_y] =
+                hud_scale_coords(rf::hud_coords[rf::hud_health_value_ul_corner], scale);
             auto health_value_w = hud_scale_coords(rf::hud_coords[rf::hud_health_value_width_and_height], scale).x;
             rf::gr::string(health_value_x + (health_value_w - text_w) / 2, health_value_y, health_str.c_str(), font_id);
             rf::gr::set_color(rf::hud_mid_color);
             auto armor_str = std::to_string(static_cast<int>(entity->armor));
             rf::gr::get_string_size(&text_w, &text_h, armor_str.c_str(), -1, font_id);
-            auto [envirosuit_value_x, envirosuit_value_y] = hud_scale_coords(rf::hud_coords[rf::hud_envirosuit_value_ul_corner], scale);
-            auto envirosuit_value_w = hud_scale_coords(rf::hud_coords[rf::hud_envirosuit_value_width_and_height], scale).x;
-            rf::gr::string(envirosuit_value_x + (envirosuit_value_w - text_w) / 2, envirosuit_value_y, armor_str.c_str(), font_id);
+            auto [envirosuit_value_x, envirosuit_value_y] =
+                hud_scale_coords(rf::hud_coords[rf::hud_envirosuit_value_ul_corner], scale);
+            auto envirosuit_value_w =
+                hud_scale_coords(rf::hud_coords[rf::hud_envirosuit_value_width_and_height], scale).x;
+            rf::gr::string(
+                envirosuit_value_x + (envirosuit_value_w - text_w) / 2, envirosuit_value_y, armor_str.c_str(), font_id
+            );
 
             rf::hud_draw_damage_indicators(player);
 

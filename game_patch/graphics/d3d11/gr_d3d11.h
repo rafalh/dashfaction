@@ -40,8 +40,14 @@ namespace df::gr::d3d11
         void window_active();
         void window_inactive();
         void set_fullscreen_state(bool fullscreen);
-        void bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, rf::gr::Mode mode);
-        void bitmap(int bm_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::gr::Mode mode);
+        void bitmap(
+            int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y,
+            rf::gr::Mode mode
+        );
+        void bitmap(
+            int bm_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x,
+            bool flip_y, rf::gr::Mode mode
+        );
         void page_in(int bm_handle);
         void clear();
         void zbuffer_clear();
@@ -53,26 +59,33 @@ namespace df::gr::d3d11
         void texture_mark_dirty(int bm_handle);
         void texture_add_ref(int bm_handle);
         void texture_remove_ref(int bm_handle);
-        bool lock(int bm_handle, int section, rf::gr::LockInfo *lock);
-        void unlock(rf::gr::LockInfo *lock);
-        void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);
+        bool lock(int bm_handle, int section, rf::gr::LockInfo* lock);
+        void unlock(rf::gr::LockInfo* lock);
+        void get_texel(int bm_handle, float u, float v, rf::gr::Color* clr);
         bool set_render_target(int bm_handle);
-        rf::bm::Format read_back_buffer(int x, int y, int w, int h, rf::ubyte *data);
-        void tmapper(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, rf::gr::Mode mode);
+        rf::bm::Format read_back_buffer(int x, int y, int w, int h, rf::ubyte* data);
+        void tmapper(int nv, const rf::gr::Vertex** vertices, int vertex_attributes, rf::gr::Mode mode);
         void line_3d(const rf::gr::Vertex& v0, const rf::gr::Vertex& v1, rf::gr::Mode mode);
         void line_2d(float x1, float y1, float x2, float y2, rf::gr::Mode mode);
-        bool poly(int nv, rf::gr::Vertex** vertices, int vertex_attributes, rf::gr::Mode mode, bool constant_sw, float sw);
+        bool
+        poly(int nv, rf::gr::Vertex** vertices, int vertex_attributes, rf::gr::Mode mode, bool constant_sw, float sw);
         void project_vertex(rf::gr::Vertex* v);
         void setup_3d(Projection proj);
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
         void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
-        void render_alpha_detail_room(rf::GRoom *room, rf::GSolid *solid);
-        void render_sky_room(rf::GRoom *room);
+        void render_alpha_detail_room(rf::GRoom* room, rf::GSolid* solid);
+        void render_sky_room(rf::GRoom* room);
         void render_room_liquid_surface(rf::GSolid* solid, rf::GRoom* room);
         void clear_solid_cache();
-        void render_v3d_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params);
-        void render_character_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params);
-        void clear_vif_cache(rf::VifLodMesh *lod_mesh);
+        void render_v3d_vif(
+            rf::VifLodMesh* lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient,
+            const rf::MeshRenderParams& params
+        );
+        void render_character_vif(
+            rf::VifLodMesh* lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient,
+            const rf::CharacterInstance* ci, const rf::MeshRenderParams& params
+        );
+        void clear_vif_cache(rf::VifLodMesh* lod_mesh);
         void fog_set();
         void page_in_v3d_mesh(rf::VifLodMesh* lod_mesh);
         void page_in_character_mesh(rf::VifLodMesh* lod_mesh);
@@ -124,7 +137,13 @@ namespace df::gr::d3d11
         }
     }
 
-    #define DF_GR_D3D11_CHECK_HR(code) { auto func_name = __func__; check_hr(code, [=]() { xlog::error("D3D11 call failed: {} (function {} in line {})", #code, func_name, __LINE__); }); }
+#define DF_GR_D3D11_CHECK_HR(code)                                                                     \
+    {                                                                                                  \
+        auto func_name = __func__;                                                                     \
+        check_hr(code, [=]() {                                                                         \
+            xlog::error("D3D11 call failed: {} (function {} in line {})", #code, func_name, __LINE__); \
+        });                                                                                            \
+    }
 
     static inline int pack_color(const rf::Color& color)
     {
@@ -132,7 +151,8 @@ namespace df::gr::d3d11
         return (color.alpha << 24) | (color.blue << 16) | (color.green << 8) | color.red;
     }
 
-    static inline std::array<int, 2> normalize_texture_handles_for_mode(rf::gr::Mode mode, const std::array<int, 2>& textures)
+    static inline std::array<int, 2>
+    normalize_texture_handles_for_mode(rf::gr::Mode mode, const std::array<int, 2>& textures)
     {
         switch (mode.get_texture_source()) {
             case rf::gr::TEXTURE_SOURCE_NONE:

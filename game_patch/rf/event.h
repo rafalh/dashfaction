@@ -20,7 +20,6 @@ namespace rf
         virtual void turn_on() = 0;
         virtual void turn_off() = 0;
         virtual void process() = 0;
-
     };
     static_assert(sizeof(Event) == 0x2B8);
 

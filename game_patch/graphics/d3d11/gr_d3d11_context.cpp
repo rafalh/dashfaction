@@ -13,16 +13,12 @@ using namespace rf;
 namespace df::gr::d3d11
 {
     RenderContext::RenderContext(
-        ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> device_context,
-        StateManager& state_manager, ShaderManager& shader_manager,
-        TextureManager& texture_manager
+        ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> device_context, StateManager& state_manager,
+        ShaderManager& shader_manager, TextureManager& texture_manager
     ) :
-        device_{std::move(device)}, device_context_{std::move(device_context)},
-        state_manager_{state_manager}, shader_manager_{shader_manager}, texture_manager_{texture_manager},
-        model_transform_cbuffer_{device_},
-        view_proj_transform_cbuffer_{device_},
-        lights_buffer_{device_},
-        render_mode_cbuffer_{device_},
+        device_{std::move(device)}, device_context_{std::move(device_context)}, state_manager_{state_manager},
+        shader_manager_{shader_manager}, texture_manager_{texture_manager}, model_transform_cbuffer_{device_},
+        view_proj_transform_cbuffer_{device_}, lights_buffer_{device_}, render_mode_cbuffer_{device_},
         per_frame_buffer_{device_}
     {
         bind_cbuffers();
@@ -88,8 +84,7 @@ namespace df::gr::d3d11
     static_assert(sizeof(ModelTransformBufferData) % 16 == 0);
 
     ModelTransformBuffer::ModelTransformBuffer(ID3D11Device* device) :
-        current_model_pos_{NAN, NAN, NAN},
-        current_model_orient_{{NAN, NAN, NAN}, {NAN, NAN, NAN}, {NAN, NAN, NAN}}
+        current_model_pos_{NAN, NAN, NAN}, current_model_orient_{{NAN, NAN, NAN}, {NAN, NAN, NAN}, {NAN, NAN, NAN}}
     {
         CD3D11_BUFFER_DESC desc{
             sizeof(ModelTransformBufferData),
@@ -106,9 +101,7 @@ namespace df::gr::d3d11
         data.world_mat = build_world_matrix(current_model_pos_, current_model_orient_);
 
         D3D11_MAPPED_SUBRESOURCE mapped_subres;
-        DF_GR_D3D11_CHECK_HR(
-            device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres)
-        );
+        DF_GR_D3D11_CHECK_HR(device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres));
         std::memcpy(mapped_subres.pData, &data, sizeof(data));
         device_context->Unmap(buffer_, 0);
     }
@@ -138,9 +131,7 @@ namespace df::gr::d3d11
         data.proj_mat = proj.matrix();
 
         D3D11_MAPPED_SUBRESOURCE mapped_subres;
-        DF_GR_D3D11_CHECK_HR(
-            device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres)
-        );
+        DF_GR_D3D11_CHECK_HR(device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres));
         std::memcpy(mapped_subres.pData, &data, sizeof(data));
         device_context->Unmap(buffer_, 0);
     }
@@ -168,9 +159,7 @@ namespace df::gr::d3d11
         data.time = rf::frametime_total_milliseconds / 1000.0f;
 
         D3D11_MAPPED_SUBRESOURCE mapped_subres;
-        DF_GR_D3D11_CHECK_HR(
-            device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres)
-        );
+        DF_GR_D3D11_CHECK_HR(device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres));
         std::memcpy(mapped_subres.pData, &data, sizeof(data));
         device_context->Unmap(buffer_, 0);
     }
@@ -205,9 +194,7 @@ namespace df::gr::d3d11
     void LightsBuffer::update(ID3D11DeviceContext* device_context)
     {
         D3D11_MAPPED_SUBRESOURCE mapped_subres;
-        DF_GR_D3D11_CHECK_HR(
-            device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres)
-        );
+        DF_GR_D3D11_CHECK_HR(device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres));
 
         LightsBufferData data{};
         for (int i = 0; i < std::min(rf::gr::num_relevant_lights, LightsBufferData::max_point_lights); ++i) {
@@ -280,9 +267,7 @@ namespace df::gr::d3d11
         }
 
         D3D11_MAPPED_SUBRESOURCE mapped_subres;
-        DF_GR_D3D11_CHECK_HR(
-            device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres)
-        );
+        DF_GR_D3D11_CHECK_HR(device_context->Map(buffer_, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_subres));
         std::memcpy(mapped_subres.pData, &data, sizeof(data));
         device_context->Unmap(buffer_, 0);
     }

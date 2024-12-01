@@ -11,7 +11,7 @@ class OptionsGraphicsDlg;
 class OptionsDisplayDlg : public CDialog
 {
 public:
-	OptionsDisplayDlg(GameConfig& conf, OptionsGraphicsDlg& graphics_dlg);
+    OptionsDisplayDlg(GameConfig& conf, OptionsGraphicsDlg& graphics_dlg);
     void OnSave();
 
 protected:

@@ -26,5 +26,4 @@ namespace rf
         return timer_get(1);
     }
 
-
 }

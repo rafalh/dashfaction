@@ -13,7 +13,7 @@ namespace rf
         GS_NEW_LEVEL = 0x5,
         GS_SAVE_GAME_MENU = 0x6,
         GS_LOAD_GAME_MENU = 0x7,
-        GS_QUICK_SAVE = 0x8, // unused
+        GS_QUICK_SAVE = 0x8,    // unused
         GS_QUICK_RESTORE = 0x9, // unused
         GS_LEVEL_TRANSITION = 0xA,
         GS_GAMEPLAY = 0xB,
@@ -31,10 +31,10 @@ namespace rf
         GS_CREDITS = 0x17,
         GS_BOMB_DEFUSE = 0x18,
         GS_MULTI_LEVEL_DOWNLOAD = 0x19, // unused by the base game
-        GS_1A = 0x1A, // unused
-        GS_1B = 0x1B, // unused
-        GS_1C = 0x1C, // unused
-        GS_1D = 0x1D, // unused
+        GS_1A = 0x1A,                   // unused
+        GS_1B = 0x1B,                   // unused
+        GS_1C = 0x1C,                   // unused
+        GS_1D = 0x1D,                   // unused
         GS_MULTI_SERVER_LIST = 0x1E,
         GS_MULTI_SPLITSCREEN = 0x1F,
         GS_MULTI_CREATE_GAME = 0x20,
@@ -48,6 +48,7 @@ namespace rf
     static auto& gameseq_get_state = addr_as_ref<GameState()>(0x00434200);
     static auto& gameseq_get_pending_state = addr_as_ref<GameState()>(0x00434220);
     static auto& gameseq_in_gameplay = addr_as_ref<bool()>(0x00434460);
-    static auto& gameseq_push_state = addr_as_ref<void(GameState state, bool transparent, bool pause_beneath)>(0x00434410);
+    static auto& gameseq_push_state =
+        addr_as_ref<void(GameState state, bool transparent, bool pause_beneath)>(0x00434410);
     static auto& gameseq_process_deferred_change = addr_as_ref<GameState()>(0x00434310);
 }

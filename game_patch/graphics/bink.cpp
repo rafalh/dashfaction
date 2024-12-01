@@ -36,9 +36,7 @@ FunHook<unsigned()> bink_init_device_info_hook{
 
 CodeInjection bink_set_sound_system_injection{
     0x00520BBC,
-    [](auto& regs) {
-        *reinterpret_cast<IDirectSound**>(regs.esp + 4) = rf::direct_sound;
-    },
+    [](auto& regs) { *reinterpret_cast<IDirectSound**>(regs.esp + 4) = rf::direct_sound; },
 };
 
 CallHook<void(int)> play_bik_file_vram_leak_fix{

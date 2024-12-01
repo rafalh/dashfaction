@@ -3,10 +3,7 @@
 #include "LauncherApp.h"
 #include <wxx_commondlg.h>
 
-OptionsInputDlg::OptionsInputDlg(GameConfig& conf)
-	: CDialog(IDD_OPTIONS_INPUT), m_conf(conf)
-{
-}
+OptionsInputDlg::OptionsInputDlg(GameConfig& conf) : CDialog(IDD_OPTIONS_INPUT), m_conf(conf) {}
 
 BOOL OptionsInputDlg::OnInitDialog()
 {
@@ -24,7 +21,9 @@ void OptionsInputDlg::InitToolTip()
 {
     m_tool_tip.Create(*this);
     m_tool_tip.AddTool(GetDlgItem(IDC_DIRECT_INPUT_CHECK), "Use DirectInput for mouse input handling");
-    m_tool_tip.AddTool(GetDlgItem(IDC_LINEAR_PITCH_CHECK), "Stop mouse movement from slowing down when looking up and down");
+    m_tool_tip.AddTool(
+        GetDlgItem(IDC_LINEAR_PITCH_CHECK), "Stop mouse movement from slowing down when looking up and down"
+    );
 }
 
 void OptionsInputDlg::OnSave()

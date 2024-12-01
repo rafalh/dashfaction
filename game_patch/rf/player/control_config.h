@@ -70,8 +70,9 @@ namespace rf
     static_assert(sizeof(ControlConfig) == 0xE50);
 
     static auto& control_config_check_pressed =
-        addr_as_ref<bool(ControlConfig *cc, ControlConfigAction action, bool *just_pressed)>(0x0043D4F0);
-    static auto& control_config_get_key_name = addr_as_ref<int(String *out, int key)>(0x0043D930);
-    static auto& control_config_get_mouse_button_name = addr_as_ref<int(String *out, int button)>(0x0043D970);
-    static auto& control_config_find_action_by_name = addr_as_ref<int(PlayerSettings *ps, const char *name)>(0x0043D9F0);
+        addr_as_ref<bool(ControlConfig* cc, ControlConfigAction action, bool* just_pressed)>(0x0043D4F0);
+    static auto& control_config_get_key_name = addr_as_ref<int(String* out, int key)>(0x0043D930);
+    static auto& control_config_get_mouse_button_name = addr_as_ref<int(String* out, int button)>(0x0043D970);
+    static auto& control_config_find_action_by_name =
+        addr_as_ref<int(PlayerSettings* ps, const char* name)>(0x0043D9F0);
 }

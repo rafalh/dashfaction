@@ -8,7 +8,7 @@
 class OptionsMultiplayerDlg : public CDialog
 {
 public:
-	OptionsMultiplayerDlg(GameConfig& conf);
+    OptionsMultiplayerDlg(GameConfig& conf);
     void OnSave();
 
 protected:

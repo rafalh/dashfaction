@@ -7,10 +7,10 @@ struct CWnd;
 
 struct CDataExchange
 {
-	BOOL m_bSaveAndValidate;
-	CWnd* m_pDlgWnd;
-	HWND m_hWndLastControl;
-	BOOL m_bEditLastControl;
+    BOOL m_bSaveAndValidate;
+    CWnd* m_pDlgWnd;
+    HWND m_hWndLastControl;
+    BOOL m_bEditLastControl;
 };
 
 struct CString

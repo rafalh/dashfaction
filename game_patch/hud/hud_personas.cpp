@@ -21,10 +21,8 @@ static bool hud_personas_is_bottom(rf::Entity* ep)
     if (!parent) {
         return false;
     }
-    return rf::entity_is_sub(parent) ||
-        rf::entity_is_driller(parent) ||
-        rf::entity_is_jeep(parent) ||
-        rf::entity_is_fighter(parent);
+    return rf::entity_is_sub(parent) || rf::entity_is_driller(parent) || rf::entity_is_jeep(parent) ||
+           rf::entity_is_fighter(parent);
 }
 
 void hud_personas_render(rf::Player* player)
@@ -34,14 +32,20 @@ void hud_personas_render(rf::Player* player)
     rf::hud_persona_current_idx = 0;
     rf::hud_personas_info[rf::hud_persona_current_idx].image_bmh =
         rf::bm::load(rf::hud_personas_info[rf::hud_persona_current_idx].image.c_str(), -1, false);
-    std::strcpy(rf::hud_personas_info[rf::hud_persona_current_idx].message, "Test message! Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.");
+    std::strcpy(
+        rf::hud_personas_info[rf::hud_persona_current_idx].message,
+        "Test message! Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut "
+        "labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut "
+        "aliquip ex ea commodo consequat."
+    );
 #endif
 
     if (rf::hud_persona_alpha <= rf::hud_persona_target_alpha) {
         rf::hud_persona_alpha = rf::hud_persona_target_alpha;
     }
     else {
-        rf::hud_persona_alpha = std::max(rf::hud_persona_alpha - rf::frametime * 1.3333334f, rf::hud_persona_target_alpha);
+        rf::hud_persona_alpha =
+            std::max(rf::hud_persona_alpha - rf::frametime * 1.3333334f, rf::hud_persona_target_alpha);
     }
     if (rf::hud_persona_alpha <= 0.0) {
         rf::hud_persona_current_idx = -1;
@@ -82,9 +86,9 @@ void hud_personas_render(rf::Player* player)
 
     // border
     rf::gr::set_color(255, 255, 255, static_cast<int>(rf::hud_persona_alpha * 77.0f));
-    rf::gr::rect(box_x, box_y, box_border, box_h); // left
-    rf::gr::rect(box_x + box_w - box_border, box_y, box_border, box_h); // right
-    rf::gr::rect(box_x + box_border, box_y, content_w, box_border); // top
+    rf::gr::rect(box_x, box_y, box_border, box_h);                                       // left
+    rf::gr::rect(box_x + box_w - box_border, box_y, box_border, box_h);                  // right
+    rf::gr::rect(box_x + box_border, box_y, content_w, box_border);                      // top
     rf::gr::rect(box_x + box_border, box_y + box_h - box_border, content_w, box_border); // bottom
 
     // background
@@ -103,12 +107,12 @@ void hud_personas_render(rf::Player* player)
     rf::gr::rect(img_box_x, img_box_y, img_w + 2 * img_border, img_h + 2 * img_border);
 
     // persona image (64x64)
-    //rf::gr::set_color(hud_default_color);
-    //rf::gr::set_alpha(static_cast<int>(hud_default_color.alpha * hud_persona_alpha));
+    // rf::gr::set_color(hud_default_color);
+    // rf::gr::set_alpha(static_cast<int>(hud_default_color.alpha * hud_persona_alpha));
     rf::gr::set_color(255, 255, 255, static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
-    int img_x = img_box_x + img_border; // 161
-    int img_y = img_box_y + img_border; // 14
-    hud_scaled_bitmap(hud_persona.image_handle, img_x, img_y, img_scale);// hud_persona_image_gr_mode
+    int img_x = img_box_x + img_border;                                   // 161
+    int img_y = img_box_y + img_border;                                   // 14
+    hud_scaled_bitmap(hud_persona.image_handle, img_x, img_y, img_scale); // hud_persona_image_gr_mode
 
     // persona name
     rf::gr::set_color(rf::hud_msg_color);
@@ -133,8 +137,8 @@ void hud_personas_render(rf::Player* player)
     constexpr int max_lines = 8;
     int len_array[max_lines];
     int offset_array[max_lines];
-    int num_lines = rf::gr::split_str(len_array, offset_array, hud_persona.message,
-        max_text_w, max_lines, 0, hud_persona_font);
+    int num_lines =
+        rf::gr::split_str(len_array, offset_array, hud_persona.message, max_text_w, max_lines, 0, hud_persona_font);
     rf::gr::set_color(rf::hud_default_color);
     rf::gr::set_alpha(static_cast<int>(rf::hud_default_color.alpha * rf::hud_persona_alpha));
     for (int i = 0; i < num_lines; ++i) {

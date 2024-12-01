@@ -220,8 +220,9 @@ CodeInjection linear_pitch_patch{
         float new_pitch_non_lin = non_linear_pitch_from_fw_vector(fvec_new);
         // Update non-linear pitch delta
         float new_pitch_delta = new_pitch_non_lin - current_pitch_non_lin;
-        xlog::trace("non-lin {} lin {} delta {} new {}", current_pitch_non_lin, current_pitch_lin, pitch_delta,
-              new_pitch_delta);
+        xlog::trace(
+            "non-lin {} lin {} delta {} new {}", current_pitch_non_lin, current_pitch_lin, pitch_delta, new_pitch_delta
+        );
         pitch_delta = new_pitch_delta;
     },
 };
@@ -254,7 +255,7 @@ void mouse_apply_patch()
     AsmWriter(0x0051DD7C).jmp(0x0051DD8E);
 
     // Use exclusive DirectInput mode so cursor cannot exit game window
-    //write_mem<u8>(0x0051E14B + 1, 5); // DISCL_EXCLUSIVE|DISCL_FOREGROUND
+    // write_mem<u8>(0x0051E14B + 1, 5); // DISCL_EXCLUSIVE|DISCL_FOREGROUND
 
     // Linear vertical rotation (pitch)
     linear_pitch_patch.install();

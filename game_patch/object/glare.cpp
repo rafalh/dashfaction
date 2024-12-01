@@ -22,10 +22,10 @@ static std::vector<rf::MoverBrush*> g_mover_brushes_to_check;
 
 static bool glare_collide_object(rf::Glare* glare, rf::Object* obj, const rf::Vector3& eye_pos)
 {
-    if (!(obj->obj_flags & rf::OF_WAS_RENDERED)
-        || !obj->vmesh
-        || (obj == rf::local_player_entity && rf::local_player->cam && rf::local_player->cam->mode == rf::CAMERA_FIRST_PERSON)
-        || glare->parent_handle == obj->handle) {
+    if (!(obj->obj_flags & rf::OF_WAS_RENDERED) || !obj->vmesh ||
+        (obj == rf::local_player_entity && rf::local_player->cam &&
+         rf::local_player->cam->mode == rf::CAMERA_FIRST_PERSON) ||
+        glare->parent_handle == obj->handle) {
         return false;
     }
 
@@ -93,32 +93,32 @@ FunHook<void(bool)> glare_render_all_flares_hook{
         }
 
         g_objects_to_check.clear();
-        for (auto& entity: DoublyLinkedList{rf::entity_list}) {
+        for (auto& entity : DoublyLinkedList{rf::entity_list}) {
             if (entity.obj_flags & rf::OF_WAS_RENDERED) {
                 g_objects_to_check.push_back(&entity);
             }
         }
 
-        for (auto& corpse: DoublyLinkedList{rf::corpse_list}) {
+        for (auto& corpse : DoublyLinkedList{rf::corpse_list}) {
             if (corpse.obj_flags & rf::OF_WAS_RENDERED) {
                 g_objects_to_check.push_back(&corpse);
             }
         }
 
-        for (auto& clutter: DoublyLinkedList{rf::clutter_list}) {
+        for (auto& clutter : DoublyLinkedList{rf::clutter_list}) {
             if (clutter.obj_flags & rf::OF_WAS_RENDERED) {
                 g_objects_to_check.push_back(&clutter);
             }
         }
 
-        for (auto& item: DoublyLinkedList{rf::item_list}) {
+        for (auto& item : DoublyLinkedList{rf::item_list}) {
             if (item.obj_flags & rf::OF_WAS_RENDERED) {
                 g_objects_to_check.push_back(&item);
             }
         }
 
         g_mover_brushes_to_check.clear();
-        for (auto& mb: DoublyLinkedList{rf::mover_brush_list}) {
+        for (auto& mb : DoublyLinkedList{rf::mover_brush_list}) {
             if (mb.obj_flags & rf::OF_WAS_RENDERED) {
                 g_mover_brushes_to_check.push_back(&mb);
             }
@@ -188,7 +188,7 @@ FunHook<bool(rf::Glare* glare, const rf::Vector3& eye_pos)> glare_is_in_view_hoo
 
 FunHook<void(rf::Glare*, int)> glare_render_corona_hook{
     0x00414860,
-    [](rf::Glare *glare, int player_idx) {
+    [](rf::Glare* glare, int player_idx) {
         // check if corona is in view using dynamic radius dedicated for this effect
         // Note: object radius matches volumetric effect size and can be very large so this check helps
         // to speed up rendering

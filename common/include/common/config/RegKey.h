@@ -16,8 +16,7 @@ public:
 
     RegKey(RegKey&& other) noexcept :
         m_key(std::exchange(other.m_key, nullptr)), m_open(std::exchange(other.m_open, false))
-    {
-    }
+    {}
 
     RegKey& operator=(RegKey&& other) noexcept
     {
@@ -114,7 +113,8 @@ public:
     bool read_value(const char* name, float* value)
     {
         static_assert(sizeof(float) == sizeof(uint32_t));
-        union {
+        union
+        {
             float f;
             uint32_t u32;
         } u;
@@ -144,7 +144,8 @@ public:
 
     void write_value(const char* name, const std::string& value)
     {
-        LONG error = RegSetValueExA(m_key, name, 0, REG_SZ, reinterpret_cast<const BYTE*>(value.c_str()), value.size() + 1);
+        LONG error =
+            RegSetValueExA(m_key, name, 0, REG_SZ, reinterpret_cast<const BYTE*>(value.c_str()), value.size() + 1);
         if (error != ERROR_SUCCESS)
             throw Win32Error(error, "RegSetValueExA failed");
     }
@@ -162,7 +163,8 @@ public:
     void write_value(const char* name, float value)
     {
         static_assert(sizeof(float) == sizeof(uint32_t));
-        union {
+        union
+        {
             float f;
             uint32_t u32;
         } u;

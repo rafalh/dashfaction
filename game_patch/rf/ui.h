@@ -7,8 +7,8 @@ namespace rf::ui
 {
     struct Gadget
     {
-        void **vtbl;
-        Gadget *parent;
+        void** vtbl;
+        Gadget* parent;
         bool highlighted;
         bool enabled;
         int x;
@@ -16,8 +16,8 @@ namespace rf::ui
         int w;
         int h;
         int key;
-        void(*on_click)();
-        void(*on_mouse_btn_down)();
+        void (*on_click)();
+        void (*on_mouse_btn_down)();
 
         [[nodiscard]] int get_absolute_x() const
         {
@@ -93,15 +93,18 @@ namespace rf::ui
     };
     static_assert(sizeof(Cycler) == 0x170);
 
-    static auto& popup_message = addr_as_ref<void(const char *title, const char *text, void(*callback)(), bool input)>(0x004560B0);
+    static auto& popup_message =
+        addr_as_ref<void(const char* title, const char* text, void (*callback)(), bool input)>(0x004560B0);
     using PopupCallbackPtr = void (*)();
-    static auto& popup_custom =
-        addr_as_ref<void(const char *title, const char *text, int num_btns, const char *choices[],
-                       PopupCallbackPtr choices_callbacks[], int default_choice, int keys[])>(0x004562A0);
+    static auto& popup_custom = addr_as_ref<void(
+        const char* title, const char* text, int num_btns, const char* choices[], PopupCallbackPtr choices_callbacks[],
+        int default_choice, int keys[]
+    )>(0x004562A0);
     static auto& popup_abort = addr_as_ref<void()>(0x004559C0);
-    static auto& popup_set_text = addr_as_ref<void(const char *text)>(0x00455A50);
+    static auto& popup_set_text = addr_as_ref<void(const char* text)>(0x00455A50);
 
-    static auto& get_gadget_from_pos = addr_as_ref<int(int x, int y, Gadget * const gadgets[], int num_gadgets)>(0x00442ED0);
+    static auto& get_gadget_from_pos =
+        addr_as_ref<int(int x, int y, Gadget* const gadgets[], int num_gadgets)>(0x00442ED0);
     static auto& update_input_box_cursor = addr_as_ref<void()>(0x00456960);
 
     static auto& scale_x = addr_as_ref<float>(0x00598FB8);

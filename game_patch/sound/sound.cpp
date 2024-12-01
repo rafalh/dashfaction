@@ -41,29 +41,11 @@ StaticBufferResizePatch<rf::SoundInstance> sound_instances_resize_patch{
     30,
     rf::sound_instances,
     {
-        {0x005053F9},
-        {0x00505599},
-        {0x005055CB},
-        {0x0050571F},
-        {0x005058E7},
-        {0x00505A04},
-        {0x00505A65},
-        {0x00505A6C},
-        {0x005060BB},
-        {0x005058EE},
-        {0x00505995},
-        {0x0050599C},
-        {0x00505C28},
-        {0x00506197},
-        {0x00505866},
-        {0x00505F35},
-        {0x005055C1, true},
-        {0x005055DB, true},
-        {0x00505A12, true},
-        {0x005060EB, true},
-        {0x00505893, true},
-        {0x00505F68, true},
-        {0x005061C1, true},
+        {0x005053F9},       {0x00505599},       {0x005055CB},       {0x0050571F},       {0x005058E7},
+        {0x00505A04},       {0x00505A65},       {0x00505A6C},       {0x005060BB},       {0x005058EE},
+        {0x00505995},       {0x0050599C},       {0x00505C28},       {0x00506197},       {0x00505866},
+        {0x00505F35},       {0x005055C1, true}, {0x005055DB, true}, {0x00505A12, true}, {0x005060EB, true},
+        {0x00505893, true}, {0x00505F68, true}, {0x005061C1, true},
     },
 };
 
@@ -93,7 +75,7 @@ CallHook<void()> cutscene_play_music_hook{
 
 FunHook<int(const char*, float)> snd_music_play_cutscene_hook{
     0x00505D70,
-    [](const char *filename, float volume) {
+    [](const char* filename, float volume) {
         g_cutscene_bg_sound_sig = snd_music_play_cutscene_hook.call_target(filename, volume);
         return g_cutscene_bg_sound_sig;
     },
@@ -183,7 +165,9 @@ FunHook<int(int, int, float, float)> snd_play_hook{
     },
 };
 
-int snd_pc_play_3d_new(int handle, const rf::Vector3& pos, float vol_scale, bool looping, const rf::Vector3& vel = rf::zero_vector)
+int snd_pc_play_3d_new(
+    int handle, const rf::Vector3& pos, float vol_scale, bool looping, const rf::Vector3& vel = rf::zero_vector
+)
 {
     // Original function has some flaws:
     // * it does not have vol_scale and vel parameters
@@ -203,12 +187,9 @@ int snd_pc_play_3d_new(int handle, const rf::Vector3& pos, float vol_scale, bool
         if (rf::snd_pc_is_ds3d_enabled()) {
             // use a calculated volume scale that takes distance into account because we do not use
             // Direct Sound 3D distance attenuation model
-            return rf::snd_ds_play_3d(sid, pos, vel,
-                rf::sounds[handle].min_range,
-                rf::sounds[handle].max_range,
-                volume_2d,
-                looping,
-                0.0f);
+            return rf::snd_ds_play_3d(
+                sid, pos, vel, rf::sounds[handle].min_range, rf::sounds[handle].max_range, volume_2d, looping, 0.0f
+            );
         }
         float pan = rf::snd_pc_calculate_pan(pos);
         if (looping)
@@ -217,7 +198,6 @@ int snd_pc_play_3d_new(int handle, const rf::Vector3& pos, float vol_scale, bool
     }
     return -1;
 }
-
 
 FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3d_hook{
     0x005056A0,
@@ -231,7 +211,6 @@ FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3
             xlog::warn("Failed to load sound {}", handle);
             return -1;
         }
-
 
         bool looping = rf::sounds[handle].is_looping;
         int instance_index = snd_get_free_instance();
@@ -260,7 +239,10 @@ FunHook<int(int, const rf::Vector3&, float, const rf::Vector3&, int)> snd_play_3
                 sig = rf::snd_pc_play(handle, vol_scale, pan, 0.0f, true);
             }
         }
-        xlog::trace("snd_play_3d handle {} pos <{:.2f} {:.2f} {:.2f}> vol {:.2f} sig {}", handle, pos.x, pos.y, pos.z, volume, sig);
+        xlog::trace(
+            "snd_play_3d handle {} pos <{:.2f} {:.2f} {:.2f}> vol {:.2f} sig {}", handle, pos.x, pos.y, pos.z, volume,
+            sig
+        );
         if (sig < 0) {
             return -1;
         }
@@ -301,7 +283,9 @@ FunHook<void(int, const rf::Vector3&, const rf::Vector3&, float)> snd_change_3d_
 
         if (volume != instance.base_volume_3d) {
             instance.base_volume_3d = volume;
-            rf::snd_calculate_2d_from_3d_info(instance.handle, instance.pos, &instance.pan, &instance.base_volume, instance.base_volume_3d);
+            rf::snd_calculate_2d_from_3d_info(
+                instance.handle, instance.pos, &instance.pan, &instance.base_volume, instance.base_volume_3d
+            );
             float vol_scale = instance.base_volume * rf::snd_group_volume[instance.group];
             rf::snd_pc_set_volume(instance.sig, vol_scale);
         }
@@ -315,14 +299,17 @@ FunHook<void(int, const rf::Vector3&, const rf::Vector3&, float)> snd_change_3d_
     },
 };
 
-void snd_update_sound_instances([[ maybe_unused ]] const rf::Vector3& camera_pos)
+void snd_update_sound_instances([[maybe_unused]] const rf::Vector3& camera_pos)
 {
     // Update sound volume of all instances because we do not use Direct Sound 3D distance attenuation model
     for (auto& instance : rf::sound_instances) {
         if (instance.handle >= 0 && instance.is_3d_sound) {
-            // Note: we should use snd_pc_calc_volume_3d because snd_calculate_2d_from_3d_info ignores volume from sounds.tbl
+            // Note: we should use snd_pc_calc_volume_3d because snd_calculate_2d_from_3d_info ignores volume from
+            // sounds.tbl
             //       but that is how it works in RF and fixing it would change volume levels for many sounds in game...
-            rf::snd_calculate_2d_from_3d_info(instance.handle, instance.pos, &instance.pan, &instance.base_volume, instance.base_volume_3d);
+            rf::snd_calculate_2d_from_3d_info(
+                instance.handle, instance.pos, &instance.pan, &instance.base_volume, instance.base_volume_3d
+            );
             float vol_scale = instance.base_volume * rf::snd_group_volume[instance.group];
             rf::snd_pc_set_volume(instance.sig, vol_scale);
             if (!rf::ds3d_enabled) {
@@ -343,7 +330,8 @@ void snd_update_ambient_sounds(const rf::Vector3& camera_pos)
             // Note: when ambient sound is muted its volume is set to 0 (events can mute/unmute ambient sounds)
             // When it's muted destroy it so it can be recreated when unmuted and start playing from the beggining
             if (in_range && ambient_snd.volume > 0.0f) {
-                float vol_scale = ambient_snd.volume * rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS] * g_game_config.level_sound_volume;
+                float vol_scale = ambient_snd.volume * rf::snd_group_volume[rf::SOUND_GROUP_EFFECTS] *
+                                  g_game_config.level_sound_volume;
                 if (ambient_snd.sig < 0) {
                     bool is_looping = rf::sounds[ambient_snd.handle].is_looping;
                     ambient_snd.sig = snd_pc_play_3d_new(ambient_snd.handle, ambient_snd.pos, vol_scale, is_looping);
@@ -368,9 +356,7 @@ void snd_update_ambient_sounds(const rf::Vector3& camera_pos)
 
 ConsoleCommand2 sound_stress_test_cmd{
     "sound_stress_test",
-    [](int num) {
-        g_sound_test = num;
-    },
+    [](int num) { g_sound_test = num; },
 };
 
 void sound_test_do_frame()
@@ -392,7 +378,7 @@ void sound_test_do_frame()
 #endif // DEBUG
 
 FunHook<void(const rf::Vector3&, const rf::Vector3&, const rf::Matrix3&)> snd_update_sounds_hook{
-     0x00505EC0,
+    0x00505EC0,
     [](const rf::Vector3& camera_pos, const rf::Vector3& camera_vel, const rf::Matrix3& camera_orient) {
         player_fpgun_move_sounds(camera_pos, camera_vel);
 
@@ -411,24 +397,25 @@ FunHook<void(const rf::Vector3&, const rf::Vector3&, const rf::Matrix3&)> snd_up
     },
 };
 
-FunHook<bool(const char*)> snd_pc_file_exists_hook{
-    0x00544680,
-    [](const char *filename) {
-        bool exists = snd_pc_file_exists_hook.call_target(filename);
+FunHook<bool(const char*)> snd_pc_file_exists_hook{0x00544680, [](const char* filename) {
+                                                       bool exists = snd_pc_file_exists_hook.call_target(filename);
 
-        if (!exists) {
-            // For some reason built-in maps often use spaces in place of sound filename (their way to disable a sound?)
-            // To reduce spam ignore space-only filenames and avoid logging the same filename multiple times in a row
-            bool has_only_spaces = std::string_view{filename}.find_first_not_of(" ") == std::string_view::npos;
-            static std::string last_file_not_found;
-            if (!has_only_spaces && filename != last_file_not_found) {
-                xlog::warn("Sound file not found: {}", filename);
-                last_file_not_found = filename;
-            }
-        }
-        return exists;
-    }
-};
+                                                       if (!exists) {
+                                                           // For some reason built-in maps often use spaces in place of
+                                                           // sound filename (their way to disable a sound?) To reduce
+                                                           // spam ignore space-only filenames and avoid logging the
+                                                           // same filename multiple times in a row
+                                                           bool has_only_spaces =
+                                                               std::string_view{filename}.find_first_not_of(" ") ==
+                                                               std::string_view::npos;
+                                                           static std::string last_file_not_found;
+                                                           if (!has_only_spaces && filename != last_file_not_found) {
+                                                               xlog::warn("Sound file not found: {}", filename);
+                                                               last_file_not_found = filename;
+                                                           }
+                                                       }
+                                                       return exists;
+                                                   }};
 
 FunHook<int(const char*, float, float, float)> snd_get_handle_hook{
     0x005054B0,
@@ -462,7 +449,7 @@ void apply_sound_patches()
         .push(asm_regs::eax);
 
     // Change number of sound channels
-    //write_mem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free sound instances, uncomment to test
+    // write_mem<u8>(0x005055AB, asm_opcodes::jmp_rel_short); // never free sound instances, uncomment to test
     sound_instances_resize_patch.install();
     auto max_sound_instances = static_cast<i8>(std::size(rf::sound_instances));
     write_mem<i8>(0x005053F5 + 1, max_sound_instances); // snd_init_sound_instances_array

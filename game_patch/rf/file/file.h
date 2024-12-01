@@ -14,7 +14,8 @@ namespace rf
         char m_internal_data[0x114];
 
     public:
-        enum SeekOrigin {
+        enum SeekOrigin
+        {
             seek_set = 0,
             seek_cur = 1,
             seek_end = 2,
@@ -25,7 +26,6 @@ namespace rf
         static constexpr uint mode_text = 0x80000000;
 
         static constexpr uint default_path_id = 9999999;
-
 
         File()
         {
@@ -72,12 +72,12 @@ namespace rf
             return AddrCaller{0x005244E0}.this_call<int>(this);
         }
 
-        [[nodiscard]] int size(const char *filename = nullptr, int a3 = default_path_id) const
+        [[nodiscard]] int size(const char* filename = nullptr, int a3 = default_path_id) const
         {
             return AddrCaller{0x00524370}.this_call<int>(this, filename, a3);
         }
 
-        int read(void *buf, int buf_len, int min_ver = 0, int unused = 0)
+        int read(void* buf, int buf_len, int min_ver = 0, int unused = 0)
         {
             return AddrCaller{0x0052CF60}.this_call<int>(this, buf, buf_len, min_ver, unused);
         }
@@ -96,8 +96,8 @@ namespace rf
         }
     };
 
-    static auto& file_get_ext = addr_as_ref<char*(const char *path)>(0x005143F0);
-    static auto& file_add_path = addr_as_ref<int(const char *path, const char *exts, bool search_on_cd)>(0x00514070);
+    static auto& file_get_ext = addr_as_ref<char*(const char* path)>(0x005143F0);
+    static auto& file_add_path = addr_as_ref<int(const char* path, const char* exts, bool search_on_cd)>(0x00514070);
 
     static auto& root_path = addr_as_ref<char[max_path_len]>(0x018060E8);
 }

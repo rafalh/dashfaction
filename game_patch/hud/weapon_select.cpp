@@ -31,20 +31,20 @@ void weapon_select_render()
     auto& selected_cycle_entry = rf::hud_weapon_cycle[rf::hud_weapon_cycle_current_idx];
     const char* weapon_type_name = nullptr;
     switch (selected_cycle_entry.category) {
-    case 0:
-        weapon_type_name = rf::strings::close_combat;
-        break;
-    case 1:
-        weapon_type_name = rf::strings::semi_auto;
-        break;
-    case 2:
-        weapon_type_name = rf::strings::heavy;
-        break;
-    case 3:
-        weapon_type_name = rf::strings::explosive;
-        break;
-    default:
-        break;
+        case 0:
+            weapon_type_name = rf::strings::close_combat;
+            break;
+        case 1:
+            weapon_type_name = rf::strings::semi_auto;
+            break;
+        case 2:
+            weapon_type_name = rf::strings::heavy;
+            break;
+        case 3:
+            weapon_type_name = rf::strings::explosive;
+            break;
+        default:
+            break;
     }
     int weapon_type_y = weapon_select_big_mode ? 210 : 113;
     int center_x = clip_w - (weapon_select_big_mode ? 148 : 74);
@@ -55,9 +55,9 @@ void weapon_select_render()
     int sq_bg_size = weapon_select_big_mode ? 30 : 20;
     int border = 1;
     int sq_spacing = 1;
-    int sq_x_delta = sq_bg_size + 2 * border + sq_spacing; // 23
+    int sq_x_delta = sq_bg_size + 2 * border + sq_spacing;              // 23
     int type_sq_y = weapon_type_y + (weapon_select_big_mode ? 24 : 14); // 127
-    int type_sq_start_x = center_x - 2 * sq_x_delta; // w - 120
+    int type_sq_start_x = center_x - 2 * sq_x_delta;                    // w - 120
     int text_offset_x = sq_bg_size / 2;
     int text_offset_y = 5;
 
@@ -82,12 +82,12 @@ void weapon_select_render()
     hud_rect_border(active_sq_x, type_sq_y, sq_with_border_size, sq_with_border_size, border);
 
     int num_ind_start_y = type_sq_y + sq_bg_size + 2 * border + sq_spacing + 1; // 150
-    int weapon_icons_start_y = num_ind_start_y + 26; // 176
+    int weapon_icons_start_y = num_ind_start_y + 26;                            // 176
     float weapon_icon_scale = weapon_select_big_mode ? 1.5f : 1.0f;
     int weapon_icon_w = static_cast<int>(128 * weapon_icon_scale);
     int weapon_icon_h = static_cast<int>(34 * weapon_icon_scale);
     int weapon_icons_x = center_x - weapon_icon_w / 2; // clip_w - 139
-    int weapon_icon_delta_y = weapon_icon_h + 1; // 35
+    int weapon_icon_delta_y = weapon_icon_h + 1;       // 35
 
     int num_drawn_weapons_per_category[4] = {0};
     rf::AiInfo* ai_info = rf::player_get_ai(rf::local_player);
@@ -98,7 +98,7 @@ void weapon_select_render()
                 cycle_entry = &entry;
             }
         }
-        if (!cycle_entry || cycle_entry->weapon_type == -1 ||  cycle_entry->category == -1) {
+        if (!cycle_entry || cycle_entry->weapon_type == -1 || cycle_entry->category == -1) {
             continue;
         }
         if (!rf::ai_has_weapon(ai_info, cycle_entry->weapon_type)) {

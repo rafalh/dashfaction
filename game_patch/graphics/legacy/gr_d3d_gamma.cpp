@@ -34,7 +34,7 @@ static bool set_gamma_ramp_via_d3d(D3DGAMMARAMP* gamma_ramp)
 
 static bool set_gamma_ramp_via_gdi(D3DGAMMARAMP* gamma_ramp)
 {
-    //HDC hdc = GetDC(rf::main_wnd);
+    // HDC hdc = GetDC(rf::main_wnd);
     HDC hdc = CreateDCA("DISPLAY", nullptr, nullptr, nullptr);
     if (!hdc) {
         xlog::warn("CreateDCA failed, error {}", GetLastError());
@@ -51,7 +51,7 @@ static bool set_gamma_ramp_via_gdi(D3DGAMMARAMP* gamma_ramp)
     }
     SetLastError(0);
     bool result = SetDeviceGammaRamp(hdc, gamma_ramp);
-    //ReleaseDC(rf::main_wnd, hdc);
+    // ReleaseDC(rf::main_wnd, hdc);
     DeleteDC(hdc);
 
     if (!result) {
@@ -101,15 +101,15 @@ void gr_d3d_gamma_reset()
 static void gamma_msg_handler(UINT msg, WPARAM w_param, [[maybe_unused]] LPARAM l_param)
 {
     switch (msg) {
-    case WM_ACTIVATE:
-    case WM_ACTIVATEAPP:
-        xlog::trace("WM_ACTIVATE {:x}", w_param);
-        if (g_gamma_ramp_initialized) {
-            if (w_param)
-                set_gamma_ramp(&g_gamma_ramp);
-            else
-                gr_d3d_gamma_reset();
-        }
+        case WM_ACTIVATE:
+        case WM_ACTIVATEAPP:
+            xlog::trace("WM_ACTIVATE {:x}", w_param);
+            if (g_gamma_ramp_initialized) {
+                if (w_param)
+                    set_gamma_ramp(&g_gamma_ramp);
+                else
+                    gr_d3d_gamma_reset();
+            }
     }
 }
 
@@ -122,5 +122,4 @@ void gr_d3d_gamma_apply_patch()
 {
     // Add gamma support for windowed mode
     AsmWriter(0x00547A60).jmp(gr_d3d_update_gamma_ramp_hook);
-
 }

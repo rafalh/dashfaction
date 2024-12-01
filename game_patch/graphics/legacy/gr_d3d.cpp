@@ -113,21 +113,33 @@ CodeInjection gr_d3d_init_error_patch{
         auto hr = static_cast<HRESULT>(regs.eax);
         xlog::error("D3D CreateDevice failed (hr 0x{:x} - {})", hr, get_d3d_error_str(hr));
 
-        auto text = std::format("Failed to create Direct3D device object - error 0x{:X} ({}).\n"
-                                 "A critical error has occurred and the program cannot continue.\n"
-                                 "Press OK to exit the program",
-                                 hr, get_d3d_error_str(hr));
+        auto text = std::format(
+            "Failed to create Direct3D device object - error 0x{:X} ({}).\n"
+            "A critical error has occurred and the program cannot continue.\n"
+            "Press OK to exit the program",
+            hr, get_d3d_error_str(hr)
+        );
 
-        hr = rf::gr::d3d::d3d->CheckDeviceType(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
-            rf::gr::d3d::pp.BackBufferFormat, rf::gr::d3d::pp.Windowed);
+        hr = rf::gr::d3d::d3d->CheckDeviceType(
+            rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
+            rf::gr::d3d::pp.BackBufferFormat, rf::gr::d3d::pp.Windowed
+        );
         if (FAILED(hr)) {
-            xlog::error("CheckDeviceType for format {} failed: {:x}", static_cast<unsigned>(rf::gr::d3d::pp.BackBufferFormat), hr);
+            xlog::error(
+                "CheckDeviceType for format {} failed: {:x}", static_cast<unsigned>(rf::gr::d3d::pp.BackBufferFormat),
+                hr
+            );
         }
 
-        hr = rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
-            D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, rf::gr::d3d::pp.AutoDepthStencilFormat);
+        hr = rf::gr::d3d::d3d->CheckDeviceFormat(
+            rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
+            D3DRTYPE_SURFACE, rf::gr::d3d::pp.AutoDepthStencilFormat
+        );
         if (FAILED(hr)) {
-            xlog::error("CheckDeviceFormat for depth-stencil format {} failed: {:x}", static_cast<unsigned>(rf::gr::d3d::pp.AutoDepthStencilFormat), hr);
+            xlog::error(
+                "CheckDeviceFormat for depth-stencil format {} failed: {:x}",
+                static_cast<unsigned>(rf::gr::d3d::pp.AutoDepthStencilFormat), hr
+            );
         }
 
         if (!(rf::gr::d3d::device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)) {
@@ -139,7 +151,10 @@ CodeInjection gr_d3d_init_error_patch{
         D3DDISPLAYMODE mode;
         for (unsigned i = 0; i < num_modes; ++i) {
             rf::gr::d3d::d3d->EnumAdapterModes(rf::gr::d3d::adapter_idx, i, &mode);
-            xlog::info("- {}x{} (format {} refresh rate {})", mode.Width, mode.Height, static_cast<int>(mode.Format), mode.RefreshRate);
+            xlog::info(
+                "- {}x{} (format {} refresh rate {})", mode.Width, mode.Height, static_cast<int>(mode.Format),
+                mode.RefreshRate
+            );
         }
 
         ShowWindow(rf::main_wnd, SW_HIDE);
@@ -162,10 +177,13 @@ D3DFORMAT determine_depth_buffer_format(D3DFORMAT adapter_format)
     D3DFORMAT formats_to_check[] = {D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D32, D3DFMT_D16, D3DFMT_D15S1};
     for (auto depth_fmt : formats_to_check) {
 
-        if (SUCCEEDED(rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, adapter_format, D3DUSAGE_DEPTHSTENCIL,
-                                                    D3DRTYPE_SURFACE, depth_fmt)) &&
-            SUCCEEDED(rf::gr::d3d::d3d->CheckDepthStencilMatch(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, adapter_format, adapter_format,
-                                                         depth_fmt))) {
+        if (SUCCEEDED(rf::gr::d3d::d3d->CheckDeviceFormat(
+                rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, adapter_format, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE,
+                depth_fmt
+            )) &&
+            SUCCEEDED(rf::gr::d3d::d3d->CheckDepthStencilMatch(
+                rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, adapter_format, adapter_format, depth_fmt
+            ))) {
             xlog::info("Selected D3D depth format: {}", static_cast<int>(depth_fmt));
             return depth_fmt;
         }
@@ -185,13 +203,18 @@ CodeInjection update_pp_hook{
         xlog::info("Back Buffer dimensions: {}x{}", rf::gr::d3d::pp.BackBufferWidth, rf::gr::d3d::pp.BackBufferHeight);
         xlog::info("D3D Device Caps: {:x}", rf::gr::d3d::device_caps.DevCaps);
         xlog::info("D3D Raster Caps: {:x}", rf::gr::d3d::device_caps.RasterCaps);
-        xlog::info("Max texture size: {}x{}", rf::gr::d3d::device_caps.MaxTextureWidth, rf::gr::d3d::device_caps.MaxTextureHeight);
+        xlog::info(
+            "Max texture size: {}x{}", rf::gr::d3d::device_caps.MaxTextureWidth,
+            rf::gr::d3d::device_caps.MaxTextureHeight
+        );
 
         if (g_game_config.msaa) {
             // Make sure selected MSAA mode is available
             auto multi_sample_type = static_cast<D3DMULTISAMPLE_TYPE>(g_game_config.msaa.value());
-            HRESULT hr = rf::gr::d3d::d3d->CheckDeviceMultiSampleType(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
-                                                                rf::gr::d3d::pp.Windowed, multi_sample_type);
+            HRESULT hr = rf::gr::d3d::d3d->CheckDeviceMultiSampleType(
+                rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat, rf::gr::d3d::pp.Windowed,
+                multi_sample_type
+            );
             if (SUCCEEDED(hr)) {
                 xlog::info("Enabling Anti-Aliasing ({}x MSAA)...", g_game_config.msaa.value());
                 rf::gr::d3d::pp.MultiSampleType = multi_sample_type;
@@ -265,10 +288,12 @@ void gr_d3d_update_texture_filtering()
         // use linear filtering for lightmaps because otherwise it looks bad
         set_texture_min_mag_filter_in_code(D3DTEXF_POINT, D3DTEXF_LINEAR);
     }
-    else if (rf::gr::d3d::device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
+    else if (rf::gr::d3d::device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering &&
+             !rf::is_dedicated_server) {
         // Anisotropic texture filtering
         set_texture_min_mag_filter_in_code(D3DTEXF_ANISOTROPIC, D3DTEXF_ANISOTROPIC);
-    } else {
+    }
+    else {
         set_texture_min_mag_filter_in_code(D3DTEXF_LINEAR, D3DTEXF_LINEAR);
     }
 }
@@ -392,7 +417,9 @@ CodeInjection D3D_DrawIndexedPrimitive_profile_patch{
             auto num_vertices = addr_as_ref<unsigned>(regs.esp + 16);
             auto start_index = addr_as_ref<unsigned>(regs.esp + 20);
             auto prim_count = addr_as_ref<unsigned>(regs.esp + 24);
-            xlog::info("DrawIndexedPrimitive {} {} {} {} {}", prim_type, min_index, num_vertices, start_index, prim_count);
+            xlog::info(
+                "DrawIndexedPrimitive {} {} {} {} {}", prim_type, min_index, num_vertices, start_index, prim_count
+            );
             ++g_num_draw_calls;
         }
     },
@@ -436,7 +463,8 @@ CodeInjection gr_d3d_init_device_injection{
     0x00546368,
     []() {
         gr_d3d_update_texture_filtering();
-        if (rf::gr::d3d::device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering && !rf::is_dedicated_server) {
+        if (rf::gr::d3d::device_caps.MaxAnisotropy > 0 && g_game_config.anisotropic_filtering &&
+            !rf::is_dedicated_server) {
             DWORD anisotropy_level = setup_max_anisotropy();
             xlog::info("Anisotropic Filtering enabled (level: {})", anisotropy_level);
         }
@@ -493,53 +521,51 @@ CodeInjection gr_d3d_bitmap_patch_2{
 CodeInjection gr_d3d_line_patch_1{
     0x0055147D,
     [](auto& regs) {
-        bool flush_needed = !rf::gr::d3d::buffers_locked
-                         || rf::gr::d3d::primitive_type != D3DPT_LINELIST
-                         || rf::gr::d3d::max_hw_vertex + 2 > 6000
-                         || rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices + 2 > 10000;
+        bool flush_needed = !rf::gr::d3d::buffers_locked || rf::gr::d3d::primitive_type != D3DPT_LINELIST ||
+                            rf::gr::d3d::max_hw_vertex + 2 > 6000 ||
+                            rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices + 2 > 10000;
         if (!flush_needed) {
             xlog::trace("Skipping gr_d3d_prepare_buffers");
             regs.eip = 0x00551482;
         }
         else {
-            xlog::trace("Line drawing requires gr_d3d_prepare_buffers {} {} {} {}",
-                 rf::gr::d3d::buffers_locked, rf::gr::d3d::primitive_type, rf::gr::d3d::max_hw_vertex,
-                 rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices);
+            xlog::trace(
+                "Line drawing requires gr_d3d_prepare_buffers {} {} {} {}", rf::gr::d3d::buffers_locked,
+                rf::gr::d3d::primitive_type, rf::gr::d3d::max_hw_vertex,
+                rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices
+            );
         }
     },
 };
 
 CallHook<void()> gr_d3d_line_patch_2{
     0x005515B2,
-    []() {
-        rf::gr::d3d::num_vertices += 2;
-    },
+    []() { rf::gr::d3d::num_vertices += 2; },
 };
 
 CodeInjection gr_d3d_line_vertex_internal_patch_1{
     0x005516FE,
     [](auto& regs) {
-        bool flush_needed = !rf::gr::d3d::buffers_locked
-                         || rf::gr::d3d::primitive_type != D3DPT_LINELIST
-                         || rf::gr::d3d::max_hw_vertex + 2 > 6000
-                         || rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices + 2 > 10000;
+        bool flush_needed = !rf::gr::d3d::buffers_locked || rf::gr::d3d::primitive_type != D3DPT_LINELIST ||
+                            rf::gr::d3d::max_hw_vertex + 2 > 6000 ||
+                            rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices + 2 > 10000;
         if (!flush_needed) {
             xlog::trace("Skipping gr_d3d_prepare_buffers");
             regs.eip = 0x00551703;
         }
         else {
-            xlog::trace("Line drawing requires gr_d3d_prepare_buffers {} {} {} {}",
-                 rf::gr::d3d::buffers_locked, rf::gr::d3d::primitive_type, rf::gr::d3d::max_hw_vertex,
-                 rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices);
+            xlog::trace(
+                "Line drawing requires gr_d3d_prepare_buffers {} {} {} {}", rf::gr::d3d::buffers_locked,
+                rf::gr::d3d::primitive_type, rf::gr::d3d::max_hw_vertex,
+                rf::gr::d3d::max_hw_index + rf::gr::d3d::num_indices
+            );
         }
     },
 };
 
 CallHook<void()> gr_d3d_line_vertex_internal_patch_2{
     0x005518E8,
-    []() {
-        rf::gr::d3d::num_vertices += 2;
-    },
+    []() { rf::gr::d3d::num_vertices += 2; },
 };
 
 CodeInjection gr_d3d_tmapper_patch{
@@ -571,14 +597,15 @@ CodeInjection gr_d3d_draw_geometry_face_patch_2{
 
 FunHook<void(int*, void*, int, int, int, rf::gr::Mode, int)> gr_d3d_queue_triangles_hook{
     0x005614B0,
-    [](int *list_idx, void *vertices, int num_vertices, int bm0, int bm1, rf::gr::Mode mode, int pass_id) {
+    [](int* list_idx, void* vertices, int num_vertices, int bm0, int bm1, rf::gr::Mode mode, int pass_id) {
         // Fix glass_house level having faces that use MT state but don't have any lightmap
         if (bm1 == -1) {
             INFO_ONCE("Prevented rendering of an unlit face with multi-texturing render state");
             rf::gr::TextureSource ts = mode.get_texture_source();
             if (ts == rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0 || ts == rf::gr::TEXTURE_SOURCE_CLAMP_1_WRAP_0_MOD2X) {
                 ts = rf::gr::TEXTURE_SOURCE_WRAP;
-            } else if (ts == rf::gr::TEXTURE_SOURCE_CLAMP_1_CLAMP_0) {
+            }
+            else if (ts == rf::gr::TEXTURE_SOURCE_CLAMP_1_CLAMP_0) {
                 ts = rf::gr::TEXTURE_SOURCE_CLAMP;
             }
             mode.set_texture_source(ts);
@@ -598,7 +625,8 @@ CodeInjection gr_d3d_init_load_library_injection{
             if (d3d8to9_module) {
                 regs.eax = d3d8to9_module;
                 regs.eip = 0x005459B9;
-            } else {
+            }
+            else {
                 xlog::warn("Failed to load d3d8to9.dll (error {})", GetLastError());
                 g_game_config.renderer = GameConfig::Renderer::d3d8;
             }
@@ -632,7 +660,8 @@ ConsoleCommand2 pow2_tex_cmd{
         rf::gr::d3d::p2t = !rf::gr::d3d::p2t;
         rf::console::print("Power of 2 textures: {}", rf::gr::d3d::p2t ? "on" : "off");
     },
-    "Forces usage of power of two textures. It may fix UV mappings in old levels. Onyl levels loaded after usage of this command are affected.",
+    "Forces usage of power of two textures. It may fix UV mappings in old levels. Onyl levels loaded after usage of "
+    "this command are affected.",
 };
 
 bool gr_d3d_is_d3d8to9()
@@ -643,7 +672,9 @@ bool gr_d3d_is_d3d8to9()
     static bool is_d3d9 = false;
     static bool is_d3d9_inited = false;
     if (!is_d3d9_inited) {
-        static const GUID IID_IDirect3D9 = {0x81BDCBCA, 0x64D4, 0x426D, {0xAE, 0x8D, 0xAD, 0x01, 0x47, 0xF4, 0x27, 0x5C}};
+        static const GUID IID_IDirect3D9 = {
+            0x81BDCBCA, 0x64D4, 0x426D, {0xAE, 0x8D, 0xAD, 0x01, 0x47, 0xF4, 0x27, 0x5C}
+        };
         ComPtr<IUnknown> d3d9;
         is_d3d9 = SUCCEEDED(rf::gr::d3d::d3d->QueryInterface(IID_IDirect3D9, reinterpret_cast<void**>(&d3d9)));
         is_d3d9_inited = true;
@@ -651,16 +682,18 @@ bool gr_d3d_is_d3d8to9()
     return is_d3d9;
 }
 
-void gr_d3d_bitmap_float(int bitmap_handle, float x, float y, float w, float h,
-                         float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::gr::Mode mode)
+void gr_d3d_bitmap_float(
+    int bitmap_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x,
+    bool flip_y, rf::gr::Mode mode
+)
 {
     auto& gr_d3d_get_num_texture_sections = addr_as_ref<int(int bm_handle)>(0x0055CA60);
     if (gr_d3d_get_num_texture_sections(bitmap_handle) != 1) {
         // If bitmap is sectioned fall back to the old implementation...
-        rf::gr::bitmap_scaled(bitmap_handle,
-            static_cast<int>(x), static_cast<int>(y), static_cast<int>(w), static_cast<int>(h),
-            static_cast<int>(sx), static_cast<int>(sy), static_cast<int>(sw), static_cast<int>(sh),
-            flip_x, flip_y, mode);
+        rf::gr::bitmap_scaled(
+            bitmap_handle, static_cast<int>(x), static_cast<int>(y), static_cast<int>(w), static_cast<int>(h),
+            static_cast<int>(sx), static_cast<int>(sy), static_cast<int>(sw), static_cast<int>(sh), flip_x, flip_y, mode
+        );
         return;
     }
 
@@ -759,11 +792,11 @@ void gr_d3d_apply_patch()
     // Fix decal fade out in gr_d3d_render_static_solid
     write_mem<u8>(0x00560994 + 1, 3);
 
-    // Flush instead of preparing D3D drawing buffers in gr_d3d_set_state, gr_d3d_set_state_and_texture, gr_d3d_tcache_set
-    // Note: By default RF calls gr_d3d_tcache_set for many textures during level load process. It causes D3D buffers
-    // to be locked and unlocked multiple times with discard flag. For some driver implementations (e.g. DXVK) such
-    // behaviour leads to allocation of new vertex/index buffers during each lock and in the end it can cause end of
-    // memory error.
+    // Flush instead of preparing D3D drawing buffers in gr_d3d_set_state, gr_d3d_set_state_and_texture,
+    // gr_d3d_tcache_set Note: By default RF calls gr_d3d_tcache_set for many textures during level load process. It
+    // causes D3D buffers to be locked and unlocked multiple times with discard flag. For some driver implementations
+    // (e.g. DXVK) such behaviour leads to allocation of new vertex/index buffers during each lock and in the end it can
+    // cause end of memory error.
     AsmWriter(0x0054F1A9).call(rf::gr::d3d::flush_buffers);
     AsmWriter(0x0055088A).call(rf::gr::d3d::flush_buffers);
     AsmWriter(0x0055CAE9).call(rf::gr::d3d::flush_buffers);
@@ -804,7 +837,8 @@ void gr_d3d_apply_patch()
     // Crash-fix in case texture has not been created (this happens if gr_read_back_buffer fails)
     gr_d3d_lock_crash_fix.install();
 
-    // Fix undefined behavior in D3D state handling: alpha operations cannot be disabled when color operations are enabled
+    // Fix undefined behavior in D3D state handling: alpha operations cannot be disabled when color operations are
+    // enabled
     write_mem<u8>(0x0054F785 + 1, D3DTOP_SELECTARG2);
     write_mem<u8>(0x0054FF18 + 1, D3DTOP_SELECTARG2);
 
@@ -816,9 +850,9 @@ void gr_d3d_apply_patch()
     write_mem<u8>(0x00547257, asm_opcodes::jmp_rel_short);
 
     // Fix flamethrower "stroboscopic effect" on high FPS
-    // gr_3d_bitmap_angle interprets parameters differently than gr_3d_bitmap_stretched_square expects - zero angle does not use
-    // diamond shape and size is not divided by 2. Instead of calling it when p0 to p1 distance is small get rid of this
-    // special case. gr_3d_bitmap_stretched_square should handle it properly even if distance is 0 because it
+    // gr_3d_bitmap_angle interprets parameters differently than gr_3d_bitmap_stretched_square expects - zero angle does
+    // not use diamond shape and size is not divided by 2. Instead of calling it when p0 to p1 distance is small get rid
+    // of this special case. gr_3d_bitmap_stretched_square should handle it properly even if distance is 0 because it
     // uses Vector3::normalize_safe() API.
     write_mem<u8>(0x00558E61, asm_opcodes::jmp_rel_short);
 

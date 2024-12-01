@@ -19,14 +19,14 @@ namespace rf
         uint32_t ip_addr;
         uint16_t port;
 
-        bool operator==(const NetAddr &other) const = default;
+        bool operator==(const NetAddr& other) const = default;
     };
     static_assert(sizeof(NetAddr) == 0x8);
 
     static auto& net_init_socket = addr_as_ref<void(unsigned short port)>(0x00528F10);
-    static auto& net_addr_to_string = addr_as_ref<void(char *buf, int buf_size, const NetAddr& addr)>(0x00529FE0);
-    static auto& net_send = addr_as_ref<void(const NetAddr &addr, const void *data, int len)>(0x0052A080);
-    static auto& net_same = addr_as_ref<int(const NetAddr &addr1, const NetAddr &addr2, bool check_port)>(0x0052A930);
+    static auto& net_addr_to_string = addr_as_ref<void(char* buf, int buf_size, const NetAddr& addr)>(0x00529FE0);
+    static auto& net_send = addr_as_ref<void(const NetAddr& addr, const void* data, int len)>(0x0052A080);
+    static auto& net_same = addr_as_ref<int(const NetAddr& addr1, const NetAddr& addr2, bool check_port)>(0x0052A930);
 
     static auto& net_udp_socket = addr_as_ref<int>(0x005A660C);
     static auto& net_port = addr_as_ref<unsigned short>(0x01B587D4);
@@ -82,7 +82,8 @@ namespace rf
     };
     static_assert(sizeof(PlayerNetData) == 0x9C8);
 
-    enum NetGameType {
+    enum NetGameType
+    {
         NG_TYPE_DM = 0,
         NG_TYPE_CTF = 1,
         NG_TYPE_TEAMDM = 2,
@@ -134,12 +135,11 @@ namespace rf
     constexpr size_t max_packet_size = 512;
 
     static auto& multi_get_game_type = addr_as_ref<NetGameType()>(0x00470770);
-    static auto& multi_io_send = addr_as_ref<void(Player *player, const void *packet, int len)>(0x00479370);
+    static auto& multi_io_send = addr_as_ref<void(Player* player, const void* packet, int len)>(0x00479370);
     static auto& multi_io_send_reliable =
-        addr_as_ref<void(Player *player, const void *data, int len, int not_limbo)>(0x00479480);
-    static auto& multi_io_send_reliable_to_all =
-        addr_as_ref<void(const void *data, int len, int a4)>(0x004795A0);
-    static auto& multi_io_send_buffered_reliable_packets = addr_as_ref<void(Player *pp)>(0x004796C0);
+        addr_as_ref<void(Player* player, const void* data, int len, int not_limbo)>(0x00479480);
+    static auto& multi_io_send_reliable_to_all = addr_as_ref<void(const void* data, int len, int a4)>(0x004795A0);
+    static auto& multi_io_send_buffered_reliable_packets = addr_as_ref<void(Player* pp)>(0x004796C0);
     static auto& multi_find_player_by_addr = addr_as_ref<Player*(const NetAddr& addr)>(0x00484850);
     static auto& multi_find_player_by_id = addr_as_ref<Player*(uint8_t id)>(0x00484890);
     static auto& multi_ctf_get_red_team_score = addr_as_ref<uint8_t()>(0x00475020);
@@ -148,19 +148,20 @@ namespace rf
     static auto& multi_ctf_get_blue_flag_player = addr_as_ref<Player*()>(0x00474E70);
     static auto& multi_ctf_is_red_flag_in_base = addr_as_ref<bool()>(0x00474E80);
     static auto& multi_ctf_is_blue_flag_in_base = addr_as_ref<bool()>(0x00474EA0);
-    static auto& multi_tdm_get_red_team_score = addr_as_ref<int()>(0x004828F0); // returns ubyte in vanilla game
+    static auto& multi_tdm_get_red_team_score = addr_as_ref<int()>(0x004828F0);  // returns ubyte in vanilla game
     static auto& multi_tdm_get_blue_team_score = addr_as_ref<int()>(0x00482900); // returns ubyte in vanilla game
     static auto& multi_num_players = addr_as_ref<int()>(0x00484830);
-    static auto& multi_kick_player = addr_as_ref<void(Player *player)>(0x0047BF00);
+    static auto& multi_kick_player = addr_as_ref<void(Player* player)>(0x0047BF00);
     static auto& multi_ban_ip = addr_as_ref<void(const NetAddr& addr)>(0x0046D0F0);
     static auto& multi_set_next_weapon = addr_as_ref<void(int weapon_type)>(0x0047FCA0);
     static auto& multi_change_level = addr_as_ref<void(const char* filename)>(0x0047BF50);
     static auto& multi_ping_player = addr_as_ref<void(Player*)>(0x00484D00);
-    static auto& send_entity_create_packet = addr_as_ref<void(Entity *entity, Player* player)>(0x00475160);
-    static auto& send_entity_create_packet_to_all = addr_as_ref<void(Entity *entity)>(0x00475110);
-    static auto& multi_find_character = addr_as_ref<int(const char *name)>(0x00476270);
-    static auto& multi_chat_print = addr_as_ref<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
-    static auto& multi_chat_say = addr_as_ref<void(const char *msg, bool is_team_msg)>(0x00444150);
+    static auto& send_entity_create_packet = addr_as_ref<void(Entity* entity, Player* player)>(0x00475160);
+    static auto& send_entity_create_packet_to_all = addr_as_ref<void(Entity* entity)>(0x00475110);
+    static auto& multi_find_character = addr_as_ref<int(const char* name)>(0x00476270);
+    static auto& multi_chat_print =
+        addr_as_ref<void(String::Pod text, ChatMsgColor color, String::Pod prefix)>(0x004785A0);
+    static auto& multi_chat_say = addr_as_ref<void(const char* msg, bool is_team_msg)>(0x00444150);
     static auto& multi_is_connecting_to_server = addr_as_ref<uint8_t(const NetAddr& addr)>(0x0044AD80);
     using MultiIoProcessPackets_Type = void(const void* data, size_t len, const NetAddr& addr, Player* player);
     static auto& multi_io_process_packets = addr_as_ref<MultiIoProcessPackets_Type>(0x004790D0);
@@ -175,7 +176,8 @@ namespace rf
     static auto& simultaneous_ping = addr_as_ref<uint32_t>(0x00599CD8);
     static auto& tracker_addr = addr_as_ref<NetAddr>(0x006FC550);
 
-    enum ChatSayType {
+    enum ChatSayType
+    {
         CHAT_SAY_GLOBAL = 0,
         CHAT_SAY_TEAM = 1,
     };
@@ -185,7 +187,7 @@ namespace rf
     static auto& multi_chat_say_render = addr_as_ref<void()>(0x00444790);
     static auto& multi_chat_say_show = addr_as_ref<void(ChatSayType type)>(0x00444A80);
     static auto& multi_hud_render_chat = addr_as_ref<void()>(0x004773D0);
-    static auto& game_poll = addr_as_ref<void(void(*key_callback)(int k))>(0x004353C0);
+    static auto& game_poll = addr_as_ref<void(void (*key_callback)(int k))>(0x004353C0);
     static auto& scoreboard_render_internal = addr_as_ref<void(bool netgame_scoreboard)>(0x00470880);
 
     constexpr int multi_max_player_id = 256;

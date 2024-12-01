@@ -6,23 +6,16 @@
 #include <wxx_commondlg.h>
 
 OptionsDlg::OptionsDlg() :
-    CDialog(IDD_OPTIONS),
-    m_display_dlg(m_conf, m_graphics_dlg),
-    m_graphics_dlg(m_conf),
-    m_misc_dlg(m_conf),
-    m_audio_dlg(m_conf),
-    m_multiplayer_dlg(m_conf),
-    m_input_dlg(m_conf),
-    m_iface_dlg(m_conf)
-{
-}
+    CDialog(IDD_OPTIONS), m_display_dlg(m_conf, m_graphics_dlg), m_graphics_dlg(m_conf), m_misc_dlg(m_conf),
+    m_audio_dlg(m_conf), m_multiplayer_dlg(m_conf), m_input_dlg(m_conf), m_iface_dlg(m_conf)
+{}
 
 BOOL OptionsDlg::OnInitDialog()
 {
     try {
         m_conf.load();
     }
-    catch (std::exception &e) {
+    catch (std::exception& e) {
         MessageBoxA(e.what(), nullptr, MB_ICONERROR | MB_OK);
     }
 
@@ -60,9 +53,9 @@ BOOL OptionsDlg::OnCommand(WPARAM wparam, LPARAM lparam)
 
     UINT id = LOWORD(wparam);
     switch (id) {
-    case IDC_EXE_BROWSE:
-        OnBnClickedExeBrowse();
-        return TRUE;
+        case IDC_EXE_BROWSE:
+            OnBnClickedExeBrowse();
+            return TRUE;
     }
 
     return FALSE;
@@ -84,7 +77,7 @@ void OptionsDlg::OnBnClickedOk()
     try {
         m_conf.save();
     }
-    catch (std::exception &e) {
+    catch (std::exception& e) {
         MessageBoxA(e.what(), nullptr, MB_ICONERROR | MB_OK);
     }
 }
@@ -105,7 +98,7 @@ void OptionsDlg::InitNestedDialog(CDialog& dlg, int placeholder_id)
     dlg.DoModeless(GetHwnd());
     CWnd placeholder = GetDlgItem(placeholder_id);
     RECT rc = placeholder.GetClientRect();
-    RECT border = { 6, 12, 6, 6 };
+    RECT border = {6, 12, 6, 6};
     MapDialogRect(border);
     rc.left += border.left;
     rc.top += border.top;

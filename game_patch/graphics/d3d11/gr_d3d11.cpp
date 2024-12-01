@@ -36,9 +36,12 @@ namespace df::gr::d3d11
         state_manager_ = std::make_unique<StateManager>(device_);
         shader_manager_ = std::make_unique<ShaderManager>(device_);
         texture_manager_ = std::make_unique<TextureManager>(device_, context_);
-        render_context_ = std::make_unique<RenderContext>(device_, context_, *state_manager_, *shader_manager_, *texture_manager_);
+        render_context_ =
+            std::make_unique<RenderContext>(device_, context_, *state_manager_, *shader_manager_, *texture_manager_);
         dyn_geo_renderer_ = std::make_unique<DynamicGeometryRenderer>(device_, *shader_manager_, *render_context_);
-        solid_renderer_ = std::make_unique<SolidRenderer>(device_, *shader_manager_, *state_manager_, *dyn_geo_renderer_, *render_context_);
+        solid_renderer_ = std::make_unique<SolidRenderer>(
+            device_, *shader_manager_, *state_manager_, *dyn_geo_renderer_, *render_context_
+        );
         mesh_renderer_ = std::make_unique<MeshRenderer>(device_, *shader_manager_, *state_manager_, *render_context_);
 
         render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
@@ -81,9 +84,7 @@ namespace df::gr::d3d11
 
     void Renderer::set_fullscreen_state(bool fullscreen)
     {
-        DF_GR_D3D11_CHECK_HR(
-            swap_chain_->SetFullscreenState(fullscreen, nullptr)
-        );
+        DF_GR_D3D11_CHECK_HR(swap_chain_->SetFullscreenState(fullscreen, nullptr));
         // unref swapchain resources before calling ResizeBuffers
         context_->OMSetRenderTargets(0, nullptr, nullptr);
         back_buffer_.release();
@@ -115,27 +116,17 @@ namespace df::gr::d3d11
         // };
 
         DWORD flags = 0;
-    //#ifndef NDEBUG
-        // Requires Windows 10 SDK
-        //flags |= D3D11_CREATE_DEVICE_DEBUG;
-    //#endif
+        // #ifndef NDEBUG
+        //  Requires Windows 10 SDK
+        // flags |= D3D11_CREATE_DEVICE_DEBUG;
+        // #endif
         D3D_FEATURE_LEVEL feature_level_supported;
-        DF_GR_D3D11_CHECK_HR(
-            pD3D11CreateDevice(
-                nullptr,
-                D3D_DRIVER_TYPE_HARDWARE,
-                nullptr,
-                flags,
-                // feature_levels,
-                // std::size(feature_levels),
-                nullptr,
-                0,
-                D3D11_SDK_VERSION,
-                &device_,
-                &feature_level_supported,
-                &context_
-            )
-        );
+        DF_GR_D3D11_CHECK_HR(pD3D11CreateDevice(
+            nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags,
+            // feature_levels,
+            // std::size(feature_levels),
+            nullptr, 0, D3D11_SDK_VERSION, &device_, &feature_level_supported, &context_
+        ));
 
         init_error(device_);
 
@@ -145,19 +136,13 @@ namespace df::gr::d3d11
     void Renderer::init_swap_chain(HWND hwnd)
     {
         ComPtr<IDXGIDevice> dxgi_device;
-        DF_GR_D3D11_CHECK_HR(
-            device_->QueryInterface(&dxgi_device)
-        );
+        DF_GR_D3D11_CHECK_HR(device_->QueryInterface(&dxgi_device));
 
         ComPtr<IDXGIAdapter> dxgi_adapter;
-        DF_GR_D3D11_CHECK_HR(
-            dxgi_device->GetAdapter(&dxgi_adapter)
-        );
+        DF_GR_D3D11_CHECK_HR(dxgi_device->GetAdapter(&dxgi_adapter));
 
         ComPtr<IDXGIFactory> dxgi_factory;
-        DF_GR_D3D11_CHECK_HR(
-            dxgi_adapter->GetParent(__uuidof(IDXGIFactory), reinterpret_cast<void**>(&dxgi_factory))
-        );
+        DF_GR_D3D11_CHECK_HR(dxgi_adapter->GetParent(__uuidof(IDXGIFactory), reinterpret_cast<void**>(&dxgi_factory)));
 
         ComPtr<IDXGIFactory2> dxgi_factory2;
         ComPtr<IDXGIFactory3> dxgi_factory3;
@@ -215,9 +200,7 @@ namespace df::gr::d3d11
             sd.Windowed = rf::gr::screen.window_mode == rf::gr::WINDOWED;
             sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-            DF_GR_D3D11_CHECK_HR(
-                dxgi_factory->CreateSwapChain(device_, &sd, &swap_chain_)
-            );
+            DF_GR_D3D11_CHECK_HR(dxgi_factory->CreateSwapChain(device_, &sd, &swap_chain_));
         }
     }
 
@@ -233,9 +216,7 @@ namespace df::gr::d3d11
             D3D11_TEXTURE2D_DESC desc;
             back_buffer_->GetDesc(&desc);
             desc.SampleDesc.Count = g_game_config.msaa;
-            DF_GR_D3D11_CHECK_HR(
-                device_->CreateTexture2D(&desc, nullptr, &msaa_render_target_)
-            );
+            DF_GR_D3D11_CHECK_HR(device_->CreateTexture2D(&desc, nullptr, &msaa_render_target_));
             default_render_target_ = msaa_render_target_;
 
             CD3D11_RENDER_TARGET_VIEW_DESC view_desc{D3D11_RTV_DIMENSION_TEXTURE2DMS};
@@ -266,28 +247,31 @@ namespace df::gr::d3d11
         depth_stencil_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 
         ComPtr<ID3D11Texture2D> depth_stencil;
-        DF_GR_D3D11_CHECK_HR(
-            device_->CreateTexture2D(&depth_stencil_desc, nullptr, &depth_stencil)
-        );
+        DF_GR_D3D11_CHECK_HR(device_->CreateTexture2D(&depth_stencil_desc, nullptr, &depth_stencil));
 
         D3D11_DEPTH_STENCIL_VIEW_DESC view_desc;
         ZeroMemory(&view_desc, sizeof(view_desc));
         view_desc.ViewDimension = g_game_config.msaa ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D;
 
-        DF_GR_D3D11_CHECK_HR(
-            device_->CreateDepthStencilView(depth_stencil, &view_desc, &depth_stencil_view_)
+        DF_GR_D3D11_CHECK_HR(device_->CreateDepthStencilView(depth_stencil, &view_desc, &depth_stencil_view_));
+    }
+
+    void Renderer::bitmap(
+        int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y,
+        gr::Mode mode
+    )
+    {
+        dyn_geo_renderer_->bitmap(
+            bm_handle, static_cast<float>(x), static_cast<float>(y), static_cast<float>(w), static_cast<float>(h),
+            static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(sw), static_cast<float>(sh), flip_x,
+            flip_y, mode
         );
     }
 
-    void Renderer::bitmap(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, gr::Mode mode)
-    {
-        dyn_geo_renderer_->bitmap(bm_handle,
-            static_cast<float>(x), static_cast<float>(y), static_cast<float>(w), static_cast<float>(h),
-            static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(sw), static_cast<float>(sh),
-            flip_x, flip_y, mode);
-    }
-
-    void Renderer::bitmap(int bm_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, rf::gr::Mode mode)
+    void Renderer::bitmap(
+        int bm_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x,
+        bool flip_y, rf::gr::Mode mode
+    )
     {
         dyn_geo_renderer_->bitmap(bm_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
     }
@@ -323,9 +307,7 @@ namespace df::gr::d3d11
         }
         xlog::trace("Presenting frame {}", rf::frame_count);
         UINT sync_interval = g_game_config.vsync ? 1 : 0;
-        DF_GR_D3D11_CHECK_HR(
-            swap_chain_->Present(sync_interval, 0)
-        );
+        DF_GR_D3D11_CHECK_HR(swap_chain_->Present(sync_interval, 0));
         // Flip swap effect clears render target after Present call
         render_context_->set_render_target(default_render_target_view_, depth_stencil_view_);
         // Note: it would be better to call update_per_frame_constants after frametime_calculate
@@ -357,22 +339,22 @@ namespace df::gr::d3d11
         texture_manager_->remove_ref(bm_handle);
     }
 
-    bool Renderer::lock(int bm_handle, int section, rf::gr::LockInfo *lock)
+    bool Renderer::lock(int bm_handle, int section, rf::gr::LockInfo* lock)
     {
         return texture_manager_->lock(bm_handle, section, lock);
     }
 
-    void Renderer::unlock(rf::gr::LockInfo *lock)
+    void Renderer::unlock(rf::gr::LockInfo* lock)
     {
         texture_manager_->unlock(lock);
     }
 
-    void Renderer::get_texel(int bm_handle, float u, float v, rf::gr::Color *clr)
+    void Renderer::get_texel(int bm_handle, float u, float v, rf::gr::Color* clr)
     {
         texture_manager_->get_texel(bm_handle, u, v, clr);
     }
 
-    void Renderer::tmapper(int nv, const rf::gr::Vertex **vertices, int vertex_attributes, rf::gr::Mode mode)
+    void Renderer::tmapper(int nv, const rf::gr::Vertex** vertices, int vertex_attributes, rf::gr::Mode mode)
     {
         std::array<int, 2> tex_handles{gr::screen.current_texture_1, gr::screen.current_texture_2};
         dyn_geo_renderer_->add_poly(nv, vertices, vertex_attributes, tex_handles, mode);
@@ -388,7 +370,9 @@ namespace df::gr::d3d11
         dyn_geo_renderer_->line_2d(x1, y1, x2, y2, mode);
     }
 
-    bool Renderer::poly(int nv, rf::gr::Vertex** vertices, int vertex_attributes, rf::gr::Mode mode, bool constant_sw, float sw)
+    bool Renderer::poly(
+        int nv, rf::gr::Vertex** vertices, int vertex_attributes, rf::gr::Mode mode, bool constant_sw, float sw
+    )
     {
         rf::ubyte and_code = 0xFF;
         for (int i = 0; i < nv; ++i) {
@@ -447,7 +431,7 @@ namespace df::gr::d3d11
         return true;
     }
 
-    bm::Format Renderer::read_back_buffer([[maybe_unused]] int x, [[maybe_unused]] int y, int w, int h, rf::ubyte *data)
+    bm::Format Renderer::read_back_buffer([[maybe_unused]] int x, [[maybe_unused]] int y, int w, int h, rf::ubyte* data)
     {
         dyn_geo_renderer_->flush();
         if (msaa_render_target_) {
@@ -478,13 +462,13 @@ namespace df::gr::d3d11
         solid_renderer_->render_movable_solid(solid, pos, orient);
     }
 
-    void Renderer::render_alpha_detail_room(rf::GRoom *room, rf::GSolid *solid)
+    void Renderer::render_alpha_detail_room(rf::GRoom* room, rf::GSolid* solid)
     {
         dyn_geo_renderer_->flush();
         solid_renderer_->render_alpha_detail(room, solid);
     }
 
-    void Renderer::render_sky_room(rf::GRoom *room)
+    void Renderer::render_sky_room(rf::GRoom* room)
     {
         dyn_geo_renderer_->flush();
         solid_renderer_->render_sky_room(room);
@@ -501,19 +485,25 @@ namespace df::gr::d3d11
         solid_renderer_->clear_cache();
     }
 
-    void Renderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
+    void Renderer::render_v3d_vif(
+        rf::VifLodMesh* lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient,
+        const rf::MeshRenderParams& params
+    )
     {
         dyn_geo_renderer_->flush();
         mesh_renderer_->render_v3d_vif(lod_mesh, lod_index, pos, orient, params);
     }
 
-    void Renderer::render_character_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
+    void Renderer::render_character_vif(
+        rf::VifLodMesh* lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient,
+        const rf::CharacterInstance* ci, const rf::MeshRenderParams& params
+    )
     {
         dyn_geo_renderer_->flush();
         mesh_renderer_->render_character_vif(lod_mesh, lod_index, pos, orient, ci, params);
     }
 
-    void Renderer::clear_vif_cache(rf::VifLodMesh *lod_mesh)
+    void Renderer::clear_vif_cache(rf::VifLodMesh* lod_mesh)
     {
         mesh_renderer_->clear_vif_cache(lod_mesh);
     }

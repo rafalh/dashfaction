@@ -34,13 +34,12 @@ static auto& g_main_frame = addr_as_ref<std::byte*>(0x006F9E68);
 
 static auto& LogDlg_Append = addr_as_ref<int(void* self, const char* format, ...)>(0x00444980);
 
-
-void *GetMainFrame()
+void* GetMainFrame()
 {
     return struct_field_ref<void*>(g_editor_app, 0xC8);
 }
 
-void *GetLogDlg()
+void* GetLogDlg()
 {
     return struct_field_ref<void*>(GetMainFrame(), 692);
 }
@@ -64,7 +63,7 @@ CodeInjection CMainFrame_PreCreateWindow_injection{
     0x0044713C,
     [](auto& regs) {
         auto& cs = addr_as_ref<CREATESTRUCTA>(regs.eax);
-        cs.style |= WS_MAXIMIZEBOX|WS_THICKFRAME;
+        cs.style |= WS_MAXIMIZEBOX | WS_THICKFRAME;
         cs.dwExStyle |= WS_EX_ACCEPTFILES;
     },
 };
@@ -73,7 +72,7 @@ CodeInjection CEditorApp_InitInstance_additional_file_paths_injection{
     0x0048290D,
     []() {
         // Load v3m files from more localizations instead of only VPP packfiles
-        auto file_add_path = addr_as_ref<int(const char *path, const char *exts, bool cd)>(0x004C3950);
+        auto file_add_path = addr_as_ref<int(const char* path, const char* exts, bool cd)>(0x004C3950);
         file_add_path("red\\meshes", ".v3m .vfx", false);
         file_add_path("user_maps\\meshes", ".v3m .vfx", false);
     },
@@ -127,7 +126,8 @@ CodeInjection CDialog_DoModal_injection{
     },
 };
 
-HMENU WINAPI LoadMenuA_new(HINSTANCE hInstance, LPCSTR lpMenuName) {
+HMENU WINAPI LoadMenuA_new(HINSTANCE hInstance, LPCSTR lpMenuName)
+{
     HMENU result = LoadMenuA(g_module, lpMenuName);
     if (!result) {
         result = LoadMenuA(hInstance, lpMenuName);
@@ -135,7 +135,8 @@ HMENU WINAPI LoadMenuA_new(HINSTANCE hInstance, LPCSTR lpMenuName) {
     return result;
 }
 
-HICON WINAPI LoadIconA_new(HINSTANCE hInstance, LPCSTR lpIconName) {
+HICON WINAPI LoadIconA_new(HINSTANCE hInstance, LPCSTR lpIconName)
+{
     HICON result = LoadIconA(g_module, lpIconName);
     if (!result) {
         result = LoadIconA(hInstance, lpIconName);
@@ -143,7 +144,8 @@ HICON WINAPI LoadIconA_new(HINSTANCE hInstance, LPCSTR lpIconName) {
     return result;
 }
 
-HACCEL WINAPI LoadAcceleratorsA_new(HINSTANCE hInstance, LPCSTR lpTableName) {
+HACCEL WINAPI LoadAcceleratorsA_new(HINSTANCE hInstance, LPCSTR lpTableName)
+{
     HACCEL result = LoadAcceleratorsA(g_module, lpTableName);
     if (!result) {
         result = LoadAcceleratorsA(hInstance, lpTableName);
@@ -191,16 +193,15 @@ void __fastcall brush_mode_handle_selection_new(void* self)
     g_skip_wnd_set_text = false;
     // TODO: print
     LogDlg_Append(GetLogDlg(), "");
-
 }
 FunHook<brush_mode_handle_selection_type> brush_mode_handle_selection_hook{0x0043F430, brush_mode_handle_selection_new};
 
-void __fastcall DedLight_UpdateLevelLight(void *this_);
+void __fastcall DedLight_UpdateLevelLight(void* this_);
 FunHook DedLight_UpdateLevelLight_hook{
     0x00453200,
     DedLight_UpdateLevelLight,
 };
-void __fastcall DedLight_UpdateLevelLight(void *this_)
+void __fastcall DedLight_UpdateLevelLight(void* this_)
 {
     auto& this_is_enabled = struct_field_ref<bool>(this_, 0xD5);
     auto& level_light = struct_field_ref<void*>(this_, 0xD8);
@@ -210,12 +211,16 @@ void __fastcall DedLight_UpdateLevelLight(void *this_)
 }
 
 struct CTextureBrowserDialog;
-rf::String * __fastcall CTextureBrowserDialog_GetFolderName(CTextureBrowserDialog *this_, int edx, rf::String *folder_name);
+rf::String* __fastcall CTextureBrowserDialog_GetFolderName(
+    CTextureBrowserDialog* this_, int edx, rf::String* folder_name
+);
 FunHook CTextureBrowserDialog_GetFolderName_hook{
     0x00471260,
     CTextureBrowserDialog_GetFolderName,
 };
-rf::String * __fastcall CTextureBrowserDialog_GetFolderName(CTextureBrowserDialog *this_, int edx, rf::String *folder_name)
+rf::String* __fastcall CTextureBrowserDialog_GetFolderName(
+    CTextureBrowserDialog* this_, int edx, rf::String* folder_name
+)
 {
     auto& texture_browser_folder_index = addr_as_ref<int>(0x006CA404);
     if (texture_browser_folder_index > 0) {
@@ -247,12 +252,16 @@ void* GetLevelFromMainFrame(CWnd* main_frame)
 
 void CMainFrame_OpenHelp(CWnd* this_)
 {
-    ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RF1_Editing_Main_Page", nullptr, nullptr, SW_SHOW);
+    ShellExecuteA(
+        WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RF1_Editing_Main_Page", nullptr, nullptr, SW_SHOW
+    );
 }
 
 void CMainFrame_OpenHotkeysHelp(CWnd* this_)
 {
-    ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RED_Hotkey_Reference", nullptr, nullptr, SW_SHOW);
+    ShellExecuteA(
+        WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RED_Hotkey_Reference", nullptr, nullptr, SW_SHOW
+    );
 }
 
 void CMainFrame_HideAllObjects(CWnd* this_)
@@ -362,7 +371,7 @@ void ApplyTriggerPatches();
 
 void LoadDashEditorPackfile()
 {
-    static auto& vpackfile_add = addr_as_ref<int __cdecl(const char *name, const char *dir)>(0x004CA930);
+    static auto& vpackfile_add = addr_as_ref<int __cdecl(const char* name, const char* dir)>(0x004CA930);
     static auto& root_path = addr_as_ref<char[256]>(0x0158CA10);
 
     auto df_dir = get_module_dir(g_module);
@@ -376,9 +385,7 @@ void LoadDashEditorPackfile()
 
 CodeInjection vpackfile_init_injection{
     0x004CA533,
-    []() {
-        LoadDashEditorPackfile();
-    },
+    []() { LoadDashEditorPackfile(); },
 };
 
 CodeInjection CMainFrame_OnPlayLevelCmd_skip_level_dir_injection{
@@ -423,8 +430,8 @@ CodeInjection CDedEvent_Copy_injection{
 
 CodeInjection texture_name_buffer_overflow_injection1{
     0x00445297,
-    [](auto &regs) {
-        const char *filename = regs.esi;
+    [](auto& regs) {
+        const char* filename = regs.esi;
         if (std::strlen(filename) > max_texture_name_len) {
             LogDlg_Append(GetLogDlg(), "Texture name too long: %s\n", filename);
             regs.eip = 0x00445273;
@@ -434,8 +441,8 @@ CodeInjection texture_name_buffer_overflow_injection1{
 
 CodeInjection texture_name_buffer_overflow_injection2{
     0x004703EC,
-    [](auto &regs) {
-        const char *filename = regs.ebp;
+    [](auto& regs) {
+        const char* filename = regs.ebp;
         if (std::strlen(filename) > max_texture_name_len) {
             LogDlg_Append(GetLogDlg(), "Texture name too long: %s\n", filename);
             regs.eip = 0x0047047F;
@@ -521,13 +528,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Especially add Rck_DefaultP.tga to default textures to fix error when packing a level containing a particle
     // emitter with default properties
     static const char* maps_files_names[] = {
-        "maps.txt",
-        "maps1.txt",
-        "maps2.txt",
-        "maps3.txt",
-        "maps4.txt",
-        "maps_df.txt",
-        nullptr,
+        "maps.txt", "maps1.txt", "maps2.txt", "maps3.txt", "maps4.txt", "maps_df.txt", nullptr,
     };
     write_mem_ptr(0x0041B813 + 1, maps_files_names);
     write_mem_ptr(0x0041B824 + 1, maps_files_names);
@@ -558,7 +559,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Allow more decals before displaying a warning message about too many decals in the level
     write_mem<i8>(0x0041E2A9 + 2, 127);
     write_mem<i8>(0x0041E2BA + 2, 127);
-    write_mem_ptr(0x0041E2C6 + 1, "There are more than 127 decals in the level! It can result in a crash for older game clients.");
+    write_mem_ptr(
+        0x0041E2C6 + 1, "There are more than 127 decals in the level! It can result in a crash for older game clients."
+    );
 
     // Fix copying cutscene path node
     CDedLevel_CloneObject_injection.install();
@@ -574,15 +577,15 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     texture_name_buffer_overflow_injection2.install();
 
     // Increase face limit in g_boolean_find_all_pairs
-    static void *found_faces_a[0x10000];
-    static void *found_faces_b[0x10000];
-    write_mem_ptr(0x004A7290+3, found_faces_a);
-    write_mem_ptr(0x004A7158+1, found_faces_a);
-    write_mem_ptr(0x004A72E5+4, found_faces_a);
-    write_mem_ptr(0x004A717D+1, found_faces_b);
-    write_mem_ptr(0x004A71A6+1, found_faces_b);
-    write_mem_ptr(0x004A72A2+3, found_faces_b);
-    write_mem_ptr(0x004A72F9+1, found_faces_b);
+    static void* found_faces_a[0x10000];
+    static void* found_faces_b[0x10000];
+    write_mem_ptr(0x004A7290 + 3, found_faces_a);
+    write_mem_ptr(0x004A7158 + 1, found_faces_a);
+    write_mem_ptr(0x004A72E5 + 4, found_faces_a);
+    write_mem_ptr(0x004A717D + 1, found_faces_b);
+    write_mem_ptr(0x004A71A6 + 1, found_faces_b);
+    write_mem_ptr(0x004A72A2 + 3, found_faces_b);
+    write_mem_ptr(0x004A72F9 + 1, found_faces_b);
 
     return 1; // success
 }

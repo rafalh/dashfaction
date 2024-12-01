@@ -2,7 +2,10 @@
 #include <d3d8.h>
 #include <map>
 
-#define DEFINE_HRESULT_ERROR(hr) {hr, #hr}
+#define DEFINE_HRESULT_ERROR(hr) \
+    {                            \
+        hr, #hr                  \
+    }
 
 // clang-format off
  const static std::map<HRESULT, const char*> DX_ERRORS = {

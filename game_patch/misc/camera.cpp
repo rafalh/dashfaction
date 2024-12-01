@@ -9,7 +9,7 @@ static float g_camera_shake_factor = 0.6f;
 
 FunHook<void(rf::Camera*)> camera_update_shake_hook{
     0x0040DB70,
-    [](rf::Camera *camera) {
+    [](rf::Camera* camera) {
         float frame_time = rf::frametime;
         if (frame_time > 0.0001f) { // < 1000FPS
             // Fix screen shake caused by some weapons (eg. Assault Rifle)

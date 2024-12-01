@@ -10,11 +10,7 @@ class AdditionalInfoDlg : public CDialog
     std::optional<std::string> m_info;
 
 public:
-    AdditionalInfoDlg(std::optional<std::string> info) :
-        CDialog(IDD_ADDITIONAL_INFO),
-        m_info(info)
-    {
-    }
+    AdditionalInfoDlg(std::optional<std::string> info) : CDialog(IDD_ADDITIONAL_INFO), m_info(info) {}
 
     std::optional<std::string> GetInfo() const
     {

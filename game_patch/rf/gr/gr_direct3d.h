@@ -14,7 +14,7 @@ namespace rf::gr::d3d
 {
     struct TextureSection
     {
-        IDirect3DTexture8 *d3d_texture;
+        IDirect3DTexture8* d3d_texture;
         int num_vram_bytes;
         float u_scale;
         float v_scale;
@@ -32,7 +32,7 @@ namespace rf::gr::d3d
         short lock_count;
         uint8_t ref_count;
         bool reset;
-        TextureSection *sections;
+        TextureSection* sections;
     };
 
     static auto& flush_buffers = addr_as_ref<void()>(0x00559D90);

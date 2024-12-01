@@ -10,19 +10,18 @@ namespace df::gr::d3d11
     class RingBuffer
     {
     public:
-        RingBuffer(int buffer_size, UINT bind_flags, ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> device_context) :
-            buffer_size_{buffer_size}, device_{device}, device_context_{device_context}
+        RingBuffer(
+            int buffer_size, UINT bind_flags, ComPtr<ID3D11Device> device, ComPtr<ID3D11DeviceContext> device_context
+        ) : buffer_size_{buffer_size}, device_{device}, device_context_{device_context}
         {
             D3D11_BUFFER_DESC buffer_desc;
             ZeroMemory(&buffer_desc, sizeof(buffer_desc));
-            buffer_desc.Usage            = D3D11_USAGE_DYNAMIC;
-            buffer_desc.ByteWidth        = buffer_size * sizeof(T);
-            buffer_desc.BindFlags        = bind_flags;
-            buffer_desc.CPUAccessFlags   = D3D11_CPU_ACCESS_WRITE;
+            buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+            buffer_desc.ByteWidth = buffer_size * sizeof(T);
+            buffer_desc.BindFlags = bind_flags;
+            buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-            DF_GR_D3D11_CHECK_HR(
-                device_->CreateBuffer(&buffer_desc, nullptr, &buffer_)
-            );
+            DF_GR_D3D11_CHECK_HR(device_->CreateBuffer(&buffer_desc, nullptr, &buffer_));
         }
 
         ~RingBuffer()
@@ -37,9 +36,7 @@ namespace df::gr::d3d11
             if (!mapped_data_) {
                 D3D11_MAP map_type = buffer_full ? D3D11_MAP_WRITE_DISCARD : D3D11_MAP_WRITE_NO_OVERWRITE;
                 D3D11_MAPPED_SUBRESOURCE mapped_subres;
-                DF_GR_D3D11_CHECK_HR(
-                    device_context_->Map(buffer_, 0, map_type, 0, &mapped_subres)
-                );
+                DF_GR_D3D11_CHECK_HR(device_context_->Map(buffer_, 0, map_type, 0, &mapped_subres));
                 mapped_data_ = reinterpret_cast<T*>(mapped_subres.pData);
                 if (buffer_full) {
                     start_pos_ = current_pos_ = 0;

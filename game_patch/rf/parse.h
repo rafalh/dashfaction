@@ -6,12 +6,12 @@ namespace rf
 {
     struct Parser
     {
-        [[nodiscard]] bool parse_optional(const char *str)
+        [[nodiscard]] bool parse_optional(const char* str)
         {
             return AddrCaller{0x005125C0}.this_call<bool>(this, str);
         }
 
-        void parse_required(const char *str)
+        void parse_required(const char* str)
         {
             AddrCaller{0x005126A0}.this_call(this, str);
         }
@@ -36,7 +36,7 @@ namespace rf
             return AddrCaller{0x00512920}.this_call<float>(this);
         }
 
-        int parse_string(String *out_str, char first_char = '"', char last_char = '"')
+        int parse_string(String* out_str, char first_char = '"', char last_char = '"')
         {
             return AddrCaller{0x00512BB0}.this_call<int>(this, out_str, first_char, last_char);
         }

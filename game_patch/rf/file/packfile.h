@@ -16,7 +16,7 @@ namespace rf
 #ifdef DASH_FACTION
         std::vector<VPackfileEntry> files;
 #else
-        VPackfileEntry *files;
+        VPackfileEntry* files;
 #endif
         uint32_t file_size;
 #ifdef DASH_FACTION
@@ -39,12 +39,12 @@ namespace rf
     };
     static_assert(sizeof(VPackfileEntry) == 0x18);
 
-    static auto& vpackfile_add = addr_as_ref<int(const char *file_name, const char *dir)>(0x0052C070);
+    static auto& vpackfile_add = addr_as_ref<int(const char* file_name, const char* dir)>(0x0052C070);
     static auto& vpackfile_set_loading_user_maps = addr_as_ref<void(bool loading_user_maps)>(0x0052BB50);
 
     static auto& vpackfile_calc_file_name_checksum = addr_as_ref<uint32_t(const char* file_name)>(0x0052BE70);
-    using VPackfileAddEntries_Type = uint32_t(VPackfile* packfile, const void* buf, unsigned num_files_in_block,
-                                              unsigned* num_added);
+    using VPackfileAddEntries_Type =
+        uint32_t(VPackfile* packfile, const void* buf, unsigned num_files_in_block, unsigned* num_added);
     static auto& vpackfile_add_entries = addr_as_ref<VPackfileAddEntries_Type>(0x0052BD40);
 
     static auto& vpackfile_loading_user_maps = addr_as_ref<bool>(0x01BDB21C);

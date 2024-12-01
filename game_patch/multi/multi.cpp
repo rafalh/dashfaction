@@ -18,7 +18,8 @@
 #include "../rf/item.h"
 
 // Note: this must be called from DLL init function
-// Note: we can't use global variable because that would lead to crash when launcher loads this DLL to check dependencies
+// Note: we can't use global variable because that would lead to crash when launcher loads this DLL to check
+// dependencies
 static rf::CmdLineParam& get_url_cmd_line_param()
 {
     static rf::CmdLineParam url_param{"-url", "", true};
@@ -55,7 +56,7 @@ void handle_url_param()
     }
 
     rf::console::print("Connecting to {}:{}...", host_name, port);
-    auto host = ntohl(reinterpret_cast<in_addr *>(hp->h_addr_list[0])->S_un.S_addr);
+    auto host = ntohl(reinterpret_cast<in_addr*>(hp->h_addr_list[0])->S_un.S_addr);
 
     rf::NetAddr addr{host, port};
     start_join_multi_game_sequence(addr, password);
@@ -119,7 +120,7 @@ bool multi_is_selecting_weapon(rf::Player* pp)
 
 FunHook<void(rf::Player*, rf::Entity*, int)> multi_select_weapon_server_side_hook{
     0x004858D0,
-    [](rf::Player *pp, rf::Entity *ep, int weapon_type) {
+    [](rf::Player* pp, rf::Entity* ep, int weapon_type) {
         if (weapon_type == -1 || ep->ai.current_primary_weapon == weapon_type) {
             // Nothing to do
             return;
@@ -135,12 +136,16 @@ FunHook<void(rf::Player*, rf::Entity*, int)> multi_select_weapon_server_side_hoo
             xlog::debug("Player {} attempted to select an unpossesed weapon {}", pp->name, weapon_type);
         }
         else if (multi_is_selecting_weapon(pp)) {
-            xlog::debug("Player {} attempted to select weapon {} while selecting weapon {}",
-                pp->name, weapon_type, ep->ai.current_primary_weapon);
+            xlog::debug(
+                "Player {} attempted to select weapon {} while selecting weapon {}", pp->name, weapon_type,
+                ep->ai.current_primary_weapon
+            );
         }
         else if (rf::entity_is_reloading(ep)) {
-            xlog::debug("Player {} attempted to select weapon {} while reloading weapon {}",
-                pp->name, weapon_type, ep->ai.current_primary_weapon);
+            xlog::debug(
+                "Player {} attempted to select weapon {} while reloading weapon {}", pp->name, weapon_type,
+                ep->ai.current_primary_weapon
+            );
         }
         else {
             rf::player_make_weapon_current_selection(pp, weapon_type);
@@ -215,8 +220,8 @@ void multi_turn_weapon_on(rf::Entity* ep, rf::Player* pp, bool alt_fire)
 void multi_turn_weapon_off(rf::Entity* ep)
 {
     auto current_primary_weapon = ep->ai.current_primary_weapon;
-    if (rf::weapon_is_on_off_weapon(current_primary_weapon, false)
-        || rf::weapon_is_on_off_weapon(current_primary_weapon, true)) {
+    if (rf::weapon_is_on_off_weapon(current_primary_weapon, false) ||
+        rf::weapon_is_on_off_weapon(current_primary_weapon, true)) {
 
         rf::entity_turn_weapon_off(ep->handle, current_primary_weapon);
     }
@@ -225,7 +230,7 @@ void multi_turn_weapon_off(rf::Entity* ep)
 bool weapon_uses_ammo(int weapon_type, bool alt_fire)
 {
     if (rf::weapon_is_detonator(weapon_type)) {
-         return false;
+        return false;
     }
     if (rf::weapon_is_riot_stick(weapon_type) && alt_fire) {
         return true;
@@ -234,7 +239,7 @@ bool weapon_uses_ammo(int weapon_type, bool alt_fire)
     return !(winfo->flags & rf::WTF_MELEE);
 }
 
-bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
+bool is_entity_out_of_ammo(rf::Entity* entity, int weapon_type, bool alt_fire)
 {
     if (!weapon_uses_ammo(weapon_type, alt_fire)) {
         return false;
@@ -284,13 +289,12 @@ bool multi_check_cps(rf::Player* pp, int weapon_type, bool alt_fire)
     float max_cps = multi_get_max_cps(weapon_type, alt_fire);
     auto [above_limit, cps] = multi_is_cps_above_limit(pp, max_cps);
     if (above_limit) {
-        xlog::info("Player {} is shooting too fast: cps {:.2f} is greater than allowed {:.2f}",
-            pp->name, cps, max_cps);
+        xlog::info("Player {} is shooting too fast: cps {:.2f} is greater than allowed {:.2f}", pp->name, cps, max_cps);
     }
     return above_limit;
 }
 
-bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, bool alt_fire)
+bool multi_is_weapon_fire_allowed_server_side(rf::Entity* ep, int weapon_type, bool alt_fire)
 {
     rf::Player* pp = rf::player_from_entity_handle(ep->handle);
     if (ep->ai.current_primary_weapon != weapon_type) {
@@ -316,7 +320,7 @@ bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, b
 
 FunHook<void(rf::Entity*, int, rf::Vector3&, rf::Matrix3&, bool)> multi_process_remote_weapon_fire_hook{
     0x0047D220,
-    [](rf::Entity *ep, int weapon_type, rf::Vector3& pos, rf::Matrix3& orient, bool alt_fire) {
+    [](rf::Entity* ep, int weapon_type, rf::Vector3& pos, rf::Matrix3& orient, bool alt_fire) {
         if (rf::is_server) {
             // Do some checks server-side to prevent cheating
             if (!multi_is_weapon_fire_allowed_server_side(ep, weapon_type, alt_fire)) {

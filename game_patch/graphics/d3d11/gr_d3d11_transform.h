@@ -22,10 +22,7 @@ namespace df::gr::d3d11
     public:
         Projection() = default;
         Projection(float sx, float sy, float zn, float zf) :
-            sx_{sx}, sy_{sy},
-            sz_{-zn / (zf - zn)},
-            tz_{zf * zn / (zf - zn)},
-            zf_{zf}
+            sx_{sx}, sy_{sy}, sz_{-zn / (zf - zn)}, tz_{zf * zn / (zf - zn)}, zf_{zf}
         {}
 
         float project_z(float z) const
@@ -42,7 +39,8 @@ namespace df::gr::d3d11
             };
         }
 
-        float unproject_z(float pz) const {
+        float unproject_z(float pz) const
+        {
             // (z * sz_ + tz_) / z == pz
             // pz * z = z * sz_ + tz_
             // pz * z - sz_ * z = tz_
@@ -54,9 +52,10 @@ namespace df::gr::d3d11
         GpuMatrix4x4 matrix() const
         {
             // RF projection (1/z) uses reversed-Z trick, maps near plane to 1 and infinity to 0
-            // It has some benefits, see "reversed-Z trick" in https://developer.nvidia.com/content/depth-precision-visualized
-            // To support far plane clipping change it a bit and map far plane to 0 instead of infinity
-            // Matrix construction: https://iolite-engine.com/blog_posts/reverse_z_cheatsheet
+            // It has some benefits, see "reversed-Z trick" in
+            // https://developer.nvidia.com/content/depth-precision-visualized To support far plane clipping change it a
+            // bit and map far plane to 0 instead of infinity Matrix construction:
+            // https://iolite-engine.com/blog_posts/reverse_z_cheatsheet
             return {{
                 {sx_, 0.0f, 0.0f, 0.0f},
                 {0.0f, sy_, 0.0f, 0.0f},

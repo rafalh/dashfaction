@@ -105,19 +105,19 @@ namespace rf
 
     struct Player
     {
-        struct Player *next;
-        struct Player *prev;
+        struct Player* next;
+        struct Player* prev;
         String name;
         unsigned flags;
         int entity_handle;
         int entity_type;
         Vector3 spew_pos;
         ubyte spew_vector_index;
-        PlayerLevelStats *stats;
+        PlayerLevelStats* stats;
         ubyte team;
         bool collides_with_world;
-        VMesh *weapon_mesh_handle;
-        VMesh *last_weapon_mesh_handle;
+        VMesh* weapon_mesh_handle;
+        VMesh* last_weapon_mesh_handle;
         Timestamp next_idle;
         int muzzle_tag_index[2];
         int ammo_digit1_tag_index;
@@ -129,7 +129,7 @@ namespace rf
         Timestamp remote_charge_switch_timestamp;
         Timestamp use_key_timestamp;
         Timestamp spawn_protection_timestamp;
-        Camera *cam;
+        Camera* cam;
         PlayerViewport viewport;
         int viewport_mode;
         int flashlight_light;
@@ -155,7 +155,7 @@ namespace rf
         float field_11F4;
         int field_11F8;
         ubyte last_damage_dir;
-        PlayerNetData *net_data;
+        PlayerNetData* net_data;
     };
     static_assert(sizeof(Player) == 0x1204);
 
@@ -163,14 +163,15 @@ namespace rf
     static auto& local_player = addr_as_ref<Player*>(0x007C75D4);
 
     static auto& player_from_entity_handle = addr_as_ref<Player*(int entity_handle)>(0x004A3740);
-    static auto& player_is_dead = addr_as_ref<bool(Player *player)>(0x004A4920);
-    static auto& player_is_dying = addr_as_ref<bool(Player *player)>(0x004A4940);
-    static auto& player_add_score = addr_as_ref<void(Player *player, int delta)>(0x004A7460);
-    static auto& player_get_ai = addr_as_ref<AiInfo*(Player *player)>(0x004A3260);
-    static auto& player_get_weapon_total_ammo = addr_as_ref<int(Player *player, int weapon_type)>(0x004A3280);
+    static auto& player_is_dead = addr_as_ref<bool(Player* player)>(0x004A4920);
+    static auto& player_is_dying = addr_as_ref<bool(Player* player)>(0x004A4940);
+    static auto& player_add_score = addr_as_ref<void(Player* player, int delta)>(0x004A7460);
+    static auto& player_get_ai = addr_as_ref<AiInfo*(Player* player)>(0x004A3260);
+    static auto& player_get_weapon_total_ammo = addr_as_ref<int(Player* player, int weapon_type)>(0x004A3280);
     static auto& player_render = addr_as_ref<void(Player*)>(0x004A2B30);
     static auto& player_render_held_corpse = addr_as_ref<void(Player* player)>(0x004A2B90);
     static auto& player_do_frame = addr_as_ref<void(Player*)>(0x004A2700);
-    static auto& player_make_weapon_current_selection = addr_as_ref<void(Player *player, int weapon_type)>(0x004A4980);
-    static auto& player_start_death_fade = addr_as_ref<void(Player *pp, float time_sec, void (*callback)(Player *))>(0x004A73E0);
+    static auto& player_make_weapon_current_selection = addr_as_ref<void(Player* player, int weapon_type)>(0x004A4980);
+    static auto& player_start_death_fade =
+        addr_as_ref<void(Player* pp, float time_sec, void (*callback)(Player*))>(0x004A73E0);
 }

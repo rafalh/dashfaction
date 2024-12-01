@@ -34,14 +34,18 @@ CodeInjection message_log_init_injection{
     },
 };
 
-CallHook<void(int, int, int, int, int, int, int, int, int, bool, bool, rf::gr::Mode)> message_log_render_gr_bitmap_stretched_hook{
-    0x004551F0,
-    [](int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y, rf::gr::Mode mode) {
-        w = static_cast<int>(sw * message_log_scale_x);
-        h = static_cast<int>(sh * message_log_scale_y);
-        message_log_render_gr_bitmap_stretched_hook.call_target(bm_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
-    },
-};
+CallHook<void(int, int, int, int, int, int, int, int, int, bool, bool, rf::gr::Mode)>
+    message_log_render_gr_bitmap_stretched_hook{
+        0x004551F0,
+        [](int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x, bool flip_y,
+           rf::gr::Mode mode) {
+            w = static_cast<int>(sw * message_log_scale_x);
+            h = static_cast<int>(sh * message_log_scale_y);
+            message_log_render_gr_bitmap_stretched_hook.call_target(
+                bm_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode
+            );
+        },
+    };
 
 void message_log_apply_patch()
 {

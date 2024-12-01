@@ -19,14 +19,17 @@ unsigned GameConfig::max_fps_limit = 240u;
 
 const char fallback_executable_path[] = R"(C:\games\RedFaction\rf.exe)";
 
-bool GameConfig::load() try
-{
-    bool result = visit_vars([](RegKey& reg_key, const char* name, auto& var) {
-        auto value_temp = var.value();
-        bool read_success = reg_key.read_value(name, &value_temp);
-        var = value_temp;
-        return read_success;
-    }, false);
+bool GameConfig::load()
+try {
+    bool result = visit_vars(
+        [](RegKey& reg_key, const char* name, auto& var) {
+            auto value_temp = var.value();
+            bool read_success = reg_key.read_value(name, &value_temp);
+            var = value_temp;
+            return read_success;
+        },
+        false
+    );
 
     if (game_executable_path.value().empty() && !detect_game_path()) {
         game_executable_path = fallback_executable_path;
@@ -44,15 +47,18 @@ catch (...) {
     std::throw_with_nested(std::runtime_error("failed to load config"));
 }
 
-void GameConfig::save() try
-{
-    visit_vars([](RegKey& reg_key, const char* name, auto& var) {
-        if (var.is_dirty()) {
-            reg_key.write_value(name, var.value());
-            var.set_dirty(false);
-        }
-        return true;
-    }, true);
+void GameConfig::save()
+try {
+    visit_vars(
+        [](RegKey& reg_key, const char* name, auto& var) {
+            if (var.is_dirty()) {
+                reg_key.write_value(name, var.value());
+                var.set_dirty(false);
+            }
+            return true;
+        },
+        true
+    );
 }
 catch (...) {
     std::throw_with_nested(std::runtime_error("failed to save config"));
@@ -63,61 +69,53 @@ bool GameConfig::detect_game_path()
     std::string install_path;
 
     // Standard RF installer
-    try
-    {
+    try {
         RegKey reg_key(HKEY_LOCAL_MACHINE, rf_key_name, KEY_READ);
-        if (reg_key.read_value("InstallPath", &install_path))
-        {
+        if (reg_key.read_value("InstallPath", &install_path)) {
             game_executable_path = install_path + "\\RF.exe";
             return true;
         }
     }
-    catch (...)
-    {
+    catch (...) {
         // ignore
     }
 
     // Steam
-    try
-    {
+    try {
         BOOL Wow64Process = FALSE;
         IsWow64Process(GetCurrentProcess(), &Wow64Process);
         REGSAM reg_sam = KEY_READ;
         if (Wow64Process) {
             reg_sam |= KEY_WOW64_64KEY;
         }
-        RegKey reg_key(HKEY_LOCAL_MACHINE, R"(SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 20530)", reg_sam);
-        if (reg_key.read_value("InstallLocation", &install_path))
-        {
+        RegKey reg_key(
+            HKEY_LOCAL_MACHINE, R"(SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 20530)", reg_sam
+        );
+        if (reg_key.read_value("InstallLocation", &install_path)) {
             game_executable_path = install_path + "\\RF.exe";
             return true;
         }
     }
-    catch (...)
-    {
+    catch (...) {
         // ignore
     }
 
     // GOG
-    try
-    {
+    try {
         RegKey reg_key(HKEY_LOCAL_MACHINE, "SOFTWARE\\Nordic Games\\Red Faction", KEY_READ);
-        if (reg_key.read_value("INSTALL_DIR", &install_path))
-        {
+        if (reg_key.read_value("INSTALL_DIR", &install_path)) {
             game_executable_path = install_path + "\\RF.exe";
             return true;
         }
     }
-    catch (...)
-    {
+    catch (...) {
         // ignore
     }
 
     char current_dir[MAX_PATH];
     GetCurrentDirectoryA(sizeof(current_dir), current_dir);
     std::string full_path = std::string(current_dir) + "\\RF.exe";
-    if (PathFileExistsA(full_path.c_str()))
-    {
+    if (PathFileExistsA(full_path.c_str())) {
         game_executable_path = full_path;
         return true;
     }
@@ -190,15 +188,13 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
 template<>
 bool is_valid_enum_value<GameConfig::WndMode>(int value)
 {
-    return value == GameConfig::FULLSCREEN
-        || value == GameConfig::WINDOWED
-        || value == GameConfig::STRETCHED;
+    return value == GameConfig::FULLSCREEN || value == GameConfig::WINDOWED || value == GameConfig::STRETCHED;
 }
 
 template<>
 bool is_valid_enum_value<GameConfig::Renderer>(int value)
 {
-    return value == static_cast<int>(GameConfig::Renderer::d3d8)
-        || value == static_cast<int>(GameConfig::Renderer::d3d9)
-        || value == static_cast<int>(GameConfig::Renderer::d3d11);
+    return value == static_cast<int>(GameConfig::Renderer::d3d8) ||
+           value == static_cast<int>(GameConfig::Renderer::d3d9) ||
+           value == static_cast<int>(GameConfig::Renderer::d3d11);
 }

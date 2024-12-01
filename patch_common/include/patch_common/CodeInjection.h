@@ -17,9 +17,9 @@ private:
     CodeBuffer m_code_buf;
 
 public:
-
     template<typename T>
-    struct Reg {
+    struct Reg
+    {
         T value;
 
         template<typename U>
@@ -42,7 +42,7 @@ public:
         }
 
         template<typename U>
-        bool operator==([[ maybe_unused ]] U other) const
+        bool operator==([[maybe_unused]] U other) const
         {
             if constexpr (std::is_null_pointer_v<U>) {
                 return this->value == 0;
@@ -53,7 +53,7 @@ public:
         }
 
         template<typename U>
-        bool operator!=([[ maybe_unused ]] U other) const
+        bool operator!=([[maybe_unused]] U other) const
         {
             if constexpr (std::is_null_pointer_v<U>) {
                 return this->value != 0;
@@ -112,23 +112,23 @@ public:
         }
     };
 
-    #define X86_GP_REG_X_UNION(letter) \
-    union                              \
-    {                                  \
-        Reg<int32_t> e##letter##x;     \
-        Reg<int16_t> letter##x;        \
-        struct                         \
-        {                              \
-            Reg<int8_t> letter##l;     \
-            Reg<int8_t> letter##h;     \
-        };                             \
-    }
-    #define X86_GP_REG_UNION(name) \
+#define X86_GP_REG_X_UNION(letter) \
     union                          \
     {                              \
-        Reg<int32_t> e##name;      \
-        Reg<int16_t> name;  /* NOLINT(bugprone-macro-parentheses) */ \
-        Reg<int8_t> name##l;       \
+        Reg<int32_t> e##letter##x; \
+        Reg<int16_t> letter##x;    \
+        struct                     \
+        {                          \
+            Reg<int8_t> letter##l; \
+            Reg<int8_t> letter##h; \
+        };                         \
+    }
+#define X86_GP_REG_UNION(name)                                      \
+    union                                                           \
+    {                                                               \
+        Reg<int32_t> e##name;                                       \
+        Reg<int16_t> name; /* NOLINT(bugprone-macro-parentheses) */ \
+        Reg<int8_t> name##l;                                        \
     }
 
     struct FlagsReg
@@ -146,13 +146,12 @@ public:
         {
             int tmp = 0;
 #ifdef __GNUC__
-            __asm__(
-                "cmp %2, %1\n\t"
-                "pushf\n\t"
-                "pop %0"
-                : "=r" (tmp)
-                : "r" (a), "r" (b)
-                : "cc");
+            __asm__("cmp %2, %1\n\t"
+                    "pushf\n\t"
+                    "pop %0"
+                    : "=r"(tmp)
+                    : "r"(a), "r"(b)
+                    : "cc");
 #else
             __asm {
                 mov eax, a
@@ -184,8 +183,8 @@ public:
         // return address
         uint32_t eip;
     };
-    #undef X86_GP_REG_X_UNION
-    #undef X86_GP_REG_UNION
+#undef X86_GP_REG_X_UNION
+#undef X86_GP_REG_UNION
 
     BaseCodeInjection(uintptr_t addr) : m_addr(addr), m_code_buf(256) {}
 
@@ -225,14 +224,13 @@ protected:
 
 template<typename T>
 class CodeInjection2<T, decltype(std::declval<T>()(std::declval<BaseCodeInjection::Regs&>()))>
- : public BaseCodeInjectionWithRegsAccess
+    : public BaseCodeInjectionWithRegsAccess
 {
     T m_functor;
 
 public:
     CodeInjection2(uintptr_t addr, T handler) :
-        BaseCodeInjectionWithRegsAccess(addr, reinterpret_cast<WrapperPtr>(&wrapper)),
-        m_functor(handler)
+        BaseCodeInjectionWithRegsAccess(addr, reinterpret_cast<WrapperPtr>(&wrapper)), m_functor(handler)
     {}
 
 private:
@@ -265,8 +263,7 @@ class CodeInjection2<T, decltype(std::declval<T>()())> : public BaseCodeInjectio
 
 public:
     CodeInjection2(uintptr_t addr, T handler) :
-        BaseCodeInjectionWithoutRegsAccess(addr, reinterpret_cast<WrapperPtr>(&wrapper)),
-        m_functor(handler)
+        BaseCodeInjectionWithoutRegsAccess(addr, reinterpret_cast<WrapperPtr>(&wrapper)), m_functor(handler)
     {}
 
 private:
@@ -280,7 +277,5 @@ template<typename T>
 class CodeInjection : public CodeInjection2<T>
 {
 public:
-    CodeInjection(uintptr_t addr, T handler) :
-        CodeInjection2<T>(addr, handler)
-    {}
+    CodeInjection(uintptr_t addr, T handler) : CodeInjection2<T>(addr, handler) {}
 };

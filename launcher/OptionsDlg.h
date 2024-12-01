@@ -15,7 +15,7 @@
 class OptionsDlg : public CDialog
 {
 public:
-	OptionsDlg();
+    OptionsDlg();
     OptionsDlg(const OptionsDlg&) = delete;
 
 protected:

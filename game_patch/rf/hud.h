@@ -34,54 +34,54 @@ namespace rf
 
     enum HudItem
     {
-        hud_health                                    = 0,
-        hud_health_value_ul_corner                    = 1,
-        hud_health_value_width_and_height             = 2,
-        hud_envirosuit                                = 3,
-        hud_envirosuit_value_ul_corner                = 4,
-        hud_envirosuit_value_width_and_height         = 5,
-        hud_ammo_bar                                  = 6,
-        hud_ammo_signal                               = 7, // behind_icon
-        hud_ammo_icon                                 = 8,
-        hud_ammo_in_clip_text_ul_region_coord         = 9,
-        hud_ammo_in_clip_text_width_and_height        = 10,
-        hud_ammo_in_inv_text_ul_region_coord          = 11,
-        hud_ammo_in_inv_text_width_and_height         = 12,
-        hud_reticle                                   = 13,
-        hud_ammo_bar_position_no_clip                 = 14, // with no clip, i.e. when using rockets
-        hud_ammo_signal_position_no_clip              = 15, // with no clip
-        hud_ammo_icon_position_no_clip                = 16, // with no clip
-        hud_ammo_in_inv_ul_region_coord_no_clip       = 17, // with no clip
+        hud_health = 0,
+        hud_health_value_ul_corner = 1,
+        hud_health_value_width_and_height = 2,
+        hud_envirosuit = 3,
+        hud_envirosuit_value_ul_corner = 4,
+        hud_envirosuit_value_width_and_height = 5,
+        hud_ammo_bar = 6,
+        hud_ammo_signal = 7, // behind_icon
+        hud_ammo_icon = 8,
+        hud_ammo_in_clip_text_ul_region_coord = 9,
+        hud_ammo_in_clip_text_width_and_height = 10,
+        hud_ammo_in_inv_text_ul_region_coord = 11,
+        hud_ammo_in_inv_text_width_and_height = 12,
+        hud_reticle = 13,
+        hud_ammo_bar_position_no_clip = 14,                 // with no clip, i.e. when using rockets
+        hud_ammo_signal_position_no_clip = 15,              // with no clip
+        hud_ammo_icon_position_no_clip = 16,                // with no clip
+        hud_ammo_in_inv_ul_region_coord_no_clip = 17,       // with no clip
         hud_ammo_in_inv_text_width_and_height_no_clip = 18, // with no clip
-        hud_scope_center_circle_radius                = 19, // along x and y axes
-        hud_front_damage_indicator_center             = 20,
-        hud_left_damage_indicator_center              = 21,
-        hud_back_damage_indicator_center              = 22,
-        hud_right_damage_indicator_center             = 23,
-        hud_ammo_in_clip_ul_coord                     = 24,
-        hud_ammo_in_clip_width_and_height             = 25,
+        hud_scope_center_circle_radius = 19,                // along x and y axes
+        hud_front_damage_indicator_center = 20,
+        hud_left_damage_indicator_center = 21,
+        hud_back_damage_indicator_center = 22,
+        hud_right_damage_indicator_center = 23,
+        hud_ammo_in_clip_ul_coord = 24,
+        hud_ammo_in_clip_width_and_height = 25,
         hud_front_damage_indicator_center_splitscreen = 26, // relative to clip region
-        hud_left_damage_indicator_center_splitscreen  = 27, // relative to clip region
-        hud_back_damage_indicator_center_splitscreen  = 28, // relative to clip region
+        hud_left_damage_indicator_center_splitscreen = 27,  // relative to clip region
+        hud_back_damage_indicator_center_splitscreen = 28,  // relative to clip region
         hud_right_damage_indicator_center_splitscreen = 29, // relative to clip region
-        hud_persona_message_box_background_ul         = 30,
-        hud_persona_message_box_background_w_h        = 31,
-        hud_persona_message_box_text_area_upper_left  = 32,
-        hud_persona_message_box_text_area_width       = 33, // height ignored
-        hud_persona_head_image                        = 34,
-        hud_persona_head_image_name                   = 35,
-        hud_persona_sub_offset                        = 36,
-        hud_message_width_and_upper_y_value           = 37, // they render centered
-        hud_message_log_text_area_width               = 38, // height ignored
-        hud_countdown_timer                           = 39,
-        hud_corpse_icon                               = 40,
-        hud_corpse_text                               = 41,
-        hud_jeep                                      = 42,
-        hud_jeep_frame                                = 43,
-        hud_jeep_value                                = 44,
-        hud_driller                                   = 45,
-        hud_driller_frame                             = 46,
-        hud_driller_value                             = 47,
+        hud_persona_message_box_background_ul = 30,
+        hud_persona_message_box_background_w_h = 31,
+        hud_persona_message_box_text_area_upper_left = 32,
+        hud_persona_message_box_text_area_width = 33, // height ignored
+        hud_persona_head_image = 34,
+        hud_persona_head_image_name = 35,
+        hud_persona_sub_offset = 36,
+        hud_message_width_and_upper_y_value = 37, // they render centered
+        hud_message_log_text_area_width = 38,     // height ignored
+        hud_countdown_timer = 39,
+        hud_corpse_icon = 40,
+        hud_corpse_text = 41,
+        hud_jeep = 42,
+        hud_jeep_frame = 43,
+        hud_jeep_value = 44,
+        hud_driller = 45,
+        hud_driller_frame = 46,
+        hud_driller_value = 47,
     };
 
     static auto& hud_draw_damage_indicators = addr_as_ref<void(Player*)>(0x00439CA0);
@@ -132,8 +132,8 @@ namespace rf
     struct WeaponCycle
     {
         int weapon_type;
-        VMesh *mesh;
-        VMesh *fpgun_mesh;
+        VMesh* mesh;
+        VMesh* fpgun_mesh;
         int category;
     };
 

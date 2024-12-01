@@ -261,8 +261,9 @@ static void for_each_packfile_entry(const std::vector<std::string_view>& ext_fil
     }
 }
 
-static int vpackfile_build_file_list_new(const char* ext_filter, char*& filenames, unsigned& num_files,
-                                     const char* packfile_filter)
+static int vpackfile_build_file_list_new(
+    const char* ext_filter, char*& filenames, unsigned& num_files, const char* packfile_filter
+)
 {
     xlog::trace("PackfileBuildFileList begin");
     auto ext_filter_splitted = string_split(ext_filter, ',');
@@ -323,19 +324,23 @@ static void vpackfile_add_to_lookup_table(rf::VPackfileEntry* entry)
     if (!inserted) {
         ++g_num_name_collisions;
         if (is_lookup_table_entry_override_allowed(it->second, entry)) {
-            xlog::trace("Allowed overriding packfile file {} (old packfile {}, new packfile {})", entry->name,
-                it->second->parent->filename, entry->parent->filename);
+            xlog::trace(
+                "Allowed overriding packfile file {} (old packfile {}, new packfile {})", entry->name,
+                it->second->parent->filename, entry->parent->filename
+            );
             it->second = entry;
         }
         else {
-            xlog::trace("Denied overriding packfile file {} (old packfile {}, new packfile {})", entry->name,
-                it->second->parent->filename, entry->parent->filename);
+            xlog::trace(
+                "Denied overriding packfile file {} (old packfile {}, new packfile {})", entry->name,
+                it->second->parent->filename, entry->parent->filename
+            );
         }
     }
 }
 
-static int vpackfile_add_entries_new(rf::VPackfile* packfile, const void* block, unsigned num_files,
-                                     unsigned& num_added_files)
+static int
+vpackfile_add_entries_new(rf::VPackfile* packfile, const void* block, unsigned num_files, unsigned& num_added_files)
 {
     struct VppFileInfo
     {

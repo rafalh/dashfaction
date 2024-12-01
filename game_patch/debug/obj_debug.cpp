@@ -10,14 +10,13 @@
 
 std::optional<float> g_target_rotate_speed;
 
-
 namespace rf
 {
 
-auto& entity_state_names = addr_as_ref<String[17]>(0x0062F208);
-auto& entity_action_names = addr_as_ref<String[0x2D]>(0x005CAEE0);
-auto& move_mode_names = addr_as_ref<const char*[16]>(0x00596384);
-auto& target_obj_handle = addr_as_ref<int>(0x007C7190);
+    auto& entity_state_names = addr_as_ref<String[17]>(0x0062F208);
+    auto& entity_action_names = addr_as_ref<String[0x2D]>(0x005CAEE0);
+    auto& move_mode_names = addr_as_ref<const char* [16]>(0x00596384);
+    auto& target_obj_handle = addr_as_ref<int>(0x007C7190);
 
 }
 
@@ -118,13 +117,15 @@ ConsoleCommand2 dbg_entity_state_cmd{
         }
         int num_states = std::size(rf::entity_state_names);
         if (!state_opt) {
-            entity->force_state_anim_index =  (entity->force_state_anim_index + 1) % num_states;
+            entity->force_state_anim_index = (entity->force_state_anim_index + 1) % num_states;
         }
         else if (state_opt.value() >= 0 && state_opt.value() < num_states) {
             entity->force_state_anim_index = state_opt.value();
         }
-        rf::console::print("Entity state: {} ({})", rf::entity_action_names[entity->force_state_anim_index],
-            entity->force_state_anim_index);
+        rf::console::print(
+            "Entity state: {} ({})", rf::entity_action_names[entity->force_state_anim_index],
+            entity->force_state_anim_index
+        );
     },
 };
 
@@ -152,9 +153,7 @@ ConsoleCommand2 dbg_entity_action_cmd{
 
 ConsoleCommand2 dbg_spin_cmd{
     "d_spin",
-    [](float speed) {
-        g_target_rotate_speed = {speed};
-    },
+    [](float speed) { g_target_rotate_speed = {speed}; },
 };
 
 ConsoleCommand2 dbg_ai_pause_cmd{
@@ -168,18 +167,30 @@ ConsoleCommand2 dbg_ai_pause_cmd{
 const char* get_obj_type_name(rf::Object& obj)
 {
     switch (obj.type) {
-        case rf::OT_ENTITY: return "entity";
-        case rf::OT_ITEM: return "item";
-        case rf::OT_WEAPON: return "weapon";
-        case rf::OT_DEBRIS: return "debris";
-        case rf::OT_CLUTTER: return "clutter";
-        case rf::OT_TRIGGER: return "trigger";
-        case rf::OT_EVENT: return "event";
-        case rf::OT_CORPSE: return "corpse";
-        case rf::OT_MOVER: return "mover";
-        case rf::OT_MOVER_BRUSH: return "mover_brash";
-        case rf::OT_GLARE: return "glare";
-        default: return "-";
+        case rf::OT_ENTITY:
+            return "entity";
+        case rf::OT_ITEM:
+            return "item";
+        case rf::OT_WEAPON:
+            return "weapon";
+        case rf::OT_DEBRIS:
+            return "debris";
+        case rf::OT_CLUTTER:
+            return "clutter";
+        case rf::OT_TRIGGER:
+            return "trigger";
+        case rf::OT_EVENT:
+            return "event";
+        case rf::OT_CORPSE:
+            return "corpse";
+        case rf::OT_MOVER:
+            return "mover";
+        case rf::OT_MOVER_BRUSH:
+            return "mover_brash";
+        case rf::OT_GLARE:
+            return "glare";
+        default:
+            return "-";
     }
 }
 
@@ -193,47 +204,76 @@ const char* get_obj_class_name(rf::Object& obj)
 const char* get_ai_mode_name(rf::AiMode ai_mode)
 {
     switch (ai_mode) {
-        case rf::AI_MODE_NONE: return "NONE";
-        case rf::AI_MODE_CATATONIC: return "CATATONIC";
-        case rf::AI_MODE_WAITING: return "WAITING";
-        case rf::AI_MODE_CHASE: return "CHASE";
-        case rf::AI_MODE_WAYPOINTS: return "WAYPOINTS";
-        case rf::AI_MODE_COLLECTING: return "COLLECTING";
-        case rf::AI_MODE_INVESTIGATE_SOUND: return "INVESTIGATE_SOUND";
-        case rf::AI_MODE_FLEE: return "FLEE";
-        case rf::AI_MODE_EVENT_LOOK_AT: return "EVENT_LOOK_AT";
-        case rf::AI_MODE_EVENT_SHOOT_AT: return "EVENT_SHOOT_AT";
-        case rf::AI_MODE_FIND_PLAYER: return "FIND_PLAYER";
-        case rf::AI_MODE_MOTION_DETECT: return "MOTION_DETECT";
-        case rf::AI_MODE_FIND_COVER: return "FIND_COVER";
-        case rf::AI_MODE_ON_TURRET: return "ON_TURRET";
-        case rf::AI_MODE_HEALING: return "HEALING";
-        case rf::AI_MODE_SECURITY_CAM: return "SECURITY_CAM";
-        case rf::AI_MODE_SET_ALARM: return "SET_ALARM";
-        case rf::AI_MODE_BERSERK: return "BERSERK";
-        default: return "?";
+        case rf::AI_MODE_NONE:
+            return "NONE";
+        case rf::AI_MODE_CATATONIC:
+            return "CATATONIC";
+        case rf::AI_MODE_WAITING:
+            return "WAITING";
+        case rf::AI_MODE_CHASE:
+            return "CHASE";
+        case rf::AI_MODE_WAYPOINTS:
+            return "WAYPOINTS";
+        case rf::AI_MODE_COLLECTING:
+            return "COLLECTING";
+        case rf::AI_MODE_INVESTIGATE_SOUND:
+            return "INVESTIGATE_SOUND";
+        case rf::AI_MODE_FLEE:
+            return "FLEE";
+        case rf::AI_MODE_EVENT_LOOK_AT:
+            return "EVENT_LOOK_AT";
+        case rf::AI_MODE_EVENT_SHOOT_AT:
+            return "EVENT_SHOOT_AT";
+        case rf::AI_MODE_FIND_PLAYER:
+            return "FIND_PLAYER";
+        case rf::AI_MODE_MOTION_DETECT:
+            return "MOTION_DETECT";
+        case rf::AI_MODE_FIND_COVER:
+            return "FIND_COVER";
+        case rf::AI_MODE_ON_TURRET:
+            return "ON_TURRET";
+        case rf::AI_MODE_HEALING:
+            return "HEALING";
+        case rf::AI_MODE_SECURITY_CAM:
+            return "SECURITY_CAM";
+        case rf::AI_MODE_SET_ALARM:
+            return "SET_ALARM";
+        case rf::AI_MODE_BERSERK:
+            return "BERSERK";
+        default:
+            return "?";
     }
 }
 
 const char* get_ai_attack_style_name(rf::AiAttackStyle attack_style)
 {
     switch (attack_style) {
-        case rf::AI_ATTACK_STYLE_DEFAULT: return "DEFAULT";
-        case rf::AI_ATTACK_STYLE_EVASIVE: return "EVASIVE";
-        case rf::AI_ATTACK_STYLE_STAND_GROUND: return "STAND_GROUND";
-        case rf::AI_ATTACK_STYLE_DIRECT: return "DIRECT";
-        default: return "?";
+        case rf::AI_ATTACK_STYLE_DEFAULT:
+            return "DEFAULT";
+        case rf::AI_ATTACK_STYLE_EVASIVE:
+            return "EVASIVE";
+        case rf::AI_ATTACK_STYLE_STAND_GROUND:
+            return "STAND_GROUND";
+        case rf::AI_ATTACK_STYLE_DIRECT:
+            return "DIRECT";
+        default:
+            return "?";
     }
 }
 
 const char* get_friendliness_name(rf::ObjFriendliness friendliness)
 {
     switch (friendliness) {
-        case rf::OBJ_UNFRIENDLY: return "UNFRIENDLY";
-        case rf::OBJ_NEUTRAL: return "NEUTRAL";
-        case rf::OBJ_FRIENDLY: return "FRIENDLY";
-        case rf::OBJ_OUTCAST: return "OUTCAST";
-        default: return "?";
+        case rf::OBJ_UNFRIENDLY:
+            return "UNFRIENDLY";
+        case rf::OBJ_NEUTRAL:
+            return "NEUTRAL";
+        case rf::OBJ_FRIENDLY:
+            return "FRIENDLY";
+        case rf::OBJ_OUTCAST:
+            return "OUTCAST";
+        default:
+            return "?";
     }
 }
 
@@ -302,7 +342,9 @@ void render_obj_debug_ui()
             }
         }
         dbg_hud.print("action", action_name);
-        dbg_hud.printf("persona", entity->info->persona >= 0 ? rf::persona_info[entity->info->persona].name.c_str() : "none");
+        dbg_hud.printf(
+            "persona", entity->info->persona >= 0 ? rf::persona_info[entity->info->persona].name.c_str() : "none"
+        );
     }
 
     if (g_target_rotate_speed) {

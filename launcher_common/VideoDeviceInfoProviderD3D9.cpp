@@ -20,8 +20,10 @@ public:
     unsigned get_format_from_bpp(unsigned bpp) override
     {
         switch (bpp) {
-            case 16: return static_cast<unsigned>(D3DFMT_R5G6B5);
-            default: return static_cast<unsigned>(D3DFMT_X8R8G8B8);
+            case 16:
+                return static_cast<unsigned>(D3DFMT_R5G6B5);
+            default:
+                return static_cast<unsigned>(D3DFMT_X8R8G8B8);
         }
     }
 
@@ -30,8 +32,7 @@ private:
     ComPtr<IDirect3D9> m_d3d;
 };
 
-VideoDeviceInfoProviderD3D9::VideoDeviceInfoProviderD3D9() :
-    m_lib{L"d3d9.dll"}
+VideoDeviceInfoProviderD3D9::VideoDeviceInfoProviderD3D9() : m_lib{L"d3d9.dll"}
 {
     if (!m_lib)
         THROW_WIN32_ERROR("Failed to load d3d9.dll");
@@ -62,7 +63,8 @@ std::vector<std::string> VideoDeviceInfoProviderD3D9::get_adapters()
     return adapters;
 }
 
-std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D9::get_resolutions(unsigned adapter, unsigned format)
+std::set<VideoDeviceInfoProvider::Resolution>
+VideoDeviceInfoProviderD3D9::get_resolutions(unsigned adapter, unsigned format)
 {
     std::set<Resolution> result;
     unsigned mode_idx = 0;
@@ -87,8 +89,10 @@ std::set<unsigned> VideoDeviceInfoProviderD3D9::get_multisample_types(unsigned a
 {
     std::set<unsigned> result;
     for (unsigned i = 2; i <= 16; ++i) {
-        HRESULT hr = m_d3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, static_cast<D3DFORMAT>(format), windowed,
-            static_cast<D3DMULTISAMPLE_TYPE>(i), nullptr);
+        HRESULT hr = m_d3d->CheckDeviceMultiSampleType(
+            adapter, D3DDEVTYPE_HAL, static_cast<D3DFORMAT>(format), windowed, static_cast<D3DMULTISAMPLE_TYPE>(i),
+            nullptr
+        );
         if (SUCCEEDED(hr))
             result.insert(i);
     }

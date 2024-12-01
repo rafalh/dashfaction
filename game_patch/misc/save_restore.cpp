@@ -44,8 +44,12 @@ void validate_level_save_data(rf::sr::LevelData* data)
     validate_save_file_num<uint8_t>(data->num_goal_create_events, rf::sr::MAX_GOAL_CREATE_EVENTS, "goal_create events");
     validate_save_file_num<uint8_t>(data->num_alarm_siren_events, rf::sr::MAX_ALARM_SIREN_EVENTS, "alarm_siren events");
     validate_save_file_num<uint8_t>(data->num_when_dead_events, rf::sr::MAX_WHEN_DEAD_EVENTS, "when_dead events");
-    validate_save_file_num<uint8_t>(data->num_cyclic_timer_events, rf::sr::MAX_CYCLIC_TIMER_EVENTS, "cyclic_timer events");
-    validate_save_file_num<uint8_t>(data->num_make_invulnerable_events, rf::sr::MAX_MAKE_INVULNERABLE_EVENTS, "make_invulnerable events");
+    validate_save_file_num<uint8_t>(
+        data->num_cyclic_timer_events, rf::sr::MAX_CYCLIC_TIMER_EVENTS, "cyclic_timer events"
+    );
+    validate_save_file_num<uint8_t>(
+        data->num_make_invulnerable_events, rf::sr::MAX_MAKE_INVULNERABLE_EVENTS, "make_invulnerable events"
+    );
     validate_save_file_num<uint8_t>(data->num_other_events, rf::sr::MAX_OTHER_EVENTS, "other events");
     validate_save_file_num<uint8_t>(data->num_emitters, rf::sr::MAX_EMITTERS, "emitters");
     validate_save_file_num<uint8_t>(data->num_decals, rf::sr::MAX_DECALS, "decals");
@@ -67,7 +71,7 @@ void validate_level_save_data(rf::sr::LevelData* data)
 
 FunHook<void(rf::sr::LevelData*)> sr_deserialize_all_objects_hook{
     0x004B4FB0,
-    [](rf::sr::LevelData *data) {
+    [](rf::sr::LevelData* data) {
         validate_level_save_data(data);
         sr_deserialize_all_objects_hook.call_target(data);
     },
@@ -75,7 +79,7 @@ FunHook<void(rf::sr::LevelData*)> sr_deserialize_all_objects_hook{
 
 FunHook<void(rf::sr::LevelData*)> sr_serialize_all_objects_hook{
     0x004B4450,
-    [](rf::sr::LevelData *data) {
+    [](rf::sr::LevelData* data) {
         sr_serialize_all_objects_hook.call_target(data);
         validate_level_save_data(data);
     },
@@ -172,7 +176,7 @@ CodeInjection weapon_serialize_all_state_oob_fix{
 
 FunHook<void(int, int*)> sr_add_handle_for_delayed_resolution_hook{
     0x004B5630,
-    [](int uid, int *obj_handle_ptr) {
+    [](int uid, int* obj_handle_ptr) {
         auto& sr_num_delayed_handle_resolution = addr_as_ref<int>(0x007DE5A0);
         if (sr_num_delayed_handle_resolution < 1500) {
             sr_add_handle_for_delayed_resolution_hook.call_target(uid, obj_handle_ptr);
@@ -185,7 +189,7 @@ FunHook<void(int, int*)> sr_add_handle_for_delayed_resolution_hook{
 
 FunHook<void(rf::Object*)> sr_store_level_transition_object_mesh_hook{
     0x004B5660,
-    [](rf::Object *obj) {
+    [](rf::Object* obj) {
         if (obj->vmesh) {
             g_level_transition_objects.emplace_back(LevelTransitionObject{
                 obj->handle,
@@ -205,8 +209,7 @@ FunHook<void()> sr_restore_level_transition_objects_meshes_hook{
                 xlog::warn("Cannot restore level transition object mesh: {}", mesh_name);
                 continue;
             }
-            switch (obj->type)
-            {
+            switch (obj->type) {
                 case rf::OT_ENTITY:
                     rf::entity_restore_mesh(static_cast<rf::Entity*>(obj), mesh_name);
                     break;
@@ -257,8 +260,8 @@ FunHook<void()> quick_save_hook{
     0x004B6160,
     []() {
         quick_save_hook.call_target();
-        bool server_side_saving_enabled = rf::is_multi && !rf::is_server && get_df_server_info()
-            && get_df_server_info().value().saving_enabled;
+        bool server_side_saving_enabled =
+            rf::is_multi && !rf::is_server && get_df_server_info() && get_df_server_info().value().saving_enabled;
         if (server_side_saving_enabled) {
             send_chat_line_packet("/save", nullptr);
         }
@@ -269,8 +272,8 @@ FunHook<void()> quick_load_hook{
     0x004B6180,
     []() {
         quick_load_hook.call_target();
-        bool server_side_saving_enabled = rf::is_multi && !rf::is_server && get_df_server_info()
-            && get_df_server_info().value().saving_enabled;
+        bool server_side_saving_enabled =
+            rf::is_multi && !rf::is_server && get_df_server_info() && get_df_server_info().value().saving_enabled;
         if (server_side_saving_enabled) {
             send_chat_line_packet("/load", nullptr);
         }
@@ -283,7 +286,7 @@ CodeInjection sr_load_player_inj{
         // Restore blackout
         // Note: if blackout had no checkboxes active (both flags clear) it is imposible to restore it
         // because of save format limitation
-        if (rf::local_player->flags & (rf::PF_KILL_AFTER_BLACKOUT|rf::PF_END_LEVEL_AFTER_BLACKOUT)) {
+        if (rf::local_player->flags & (rf::PF_KILL_AFTER_BLACKOUT | rf::PF_END_LEVEL_AFTER_BLACKOUT)) {
             rf::player_start_death_fade(rf::local_player, 1.5f, [](rf::Player*) {});
         }
     },
@@ -335,8 +338,8 @@ void apply_save_restore_patches()
     quick_load_hook.install();
 
     // Fix memory corruption when transitioning to 5th level in a sequence and the level has no entry in ponr.tbl
-    AsmWriter{0x004B3CAF, 0x004B3CB2}.xor_(asm_regs::ebx, asm_regs::ebx);  // save
-    AsmWriter{0x004B5374, 0x004B5377}.xor_(asm_regs::edx, asm_regs::edx);  // transition
+    AsmWriter{0x004B3CAF, 0x004B3CB2}.xor_(asm_regs::ebx, asm_regs::ebx); // save
+    AsmWriter{0x004B5374, 0x004B5377}.xor_(asm_regs::edx, asm_regs::edx); // transition
 
     // Restore blackout when loading a save file
     sr_load_player_inj.install();

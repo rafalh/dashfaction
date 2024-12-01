@@ -6,8 +6,8 @@ namespace rf
 {
     struct Trigger : Object
     {
-        Trigger *next;
-        Trigger *prev;
+        Trigger* next;
+        Trigger* prev;
         int type;
         Timestamp next_check;
         int reset_time_ms;

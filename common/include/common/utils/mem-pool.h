@@ -3,7 +3,7 @@
 #include <vector>
 #include <memory>
 
-template <typename T, size_t N>
+template<typename T, size_t N>
 class MemPool
 {
     using Slot = typename std::aligned_storage<sizeof(T), alignof(T)>::type;

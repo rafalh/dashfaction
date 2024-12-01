@@ -100,5 +100,5 @@ public:
 #ifdef __cpp_deduction_guides
 // deduction guide for lambda functions
 template<class T>
-FunHook(uintptr_t addr, T)->FunHook<typename function_traits<T>::f_type>;
+FunHook(uintptr_t addr, T) -> FunHook<typename function_traits<T>::f_type>;
 #endif

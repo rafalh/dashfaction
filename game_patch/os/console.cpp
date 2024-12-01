@@ -51,7 +51,8 @@ FunHook<int()> gameseq_process_hook{
     0x00434230,
     []() {
         int menu_id = gameseq_process_hook.call_target();
-        if (menu_id == rf::GS_MULTI_LIMBO) // hide cursor when changing level - hackfixed in RF by changing rendering logic
+        if (menu_id ==
+            rf::GS_MULTI_LIMBO) // hide cursor when changing level - hackfixed in RF by changing rendering logic
             rf::mouse_set_visible(false);
         else if (menu_id == rf::GS_MAIN_MENU)
             rf::mouse_set_visible(true);
@@ -78,7 +79,7 @@ CodeInjection console_run_cmd_call_handler_patch{
 
 CallHook<void(char*, int)> console_process_kbd_get_text_from_clipboard_hook{
     0x0050A2FD,
-    [](char *buf, int max_len) {
+    [](char* buf, int max_len) {
         max_len = std::min(max_len, max_cmd_line_len - rf::console::cmd_line_len);
         console_process_kbd_get_text_from_clipboard_hook.call_target(buf, max_len);
     },
@@ -127,7 +128,6 @@ static FunHook<void()> console_draw_client_hook{
     },
 };
 
-
 static CallHook<void(char)> console_put_char_new_line_hook{
     0x0050A081,
     [](char c) {
@@ -160,7 +160,6 @@ static CodeInjection console_handle_input_injection{
 static CodeInjection console_handle_input_history_injection{
     0x0050A09B,
     [](auto& regs) {
-
         if (rf::console::history_max_index >= 0 &&
             std::strcmp(rf::console::history[rf::console::history_max_index], rf::console::cmd_line) == 0) {
             // Command was repeated - do not add it to the history

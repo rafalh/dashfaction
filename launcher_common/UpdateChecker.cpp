@@ -17,17 +17,17 @@ static unsigned char signature_public_key[] = {
     0x68, 0x3D, 0xC3, 0xE7, 0x29, 0x67, 0x17, 0xE3, 0x2F, 0xAD, 0xA1, 0x71, 0x33, 0x13, 0x4C, 0x7C,
 };
 
-static bool verify_signature(const std::optional<std::string>& sig_hdr_opt, std::string_view response_body, const std::string& challenge)
+static bool verify_signature(
+    const std::optional<std::string>& sig_hdr_opt, std::string_view response_body, const std::string& challenge
+)
 {
     std::string sig_hdr = sig_hdr_opt.value();
     std::string sig = base64_decode(sig_hdr);
     std::string msg{response_body};
     msg += challenge;
     int result = ed25519_verify(
-        reinterpret_cast<const unsigned char*>(sig.data()),
-        reinterpret_cast<const unsigned char*>(msg.data()),
-        msg.size(),
-        signature_public_key
+        reinterpret_cast<const unsigned char*>(sig.data()), reinterpret_cast<const unsigned char*>(msg.data()),
+        msg.size(), signature_public_key
     );
     return result != 0;
 }

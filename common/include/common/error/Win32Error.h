@@ -7,13 +7,9 @@
 class Win32Error : public std::exception
 {
 public:
-    Win32Error(const char* msg = "") :
-        Win32Error(GetLastError(), msg)
-    {}
+    Win32Error(const char* msg = "") : Win32Error(GetLastError(), msg) {}
 
-    Win32Error(DWORD error, const char* msg = "") :
-        m_error(error),
-        m_what(msg)
+    Win32Error(DWORD error, const char* msg = "") : m_error(error), m_what(msg)
     {
         if (!m_what.empty())
             m_what += ": ";
@@ -36,7 +32,6 @@ private:
     DWORD m_error;
     std::string m_what;
 };
-
 
 #define S(x) #x
 #define S_(x) S(x)

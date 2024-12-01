@@ -8,7 +8,7 @@
 class OptionsMiscDlg : public CDialog
 {
 public:
-	OptionsMiscDlg(GameConfig& conf);
+    OptionsMiscDlg(GameConfig& conf);
     void OnSave();
 
 protected:
