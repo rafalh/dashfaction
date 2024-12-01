@@ -1,7 +1,6 @@
-# Tested with clang-format 6.0.1
 AccessModifierOffset: -4
+AlignAfterOpenBracket: BlockIndent
 AlignEscapedNewlines: Left
-AllowShortLoopsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Empty
 AlwaysBreakTemplateDeclarations: true
 BraceWrapping:
@@ -21,6 +20,10 @@ BreakBeforeBraces: Custom
 BreakConstructorInitializers: AfterColon
 ColumnLimit: 120
 Cpp11BracedListStyle: true
+FixNamespaceComments: false
+IndentCaseLabels: true
 IndentWidth: 4
+NamespaceIndentation: All
 PointerAlignment: Left
 SpaceAfterTemplateKeyword: false
+SortIncludes: Never
