@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <windows.h>
 
 class DynamicLinkLibrary
 {

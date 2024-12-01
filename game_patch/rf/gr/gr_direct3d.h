@@ -5,6 +5,9 @@
 
 #ifdef NO_D3D8
 using IDirect3DTexture8 = IUnknown;
+#else
+#include <windows.h>
+#include <d3d8.h>
 #endif
 
 namespace rf::gr::d3d

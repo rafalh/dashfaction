@@ -3,6 +3,7 @@
 #include <cstring>
 #include <format>
 #include <utility>
+#include <patch_common/MemUtils.h>
 
 namespace rf
 {
