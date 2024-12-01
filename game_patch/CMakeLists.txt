@@ -214,7 +214,6 @@ target_link_libraries(DashFaction
     Xlog
     Common
     CrashHandlerStub
-    PureFactionAntiCheat
     xxhash
     gdi32
     winmm
@@ -225,9 +224,8 @@ target_link_libraries(DashFaction
 )
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/purefaction/ac")
-    set(PF_AC_SRCS "")
     add_subdirectory(purefaction/ac)
     target_link_libraries(DashFaction PureFactionAntiCheat)
 else()
-    target_sources(DashFaction purefaction/pf_ac_stubs.cpp)
+    target_sources(DashFaction PRIVATE purefaction/pf_ac_stubs.cpp)
 endif()
