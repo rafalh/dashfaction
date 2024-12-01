@@ -247,47 +247,65 @@ bool is_entity_out_of_ammo(rf::Entity *entity, int weapon_type, bool alt_fire)
     auto clip_ammo = entity->ai.clip_ammo[weapon_type];
     return clip_ammo == 0;
 }
-
-std::pair<bool, float> multi_is_cps_above_limit(rf::Player* pp, float max_cps)
+void send_private_message_for_cancelled_shot(rf::Player* player, const std::string& reason)
 {
-    constexpr int num_samples = 4;
+    auto message = std::format("\xA6 Shot canceled: {}", reason);
+    send_chat_line_packet(message.c_str(), player);
+}
+
+bool multi_is_player_firing_too_fast(rf::Player* pp, int weapon_type)
+{
+    // do not consider melee weapons for click limiter
+    if (rf::weapon_is_melee(weapon_type)) {
+        return false;
+    }
+
     int player_id = pp->net_data->player_id;
-    static int last_weapon_fire[rf::multi_max_player_id][num_samples];
     int now = rf::timer_get(1000);
-    float avg_dt_secs = (now - last_weapon_fire[player_id][0]) / static_cast<float>(num_samples) / 1000.0f;
-    float cps = 1.0f / avg_dt_secs;
-    if (cps > max_cps) {
-        return {true, cps};
-    }
-    for (int i = 0; i < num_samples - 1; ++i) {
-        last_weapon_fire[player_id][i] = last_weapon_fire[player_id][i + 1];
-    }
-    last_weapon_fire[player_id][num_samples - 1] = now;
-    return {false, cps};
-}
 
-float multi_get_max_cps(int weapon_type, bool alt_fire)
-{
+    static std::vector<int> last_weapon_id(rf::multi_max_player_id, 0);
+    static std::vector<int> last_weapon_fire(rf::multi_max_player_id, 0);
+
+    int fire_wait_ms = 0;
+
     if (rf::weapon_is_semi_automatic(weapon_type)) {
-        // most people cannot do much more than 10 clicks per second so 20 should be safe
-        return 20.0f;
+        // for semi-auto weapons, use the server's fire wait setting
+        fire_wait_ms = g_additional_server_config.click_limiter_fire_wait;
     }
-    int fire_wait_ms = rf::weapon_get_fire_wait_ms(weapon_type, alt_fire);
-    float fire_wait_secs = fire_wait_ms / 1000.0f;
-    float fire_rate = 1.0f / fire_wait_secs;
-    // allow 10% more to make sure we do not skip any legit packets
-    return fire_rate * 1.1f;
-}
+    else {
+        // for automatic weapons, use the minimum fire wait between both modes in weapons.tbl
+        fire_wait_ms = std::min(rf::weapon_get_fire_wait_ms(weapon_type, 0), // primary
+                                rf::weapon_get_fire_wait_ms(weapon_type, 1)  // alt
+        );
+    }
 
-bool multi_check_cps(rf::Player* pp, int weapon_type, bool alt_fire)
-{
-    float max_cps = multi_get_max_cps(weapon_type, alt_fire);
-    auto [above_limit, cps] = multi_is_cps_above_limit(pp, max_cps);
-    if (above_limit) {
-        xlog::info("Player {} is shooting too fast: cps {:.2f} is greater than allowed {:.2f}",
-            pp->name, cps, max_cps);
+    // apply a 10% buffer for auto weapons
+    if (!rf::weapon_is_semi_automatic(weapon_type))
+    {
+        fire_wait_ms = static_cast<int>(fire_wait_ms * 0.9f);
+        
     }
-    return above_limit;
+
+    // reset if weapon changed
+    if (last_weapon_id[player_id] != weapon_type) {
+        last_weapon_fire[player_id] = 0;
+        last_weapon_id[player_id] = weapon_type;
+    }
+
+    // check if time since last shot is less than minimum wait time
+    int time_since_last_shot = now - last_weapon_fire[player_id];
+
+    if (time_since_last_shot < fire_wait_ms)
+        {
+        send_private_message_for_cancelled_shot(pp, std::format(
+            "too fast! Time between shots: {}ms, server minimum: {}ms", time_since_last_shot, fire_wait_ms));
+
+        return true;
+    }
+
+    // we fired
+    last_weapon_fire[player_id] = now;
+    return false;
 }
 
 bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, bool alt_fire)
@@ -308,7 +326,7 @@ bool multi_is_weapon_fire_allowed_server_side(rf::Entity *ep, int weapon_type, b
     else if (rf::entity_is_reloading(ep)) {
         xlog::debug("Player {} attempted to fire weapon {} while reloading it", pp->name, weapon_type);
     }
-    else if (!multi_check_cps(pp, weapon_type, alt_fire)) {
+    else if (!multi_is_player_firing_too_fast(pp, weapon_type)) {
         return true;
     }
     return false;
