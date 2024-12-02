@@ -46,6 +46,7 @@ Version 1.9.0 (not released yet)
 - Fix cockpit not rendering for any jeeps after the first one entered each level load
 - Add `server_password` command
 - Add `$DF CTF Flag Return Time` option in dedicated server config
+- Add mod name to main menu
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` in TrueType fonts
