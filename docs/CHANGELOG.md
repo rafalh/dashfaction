@@ -50,7 +50,7 @@ Version 1.9.0 (not released yet)
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` in TrueType fonts
 - Improve frag message format
-- Search command descriptions for `.` command
+- Search command descriptions in `.` command
 - Improve PF network protocol compatibility
 
 [@Mystyle-48](https://github.com/Mystyle-48)
