@@ -14,11 +14,16 @@
 
 ConsoleCommand2 dot_cmd{
     ".",
-    [](std::string pattern) {
+    [] (const std::string pattern) {
         for (i32 i = 0; i < rf::console::num_commands; ++i) {
-            rf::console::Command* cmd = g_commands_buffer[i];
-            if (string_contains_ignore_case(cmd->name, pattern)) {
-                rf::console::print("{}", cmd->name);
+            const rf::console::Command* cmd = g_commands_buffer[i];
+            if (string_contains_ignore_case(cmd->name, pattern)
+                || (cmd->help && string_contains_ignore_case(cmd->help, pattern))) {    
+                if (cmd->help) {   
+                    rf::console::print("{} - {}", cmd->name, cmd->help);        
+                } else { 
+                    rf::console::print("{}", cmd->name);
+                }
             }
         }
     },
@@ -90,6 +95,27 @@ ConsoleCommand2 level_info_cmd{
 DcCommandAlias map_info_cmd{
     "map_info",
     level_info_cmd,
+};
+
+ConsoleCommand2 server_password_cmd{
+    "server_password",
+    [](std::optional<std::string> new_password) {
+        if (!rf::is_multi || !rf::is_server) {
+            rf::console::print("This command can only be run as a server!");
+            return;
+        }            
+
+        if (new_password) {
+            rf::netgame.password = new_password.value().c_str();
+            rf::console::print("Server password set to: {}", rf::netgame.password);
+        }
+        else {
+            rf::netgame.password = "";
+            rf::console::print("Server password removed.");
+        }
+    },
+    "Set or remove the server password.",
+    "server_password <password>",
 };
 
 // only allow verify_level if a level is loaded (avoid a crash if command is run in menu)
@@ -205,5 +231,6 @@ void console_commands_init()
     map_cmd.register_cmd();
     level_info_cmd.register_cmd();
     map_info_cmd.register_cmd();
+    server_password_cmd.register_cmd();
     verify_level_cmd_hook.install();
 }
