@@ -173,7 +173,9 @@ static void process_pf_player_stats_packet(const void* data, size_t len, [[ mayb
         auto* player = rf::multi_find_player_by_id(in_stats.player_id);
         if (player) {
             auto& stats = *static_cast<PlayerStatsNew*>(player->stats);
-            // Ignore `is_pure`.  Why is it in `player_stats`? 
+            if (in_stats.is_pure <= static_cast<uint8_t>(pf_pure_status::_last_variant)) {
+                stats.received_ac_status = std::optional{static_cast<pf_pure_status>(in_stats.is_pure)};
+            }
             stats.received_accuracy = std::optional{in_stats.accuracy};
             stats.max_streak = in_stats.streak_max;
             stats.current_streak = in_stats.streak_current;
