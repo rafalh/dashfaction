@@ -51,7 +51,7 @@ Version 1.9.0 (not released yet)
 - Support `©` in TrueType fonts
 - Improve frag messages
 - Search in command descriptions in `.` command
-- Improve PF packet logic
+- Improve support for PF network protocol
 
 [@Mystyle-48](https://github.com/Mystyle-48)
 - Simplify installation detection in setup and launcher
