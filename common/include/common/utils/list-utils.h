@@ -25,7 +25,9 @@ public:
             current(first), first(first)
         {}
 
-        self_type operator++()
+        Iterator() = default;
+
+        self_type& operator++()
         {
             current = current->*NEXT_PTR;
             if (current == first) {
@@ -36,8 +38,8 @@ public:
 
         self_type operator++([[maybe_unused]] int junk)
         {
-            self_type copy = *this;
-            ++copy;
+            const self_type copy = *this;
+            ++*this;
             return copy;
         }
 
