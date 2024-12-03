@@ -5,7 +5,7 @@
 template<typename T, T* T::*NEXT_PTR = &T::next>
 class SinglyLinkedList
 {
-    T*& m_list;
+    T* m_list;
 
 public:
     class Iterator
@@ -59,7 +59,7 @@ public:
         }
     };
 
-    SinglyLinkedList(T*& list) : m_list(list)
+    SinglyLinkedList(T* list) : m_list(list)
     {}
 
     Iterator begin()
@@ -76,7 +76,7 @@ public:
 template<typename T, T* T::*NEXT_PTR = &T::next, T* T::*PREV_PTR = &T::prev>
 class DoublyLinkedList
 {
-    T& m_list;
+    T* m_list;
 
 public:
     class Iterator
@@ -95,13 +95,15 @@ public:
             current(current)
         {}
 
-        self_type operator++()
+        Iterator() = default;
+
+        self_type& operator++()
         {
             current = current->*NEXT_PTR;
             return *this;
         }
 
-        self_type operator--()
+        self_type& operator--()
         {
             current = current->*PREV_PTR;
             return *this;
@@ -110,7 +112,7 @@ public:
         self_type operator++([[maybe_unused]] int junk)
         {
             self_type copy = *this;
-            ++copy;
+            ++*this;
             return copy;
         }
 
@@ -127,12 +129,12 @@ public:
         }
     };
 
-    DoublyLinkedList(T& list) : m_list(list)
+    DoublyLinkedList(T& list) : m_list(&list)
     {}
 
     Iterator begin()
     {
-        auto next = m_list.next ? m_list.next : &m_list;
+        auto next = m_list->next ? m_list->next : m_list;
         return Iterator(next);
     }
 
