@@ -111,7 +111,7 @@ public:
 
         self_type operator++([[maybe_unused]] int junk)
         {
-            self_type copy = *this;
+            const self_type copy = *this;
             ++*this;
             return copy;
         }
@@ -140,6 +140,6 @@ public:
 
     Iterator end()
     {
-        return Iterator(&m_list);
+        return Iterator(m_list);
     }
 };
