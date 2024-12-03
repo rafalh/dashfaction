@@ -1,4 +1,5 @@
 #include <cassert>
+#include <algorithm>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
@@ -109,6 +110,70 @@ ConsoleCommand2 ms_cmd{
     },
     "Sets mouse sensitivity",
     "ms <value>",
+};
+
+float scope_sensitivity_factor = 1.0f;
+float scanner_sensitivity_factor = 1.0f;
+
+constexpr float clamp_sensitivity_modifier(float modifier)
+{
+    constexpr const float min = 0.01f; // prevent division by zero in scope sens
+    constexpr const float max = 4.0f;
+    return std::clamp(modifier, min, max);
+}
+
+void patch_scope_and_scanner_sensitivity()
+{
+    AsmWriter{0x004309B1}.fmul<float>(AsmRegMem{&scope_sensitivity_factor});
+    AsmWriter{0x004309DE}.fmul<float>(AsmRegMem{&scanner_sensitivity_factor});
+}
+
+void update_scope_sensitivity()
+{
+    float modifier = clamp_sensitivity_modifier(g_game_config.scope_sensitivity_modifier);
+    scope_sensitivity_factor = rf::scope_sensitivity_constant * (1.0f / modifier);
+}
+
+void update_scanner_sensitivity()
+{
+    float modifier = clamp_sensitivity_modifier(g_game_config.scanner_sensitivity_modifier);
+    scanner_sensitivity_factor = rf::scanner_sensitivity_constant * modifier;
+}
+
+ConsoleCommand2 scope_sens_cmd{
+    "scope_sensitivity_modifier",
+    [](std::optional<float> value_opt) {
+        if (value_opt) {
+            g_game_config.scope_sensitivity_modifier = value_opt.value();
+            g_game_config.save();
+            update_scope_sensitivity();
+        }
+        else {
+            rf::console::print("Scope sensitivity modifier: {:.2f}",
+                static_cast<float>(clamp_sensitivity_modifier(g_game_config.scope_sensitivity_modifier)));
+        }
+
+    },
+    "Sets mouse sensitivity modifier used while scoped in.",
+    "scope_sensitivity_modifier <value> (valid range: 0.01 - 4.00)",
+};
+
+ConsoleCommand2 scanner_sens_cmd{
+    "scanner_sensitivity_modifier",
+    [](std::optional<float> value_opt) {
+        if (value_opt) {
+            g_game_config.scanner_sensitivity_modifier = value_opt.value();
+            g_game_config.save();
+            update_scanner_sensitivity();            
+        }
+        else {
+            rf::console::print(
+                "Scanner sensitivity modifier: {:.2f}",
+                static_cast<float>(clamp_sensitivity_modifier(g_game_config.scanner_sensitivity_modifier)));
+        }
+    },
+    "Sets mouse sensitivity modifier used while in a rail scanner.",
+    "scanner_sensitivity_modifier <value> (valid range: 0.01 - 4.00)",
 };
 
 rf::Vector3 fw_vector_from_non_linear_yaw_pitch(float yaw, float pitch)
@@ -242,6 +307,11 @@ ConsoleCommand2 linear_pitch_cmd{
 
 void mouse_apply_patch()
 {
+    // Scale zoomed sensitivity
+    patch_scope_and_scanner_sensitivity();
+    update_scope_sensitivity();
+    update_scanner_sensitivity();
+
     // Disable mouse when window is not active
     mouse_eval_deltas_hook.install();
 
@@ -262,5 +332,7 @@ void mouse_apply_patch()
     // Commands
     input_mode_cmd.register_cmd();
     ms_cmd.register_cmd();
+    scope_sens_cmd.register_cmd();
+    scanner_sens_cmd.register_cmd();
     linear_pitch_cmd.register_cmd();
 }

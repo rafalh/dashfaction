@@ -122,6 +122,8 @@ namespace rf
     static auto& mouse_set_visible = addr_as_ref<void(bool visible)>(0x0051E680);
     static auto& key_process_event = addr_as_ref<void(int scan_code, int key_down, int delta_time)>(0x0051E6C0);
 
+    static auto& scope_sensitivity_constant = addr_as_ref<float>(0x005895C0);
+    static auto& scanner_sensitivity_constant = addr_as_ref<float>(0x005893D4);
     static auto& mouse_initialized = addr_as_ref<uint8_t>(0x01885461);
     static auto& direct_input_disabled = addr_as_ref<bool>(0x005A4F88);
     static auto& di_mouse = addr_as_ref<LPDIRECTINPUTDEVICE8A>(0x0188545C);
