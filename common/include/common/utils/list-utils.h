@@ -21,11 +21,13 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = int;
 
+        Iterator() :
+            Iterator{nullptr}
+        {}
+
         Iterator(pointer first) :
             current(first), first(first)
         {}
-
-        Iterator() = default;
 
         self_type& operator++()
         {
@@ -91,11 +93,13 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = int;
 
+        Iterator() :
+            Iterator{nullptr}
+        {}
+
         Iterator(pointer current) :
             current(current)
         {}
-
-        Iterator() = default;
 
         self_type& operator++()
         {
