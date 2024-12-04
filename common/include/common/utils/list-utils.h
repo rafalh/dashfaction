@@ -90,7 +90,7 @@ public:
         using value_type = T;
         using reference = T&;
         using pointer = T*;
-        using iterator_category = std::forward_iterator_tag;
+        using iterator_category = std::bidirectional_iterator_tag;
         using difference_type = int;
 
         Iterator() :
@@ -111,6 +111,12 @@ public:
         {
             current = current->*PREV_PTR;
             return *this;
+        }
+
+        self_type operator--([[maybe_unused]] int junk) {
+            const self_type copy = *this;
+            --*this;
+            return copy;
         }
 
         self_type operator++([[maybe_unused]] int junk)
