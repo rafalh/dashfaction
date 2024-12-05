@@ -425,6 +425,9 @@ namespace rf
     static auto& entity_turn_weapon_on = addr_as_ref<void __cdecl(int entity_handle, int weapon_type, bool alt_fire)>(0x0041A870);
     static auto& entity_turn_weapon_off = addr_as_ref<void __cdecl(int entity_handle, int weapon_type)>(0x0041AE70);
     static auto& entity_restore_mesh = addr_as_ref<void(Entity *ep, const char *mesh_name)>(0x0042C570);
+    static auto& game_do_explosion = addr_as_ref<void(int vclip, GRoom* src_room, const Vector3* src_pos,
+        const Vector3* pos, float radius, float damage_scale, const Vector3* dir)>(0x00436490);
+    static auto& vclip_lookup = addr_as_ref<int(const char*)>(0x004C1D00);
 
     static auto& entity_list = addr_as_ref<Entity>(0x005CB060);
     static auto& local_player_entity = addr_as_ref<Entity*>(0x005CB054);

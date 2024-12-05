@@ -47,6 +47,8 @@ Version 1.9.0 (not released yet)
 - Add `server_password` command
 - Add `$DF CTF Flag Return Time` option in dedicated server config
 - Add mod name to main menu
+- Add `gore_level` command
+- Add gibbing when enemies die from explosives (gore level 2)
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` in TrueType fonts
