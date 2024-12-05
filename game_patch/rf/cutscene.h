@@ -31,8 +31,8 @@ namespace rf
         Timestamp next_stage_timestamp;
         Timestamp start_path_timestamp;
         Timestamp stop_path_timestamp;
-        CutsceneScript *current_script;
-        CutscenePath *current_path;
+        CutsceneScript* current_script;
+        CutscenePath* current_path;
         Vector3 current_cam_pos;
         Matrix3 current_cam_orient;
         float path_travel_time;

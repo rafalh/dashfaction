@@ -23,17 +23,25 @@ namespace df::gr::d3d11
     class RoomRenderCache;
     class GRenderCache;
 
-    enum class FaceRenderType { opaque, alpha, liquid };
+    enum class FaceRenderType
+    {
+        opaque,
+        alpha,
+        liquid
+    };
 
     class SolidRenderer
     {
     public:
-        SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, StateManager& state_manager, DynamicGeometryRenderer& dyn_geo_renderer, RenderContext& render_context);
+        SolidRenderer(
+            ComPtr<ID3D11Device> device, ShaderManager& shader_manager, StateManager& state_manager,
+            DynamicGeometryRenderer& dyn_geo_renderer, RenderContext& render_context
+        );
         ~SolidRenderer();
         void render_solid(rf::GSolid* solid, rf::GRoom** rooms, int num_rooms);
         void render_movable_solid(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient);
-        void render_sky_room(rf::GRoom *room);
-        void render_alpha_detail(rf::GRoom *room, rf::GSolid *solid);
+        void render_sky_room(rf::GRoom* room);
+        void render_alpha_detail(rf::GRoom* room, rf::GSolid* solid);
         void render_room_liquid_surface(rf::GSolid* solid, rf::GRoom* room);
         void clear_cache();
         void page_in_solid(rf::GSolid* solid);

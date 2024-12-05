@@ -16,44 +16,32 @@ static FunHook<void()> multi_tdm_level_init_hook{
 
 static FunHook<void(unsigned short)> multi_tdm_set_red_score_hook{
     0x00482890,
-    [](unsigned short score) {
-        multi_tdm_red_score = score;
-    },
+    [](unsigned short score) { multi_tdm_red_score = score; },
 };
 
 static FunHook<void(unsigned short)> multi_tdm_set_blue_score_hook{
     0x004828C0,
-    [](unsigned short score) {
-        multi_tdm_blue_score = score;
-    },
+    [](unsigned short score) { multi_tdm_blue_score = score; },
 };
 
 static FunHook<int()> multi_tdm_get_red_team_score_hook{
     0x004828F0,
-    []() {
-        return multi_tdm_red_score;
-    },
+    []() { return multi_tdm_red_score; },
 };
 
 static FunHook<int()> multi_tdm_get_blue_team_score_hook{
     0x00482900,
-    []() {
-        return multi_tdm_blue_score;
-    },
+    []() { return multi_tdm_blue_score; },
 };
 
 static FunHook<void()> multi_tdm_increase_red_score_hook{
     0x00482910,
-    []() {
-        ++multi_tdm_red_score;
-    },
+    []() { ++multi_tdm_red_score; },
 };
 
 static FunHook<void()> multi_tdm_increase_blue_score_hook{
     0x00482920,
-    []() {
-        ++multi_tdm_blue_score;
-    },
+    []() { ++multi_tdm_blue_score; },
 };
 
 static FunHook<int()> multi_ctf_get_red_team_score_hook{
@@ -74,9 +62,7 @@ static FunHook<int()> multi_ctf_get_blue_team_score_hook{
 
 static CallHook<void(int*, int, int)> multi_load_dedicated_server_config_max_kills_cap_int_hook{
     0x0046DECF,
-    [](int *v, int, int) {
-        *v = std::clamp(*v, 1, 999);
-    },
+    [](int* v, int, int) { *v = std::clamp(*v, 1, 999); },
 };
 
 void multi_tdm_apply_patch()
@@ -105,7 +91,7 @@ void multi_tdm_apply_patch()
     AsmWriter{0x00470B66}.nop(5); // and eax, 0xFF
     // send_team_scores_packet
     AsmWriter{0x00472169, 0x0047216D}.mov(si, ax); // movzx si, al
-    AsmWriter{0x00472172, 0x00472176}.nop(); // movzx ax, al
+    AsmWriter{0x00472172, 0x00472176}.nop();       // movzx ax, al
     // multi_hud_render_team_scores
     AsmWriter{0x00477BCD}.nop(5); // and eax, 0xFF
     AsmWriter{0x00477BD9}.nop(5); // and eax, 0xFF

@@ -5,10 +5,7 @@
 #include <xlog/xlog.h>
 #include <common/version/version.h>
 
-AboutDlg::AboutDlg()
-	: CDialog(IDD_ABOUT)
-{
-}
+AboutDlg::AboutDlg() : CDialog(IDD_ABOUT) {}
 
 BOOL AboutDlg::OnInitDialog()
 {
@@ -32,21 +29,21 @@ BOOL AboutDlg::OnInitDialog()
     return TRUE;
 }
 
-LRESULT AboutDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
+LRESULT AboutDlg::OnNotify([[maybe_unused]] WPARAM wparam, LPARAM lparam)
 {
     auto& nmhdr = *reinterpret_cast<LPNMHDR>(lparam);
     switch (nmhdr.code) {
-    case NM_CLICK:
-        // Fall through to the next case.
-    case NM_RETURN:
-        if (nmhdr.idFrom == IDC_LICENSE_LINK) {
-            OpenLicensingInfo();
-        }
-        else if (nmhdr.idFrom == IDC_SRC_LINK) {
-            auto& nmlink = *reinterpret_cast<PNMLINK>(lparam);
-            ShellExecuteW(nullptr, L"open", nmlink.item.szUrl, nullptr, nullptr, SW_SHOW);
-        }
-        break;
+        case NM_CLICK:
+            // Fall through to the next case.
+        case NM_RETURN:
+            if (nmhdr.idFrom == IDC_LICENSE_LINK) {
+                OpenLicensingInfo();
+            }
+            else if (nmhdr.idFrom == IDC_SRC_LINK) {
+                auto& nmlink = *reinterpret_cast<PNMLINK>(lparam);
+                ShellExecuteW(nullptr, L"open", nmlink.item.szUrl, nullptr, nullptr, SW_SHOW);
+            }
+            break;
     }
     return 0;
 }

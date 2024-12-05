@@ -12,15 +12,13 @@
 int main(int argc, char* argv[])
 {
     if (argc <= 1) {
-        printf(
-            "Usage: shader_compiler [options...] hlsl_file\n\n"
-            "Available options:\n"
-            "-o output_file output file name\n"
-            "-e entrypoint  sets shader main function\n"
-            "-t target      sets shader target (e.g. vs_2_0)\n"
-            "-Dname=value   adds macro-definition\n"
-            "-O[123]        sets optimization level\n"
-        );
+        printf("Usage: shader_compiler [options...] hlsl_file\n\n"
+               "Available options:\n"
+               "-o output_file output file name\n"
+               "-e entrypoint  sets shader main function\n"
+               "-t target      sets shader target (e.g. vs_2_0)\n"
+               "-Dname=value   adds macro-definition\n"
+               "-O[123]        sets optimization level\n");
         return 1;
     }
 
@@ -108,17 +106,8 @@ int main(int argc, char* argv[])
     std::string hlsl_code((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
 
     HRESULT hr = D3DCompile(
-        hlsl_code.data(),
-        hlsl_code.size(),
-        hlsl_filename.c_str(),
-        macros.data(),
-        D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        entrypoint.c_str(),
-        target.c_str(),
-        flags1,
-        flags2,
-        &shader_bytecode,
-        &errors
+        hlsl_code.data(), hlsl_code.size(), hlsl_filename.c_str(), macros.data(), D3D_COMPILE_STANDARD_FILE_INCLUDE,
+        entrypoint.c_str(), target.c_str(), flags1, flags2, &shader_bytecode, &errors
     );
     if (errors) {
         if (errors->GetBufferSize() > 0) {

@@ -4,7 +4,8 @@
 #include "pf_packets.h"
 
 // Forward declarations
-namespace rf {
+namespace rf
+{
     struct NetAddr;
     struct Player;
 }

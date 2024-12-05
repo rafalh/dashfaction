@@ -52,8 +52,8 @@ FunHook<void(bool)> cutscene_do_frame_hook{
     [](bool dlg_open) {
         bool skip_cutscene = false;
         auto skip_cutscene_ctrl = g_game_config.skip_cutscene_ctrl.value() != -1
-            ? static_cast<rf::ControlConfigAction>(g_game_config.skip_cutscene_ctrl.value())
-            : default_skip_cutscene_ctrl;
+                                      ? static_cast<rf::ControlConfigAction>(g_game_config.skip_cutscene_ctrl.value())
+                                      : default_skip_cutscene_ctrl;
         rf::control_config_check_pressed(&rf::local_player->settings.controls, skip_cutscene_ctrl, &skip_cutscene);
 
         if (!skip_cutscene) {

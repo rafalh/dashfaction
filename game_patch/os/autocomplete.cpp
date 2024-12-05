@@ -17,9 +17,9 @@ void console_show_cmd_help(rf::console::Command* cmd)
 
 int console_auto_complete_get_component(int offset, std::string& result)
 {
-    const char *begin = rf::console::cmd_line + offset;
-    const char *end = nullptr;
-    const char *next;
+    const char* begin = rf::console::cmd_line + offset;
+    const char* end = nullptr;
+    const char* next;
 
     if (begin[0] == '"') {
         ++begin;
@@ -51,7 +51,8 @@ void console_auto_complete_put_component(int offset, const std::string& componen
     }
     rf::console::cmd_line_len = offset + len;
     if (finished)
-        rf::console::cmd_line_len += snprintf(rf::console::cmd_line + rf::console::cmd_line_len, max_len - rf::console::cmd_line_len, " ");
+        rf::console::cmd_line_len +=
+            snprintf(rf::console::cmd_line + rf::console::cmd_line_len, max_len - rf::console::cmd_line_len, " ");
 }
 
 template<typename T, typename F>
@@ -62,8 +63,9 @@ void console_auto_complete_print_suggestions(T& suggestions, F mapping_fun)
     }
 }
 
-void console_auto_complete_update_common_prefix(std::string& common_prefix, const std::string& value, bool& first,
-                                      bool case_sensitive = false)
+void console_auto_complete_update_common_prefix(
+    std::string& common_prefix, const std::string& value, bool& first, bool case_sensitive = false
+)
 {
     if (first) {
         first = false;

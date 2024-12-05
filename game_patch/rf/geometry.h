@@ -76,7 +76,7 @@ namespace rf
 
     struct GSolid
     {
-        GBBox *bbox;
+        GBBox* bbox;
         char name[64];
         int modifiability;
         Vector3 bbox_min;
@@ -111,7 +111,7 @@ namespace rf
         int field_370;
         int field_374;
 
-        void collide(GCollisionInput *in, GCollisionOutput *out, bool clear_fraction)
+        void collide(GCollisionInput* in, GCollisionOutput* out, bool clear_fraction)
         {
             AddrCaller{0x004DF1C0}.this_call(this, in, out, clear_fraction);
         }
@@ -123,14 +123,14 @@ namespace rf
         bool is_detail;
         bool is_sky;
         bool is_invisible;
-        GCache *geo_cache;
+        GCache* geo_cache;
         Vector3 bbox_min;
         Vector3 bbox_max;
         int room_index;
         int uid;
         VList<GFace, FACE_LIST_ROOM> face_list;
         VArray<GPortal*> portals;
-        GBBox *bbox;
+        GBBox* bbox;
         bool is_blocked;
         bool is_cold;
         bool is_outside;
@@ -141,7 +141,7 @@ namespace rf
         char eax_effect[32];
         bool has_alpha;
         VArray<GRoom*> detail_rooms;
-        GRoom *room_to_render_with;
+        GRoom* room_to_render_with;
         Plane room_plane;
         int last_frame_rendered_normal;
         int last_frame_rendered_alpha;
@@ -182,8 +182,9 @@ namespace rf
     struct GFaceAttributes
     {
         uint flags;
-        union {
-            int group_id; // temporarily used for face grouping/sorting
+        union
+        {
+            int group_id;                 // temporarily used for face grouping/sorting
             GTextureMover* texture_mover; // temporarily used by room render cache code
         };
         int bitmap_id;
@@ -225,10 +226,10 @@ namespace rf
         Vector3 bounding_box_min;
         Vector3 bounding_box_max;
         GFaceAttributes attributes;
-        GFaceVertex *edge_loop;
-        GRoom *which_room;
-        GBBox *which_bbox;
-        DecalPoly *decal_list;
+        GFaceVertex* edge_loop;
+        GRoom* which_room;
+        GBBox* which_bbox;
+        DecalPoly* decal_list;
         short unk_cache_index;
         GFace* next[FACE_LIST_NUM];
     };
@@ -246,13 +247,13 @@ namespace rf
 
     struct GFaceVertex
     {
-        GVertex *vertex;
+        GVertex* vertex;
         float texture_u;
         float texture_v;
         float lightmap_u;
         float lightmap_v;
-        GFaceVertex *next;
-        GFaceVertex *prev;
+        GFaceVertex* next;
+        GFaceVertex* prev;
     };
     static_assert(sizeof(GFaceVertex) == 0x1C);
 
@@ -263,7 +264,7 @@ namespace rf
         ubyte flags;
         bool should_smooth;
         bool fullbright;
-        GLightmap *lightmap;
+        GLightmap* lightmap;
         int xstart;
         int ystart;
         int width;
@@ -310,7 +311,7 @@ namespace rf
         bool unusable;
         short adjacent;
         float distance;
-        GPathNode *backptr;
+        GPathNode* backptr;
         GPathNodeType type;
         bool directional;
         Matrix3 orient;
@@ -325,9 +326,9 @@ namespace rf
         Matrix3 orient;
         Vector3 width;
         int bitmap_id;
-        GRoom *room;
-        GRoom *room2;
-        GSolid *solid;
+        GRoom* room;
+        GRoom* room2;
+        GSolid* solid;
         ubyte alpha;
         int flags;
         int object_handle;
@@ -335,12 +336,12 @@ namespace rf
         Plane decal_poly_planes[6];
         Vector3 bb_min;
         Vector3 bb_max;
-        DecalPoly *poly_list;
+        DecalPoly* poly_list;
         int num_decal_polys;
         float lifetime_sec;
-        GDecal *next;
-        GDecal *prev;
-        GSolid *editor_geometry;
+        GDecal* next;
+        GDecal* prev;
+        GSolid* editor_geometry;
     };
     static_assert(sizeof(GDecal) == 0xEC);
 
@@ -361,17 +362,17 @@ namespace rf
         int lightmap_bm_handle;
         int nv;
         DecalVertex verts[25];
-        GFace *face;
-        GDecal *my_decal;
-        DecalPoly *next;
-        DecalPoly *prev;
-        DecalPoly *next_for_face;
+        GFace* face;
+        GDecal* my_decal;
+        DecalPoly* next;
+        DecalPoly* prev;
+        DecalPoly* next_for_face;
     };
     static_assert(sizeof(DecalPoly) == 0x534);
 
     struct GCollisionInput
     {
-        GFace *face;
+        GFace* face;
         Vector3 geometry_pos;
         Matrix3 geometry_orient;
         Vector3 start_pos;
@@ -395,7 +396,7 @@ namespace rf
         Vector3 hit_point;
         Vector3 normal;
         int field_20;
-        GFace *face;
+        GFace* face;
 
         GCollisionOutput()
         {
@@ -406,10 +407,10 @@ namespace rf
 
     struct GLightmap
     {
-        ubyte *unk;
+        ubyte* unk;
         int w;
         int h;
-        ubyte *buf;
+        ubyte* buf;
         int bm_handle;
         int index;
     };
@@ -420,13 +421,13 @@ namespace rf
     {
         int last_frame_updated;
         int last_frame_needs_updating;
-        GProceduralTexture *next;
-        GProceduralTexture *prev;
+        GProceduralTexture* next;
+        GProceduralTexture* prev;
         int width;
         int height;
         int user_bm_handle;
         ProcTexType type;
-        void (*update_function)(GProceduralTexture *pt);
+        void (*update_function)(GProceduralTexture* pt);
         int base_bm_handle;
         float slide_pos_xc; // unused?
         float slide_pos_xt;
@@ -445,16 +446,19 @@ namespace rf
         bool is_behind_brush;
         bool lights_enabled;
         bool use_static_lights;
-        Plane *object_plane;
-        Vector3 *bbox_min;
-        Vector3 *bbox_max;
+        Plane* object_plane;
+        Vector3* bbox_min;
+        Vector3* bbox_max;
         float z_value;
-        void (*render_function)(int, GSolid *);
+        void (*render_function)(int, GSolid*);
     };
     static_assert(sizeof(GPortalObject) == 0x30);
 
     static auto& g_cache_clear = addr_as_ref<void()>(0x004F0B90);
-    static auto& g_get_room_render_list = addr_as_ref<void(GRoom ***rooms, int *num_rooms)>(0x004D3330);
+    static auto& g_get_room_render_list = addr_as_ref<void(GRoom*** rooms, int* num_rooms)>(0x004D3330);
 
-    static auto& bbox_intersect = addr_as_ref<bool(const Vector3& bbox1_min, const Vector3& bbox1_max, const Vector3& bbox2_min, const Vector3& bbox2_max)>(0x0046C340);
+    static auto& bbox_intersect = addr_as_ref<
+        bool(const Vector3& bbox1_min, const Vector3& bbox1_max, const Vector3& bbox2_min, const Vector3& bbox2_max)>(
+        0x0046C340
+    );
 }

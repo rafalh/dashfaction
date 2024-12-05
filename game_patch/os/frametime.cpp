@@ -91,7 +91,8 @@ FunHook<void()> frametime_reset_hook{
         frametime_reset_hook.call_target();
 
         // Set initial FPS limit
-        unsigned max_fps = rf::is_dedicated_server ? g_game_config.server_max_fps.value() : g_game_config.max_fps.value();
+        unsigned max_fps =
+            rf::is_dedicated_server ? g_game_config.server_max_fps.value() : g_game_config.max_fps.value();
         rf::frametime_min = 1.0f / static_cast<float>(max_fps);
     },
 };
@@ -119,9 +120,7 @@ ConsoleCommand2 max_fps_cmd{
 
 ConsoleCommand2 frametime_graph_cmd{
     "frametime_graph",
-    []() {
-        g_show_frametime_graph = !g_show_frametime_graph;
-    },
+    []() { g_show_frametime_graph = !g_show_frametime_graph; },
 };
 
 void frametime_apply_patch()

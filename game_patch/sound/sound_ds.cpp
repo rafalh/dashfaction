@@ -21,83 +21,22 @@ StaticBufferResizePatch<rf::DsChannel> ds_channels_resize_patch{
     30,
     rf::ds_channels,
     {
-        {0x00521149},
-        {0x005211C3},
-        {0x0052165D},
-        {0x00522306},
-        {0x005224DA},
-        {0x0052250D},
-        {0x005225A3},
-        {0x005225B7},
-        {0x005225F2},
-        {0x00522608},
-        {0x00522632},
-        {0x0052265A},
-        {0x00522734},
-        {0x00522741},
-        {0x00522763},
-        {0x005227AD},
-        {0x0052282F},
-        {0x00522A61},
-        {0x00522AAD},
-        {0x00522B3A},
-        {0x00522BDA},
-        {0x00522C8E},
-        {0x00522D4B},
-        {0x00522D66},
-        {0x00522D98},
-        {0x00522DDF},
-        {0x00522E1B},
-        {0x00522F0B},
-        {0x0052312B},
-        {0x0054E8CC},
-        {0x0054E956},
-        {0x0054EAB5},
-        {0x0054EB64},
-        {0x0054EBB6},
-        {0x0054EC93},
-        {0x005211F5},
-        {0x005225BD},
-        {0x00562DC9},
-        {0x0052264C},
-        {0x00522781},
-        {0x00522792},
-        {0x00505E96},
-        {0x00522688},
-        {0x005226A0},
-        {0x005227D8},
-        {0x005227F0},
-        {0x00522CFE},
-        {0x00522F3A},
-        {0x00522626},
-        {0x0052275D},
-        {0x00522D75},
-        {0x0052262C},
-        {0x0052271E},
-        {0x00521945},
-        {0x00522478},
-        {0x0052251A},
-        {0x005225E4},
-        {0x005225EC},
-        {0x00522724},
-        {0x0052272E},
-        {0x00522A57},
-        {0x00522AA3},
-        {0x00522AF4},
-        {0x00522BE6},
-        {0x00522BEE},
-        {0x00522C04},
-        {0x00522C57},
-        {0x00522C80},
-        {0x00522C9F},
-        {0x00522CA7},
-        {0x00522CB4},
-        {0x0052194E},
-        {0x00522F47, true},
-        {0x005224A7, true},
-        {0x00522B0B, true},
-        {0x00522C29, true},
-        {0x00522CCB, true},
+        {0x00521149},       {0x005211C3},       {0x0052165D},       {0x00522306},       {0x005224DA},
+        {0x0052250D},       {0x005225A3},       {0x005225B7},       {0x005225F2},       {0x00522608},
+        {0x00522632},       {0x0052265A},       {0x00522734},       {0x00522741},       {0x00522763},
+        {0x005227AD},       {0x0052282F},       {0x00522A61},       {0x00522AAD},       {0x00522B3A},
+        {0x00522BDA},       {0x00522C8E},       {0x00522D4B},       {0x00522D66},       {0x00522D98},
+        {0x00522DDF},       {0x00522E1B},       {0x00522F0B},       {0x0052312B},       {0x0054E8CC},
+        {0x0054E956},       {0x0054EAB5},       {0x0054EB64},       {0x0054EBB6},       {0x0054EC93},
+        {0x005211F5},       {0x005225BD},       {0x00562DC9},       {0x0052264C},       {0x00522781},
+        {0x00522792},       {0x00505E96},       {0x00522688},       {0x005226A0},       {0x005227D8},
+        {0x005227F0},       {0x00522CFE},       {0x00522F3A},       {0x00522626},       {0x0052275D},
+        {0x00522D75},       {0x0052262C},       {0x0052271E},       {0x00521945},       {0x00522478},
+        {0x0052251A},       {0x005225E4},       {0x005225EC},       {0x00522724},       {0x0052272E},
+        {0x00522A57},       {0x00522AA3},       {0x00522AF4},       {0x00522BE6},       {0x00522BEE},
+        {0x00522C04},       {0x00522C57},       {0x00522C80},       {0x00522C9F},       {0x00522CA7},
+        {0x00522CB4},       {0x0052194E},       {0x00522F47, true}, {0x005224A7, true}, {0x00522B0B, true},
+        {0x00522C29, true}, {0x00522CCB, true},
     },
 };
 
@@ -235,22 +174,26 @@ ConsoleCommand2 playing_sounds_cmd{
                 DWORD status;
                 chnl.pdsb->GetStatus(&status);
                 auto& buf = rf::ds_buffers[chnl.buf_id];
-                rf::console::print("Channel {}: filename {} flags {:x} status {:x}", chnl_num, buf.filename, chnl.flags, status);
+                rf::console::print(
+                    "Channel {}: filename {} flags {:x} status {:x}", chnl_num, buf.filename, chnl.flags, status
+                );
             }
         }
     },
 };
 #endif
 
-struct MmioWrapper {
+struct MmioWrapper
+{
     HMMIO hmmio = nullptr;
     stb_vorbis* vorbis = nullptr;
 };
 
 FunHook<int(LPSTR, LONG, HMMIO*, WAVEFORMATEX**, WAVEFORMATEX**, LPMMCKINFO)> snd_mmio_open_hook{
     0x00563370,
-    [](LPSTR filename, LONG offset, HMMIO* hmmio, WAVEFORMATEX **wfmt_orig, WAVEFORMATEX **wfmt_ds, LPMMCKINFO chunk_info) {
-        char *sound_name = filename - 0x100;
+    [](LPSTR filename, LONG offset, HMMIO* hmmio, WAVEFORMATEX** wfmt_orig, WAVEFORMATEX** wfmt_ds,
+       LPMMCKINFO chunk_info) {
+        char* sound_name = filename - 0x100;
         xlog::trace("Loading sound: {}", sound_name);
         if (!strcmp(rf::file_get_ext(sound_name), ".ogg")) {
             xlog::info("Loading Ogg Vorbis: {}", sound_name);
@@ -259,7 +202,7 @@ FunHook<int(LPSTR, LONG, HMMIO*, WAVEFORMATEX**, WAVEFORMATEX**, LPMMCKINFO)> sn
                 xlog::error("Cannot get file size: {}", filename);
                 return -1;
             }
-            FILE *file = std::fopen(filename, "rb");
+            FILE* file = std::fopen(filename, "rb");
             if (!file) {
                 xlog::error("Failed to open: {}", filename);
                 return -1;
@@ -307,7 +250,8 @@ FunHook<int(HMMIO*, LPMMCKINFO, const MMCKINFO*)> snd_mmio_find_data_chunk_hook{
             float length = stb_vorbis_stream_length_in_seconds(wrapper->vorbis);
             data_mmcki->cksize = info.sample_rate * info.channels * sizeof(short) * length;
             return 0;
-        } else {
+        }
+        else {
             return snd_mmio_find_data_chunk_hook.call_target(&wrapper->hmmio, data_mmcki, riff_mmcki);
         }
     },
@@ -315,11 +259,13 @@ FunHook<int(HMMIO*, LPMMCKINFO, const MMCKINFO*)> snd_mmio_find_data_chunk_hook{
 
 FunHook<int(HMMIO, unsigned, BYTE*, MMCKINFO*, int*)> snd_mmio_read_chunk_hook{
     0x00563620,
-    [](HMMIO hmmio, unsigned buf_size, BYTE *buf, MMCKINFO *mmcki, int *bytes_read) {
+    [](HMMIO hmmio, unsigned buf_size, BYTE* buf, MMCKINFO* mmcki, int* bytes_read) {
         auto wrapper = reinterpret_cast<MmioWrapper*>(hmmio);
         if (wrapper->vorbis) {
             stb_vorbis_info info = stb_vorbis_get_info(wrapper->vorbis);
-            int samples_read = stb_vorbis_get_samples_short_interleaved(wrapper->vorbis, info.channels, reinterpret_cast<short*>(buf), buf_size / 2);
+            int samples_read = stb_vorbis_get_samples_short_interleaved(
+                wrapper->vorbis, info.channels, reinterpret_cast<short*>(buf), buf_size / 2
+            );
             *bytes_read = samples_read * info.channels * sizeof(short);
             xlog::info("Ogg Vorbis: read {} samples", samples_read);
             return 0;
@@ -330,7 +276,7 @@ FunHook<int(HMMIO, unsigned, BYTE*, MMCKINFO*, int*)> snd_mmio_read_chunk_hook{
 
 FunHook<void(HMMIO*)> snd_mmio_close_hook{
     0x005636E0,
-    [](HMMIO *hmmio) {
+    [](HMMIO* hmmio) {
         auto wrapper = reinterpret_cast<MmioWrapper*>(*hmmio);
         if (!wrapper) {
             return;
@@ -338,7 +284,8 @@ FunHook<void(HMMIO*)> snd_mmio_close_hook{
         if (wrapper->vorbis) {
             xlog::info("Closing Ogg Vorbis stream");
             stb_vorbis_close(wrapper->vorbis);
-        } else {
+        }
+        else {
             snd_mmio_close_hook.call_target(&wrapper->hmmio);
         }
         delete wrapper;

@@ -14,7 +14,8 @@ constexpr uint8_t TRIGGER_CLIENT_SIDE = 0x2;
 constexpr uint8_t TRIGGER_SOLO = 0x4;
 constexpr uint8_t TRIGGER_TELEPORT = 0x8;
 
-class TriggerCustomFlagsHelper {
+class TriggerCustomFlagsHelper
+{
     HWND hwnd_;
     bool is_solo_ = false;
     bool is_clientside_ = false;
@@ -71,7 +72,6 @@ public:
             new_script_name += script_name;
             SetDlgItemTextA(hwnd_, IDC_TRIGGER_SCRIPT_NAME, new_script_name.c_str());
         }
-
     }
 };
 
@@ -97,15 +97,8 @@ void __fastcall CTriggerPropsDialog_DoDataExchange_new(CWnd* this_, int, CDataEx
     }
 }
 
-
 const char* activated_by_names[] = {
-    "Players Only",
-    "All Objects",
-    "Linked Objects",
-    "AI Only",
-    "Player Vehicle Only",
-    "Geomods",
-    "Undefined",
+    "Players Only", "All Objects", "Linked Objects", "AI Only", "Player Vehicle Only", "Geomods", "Undefined",
 };
 
 CodeInjection CDedLevel_OpenTriggerProperties_injection{
@@ -130,7 +123,7 @@ CodeInjection CDedLevel_OpenTriggerProperties_injection{
         }
 
         // Set Activated By to empty string if selected triggers have different configs
-        auto& activate_by_names = addr_as_ref<const char*[6]>(0x0057A910);
+        auto& activate_by_names = addr_as_ref<const char* [6]>(0x0057A910);
         auto& trigger_activated_by = struct_field_ref<uint8_t>(current_trigger, 0xB8);
         auto& dialog_activated_by = struct_field_ref<CString>(trigger_dialog, 0x340);
         if (dialog_activated_by != activate_by_names[trigger_activated_by]) {

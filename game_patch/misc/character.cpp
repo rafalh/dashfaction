@@ -24,7 +24,7 @@ static void skeleton_cleanup_one(rf::Skeleton* sp)
 
 static FunHook<rf::Skeleton*(const char*)> skeleton_find_hook{
     0x00539BE0,
-    [](const char *filename) {
+    [](const char* filename) {
         std::string key = string_to_lower(get_filename_without_ext(filename));
         auto it = skeletons.find(key);
         if (it == skeletons.end()) {
@@ -45,7 +45,9 @@ static FunHook<void(rf::Skeleton*, bool)> skeleton_unlink_base_hook{
         sp->base_usage_count = std::max(sp->base_usage_count - 1, 0);
         if (sp->base_usage_count == 0 || force_unload) {
             if (sp->base_usage_count != 0) {
-                xlog::warn("Expected 0 base usages for skeleton '{}' but got {}", sp->mvf_filename, sp->base_usage_count);
+                xlog::warn(
+                    "Expected 0 base usages for skeleton '{}' but got {}", sp->mvf_filename, sp->base_usage_count
+                );
             }
             xlog::trace("Unloading skeleton: {} (total {})", sp->mvf_filename, skeletons.size());
             skeleton_cleanup_one(sp);
@@ -58,9 +60,7 @@ static FunHook<void(rf::Skeleton*, bool)> skeleton_unlink_base_hook{
 
 static FunHook<void()> skeleton_init_hook{
     0x00539D90,
-    []() {
-        skeletons.reserve(800);
-    },
+    []() { skeletons.reserve(800); },
 };
 
 static FunHook<void()> skeleton_close_hook{
@@ -69,12 +69,16 @@ static FunHook<void()> skeleton_close_hook{
         for (auto& p : skeletons) {
             auto& skeleton = p.second;
             if (skeleton->base_usage_count > 0) {
-                xlog::warn("Expected 0 base usages for skeleton '{}' but got {}",
-                    skeleton->mvf_filename, skeleton->base_usage_count);
+                xlog::warn(
+                    "Expected 0 base usages for skeleton '{}' but got {}", skeleton->mvf_filename,
+                    skeleton->base_usage_count
+                );
             }
             if (skeleton->instance_usage_count > 0) {
-                xlog::warn("Expected 0 instance usages for skeleton '{}' but got {}",
-                    skeleton->mvf_filename, skeleton->instance_usage_count);
+                xlog::warn(
+                    "Expected 0 instance usages for skeleton '{}' but got {}", skeleton->mvf_filename,
+                    skeleton->instance_usage_count
+                );
             }
             skeleton_cleanup_one(skeleton.get());
         }
@@ -98,7 +102,9 @@ static void skeleton_flush()
     }
 }
 
-static int __fastcall character_load_animation(rf::Character *this_, int, const char *anim_filename, bool is_state, [[maybe_unused]] bool unused)
+static int __fastcall character_load_animation(
+    rf::Character* this_, int, const char* anim_filename, bool is_state, [[maybe_unused]] bool unused
+)
 {
     rf::Skeleton* sp = rf::skeleton_link_base(anim_filename);
     if (!sp) {
@@ -109,14 +115,19 @@ static int __fastcall character_load_animation(rf::Character *this_, int, const 
         if (this_->animations[i] == sp && this_->anim_is_state[i] == is_state) {
             // Unlink call is missing in oryginal code (RF bug)
             rf::skeleton_unlink_base(sp, false);
-            xlog::trace("Animation '{}' already used by character '{}' ({} base usages)", anim_filename, this_->name, sp->base_usage_count);
+            xlog::trace(
+                "Animation '{}' already used by character '{}' ({} base usages)", anim_filename, this_->name,
+                sp->base_usage_count
+            );
             return i;
         }
     }
     // Animation not found - check if we can add it
     if (this_->num_anims >= static_cast<int>(std::size(this_->animations))) {
         // Protect from buffer overflow
-        xlog::error("Cannot add animation '{}' to character '{}' because there is no free slot!", anim_filename, this_->name);
+        xlog::error(
+            "Cannot add animation '{}' to character '{}' because there is no free slot!", anim_filename, this_->name
+        );
         rf::skeleton_unlink_base(sp, false);
         return 0;
     }
@@ -125,8 +136,10 @@ static int __fastcall character_load_animation(rf::Character *this_, int, const 
     this_->animations[anim_index] = sp;
     this_->anim_is_state[anim_index] = is_state;
     rf::skeleton_page_in(anim_filename, 0);
-    xlog::trace("Animation '{}' loaded for character '{}' ({} base usages) this {} sp {} anim_index {} is_state {}",
-        anim_filename, this_->name, sp->base_usage_count, this_, sp, anim_index, is_state);
+    xlog::trace(
+        "Animation '{}' loaded for character '{}' ({} base usages) this {} sp {} anim_index {} is_state {}",
+        anim_filename, this_->name, sp->base_usage_count, this_, sp, anim_index, is_state
+    );
     return anim_index;
 }
 

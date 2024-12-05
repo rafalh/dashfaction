@@ -17,25 +17,40 @@ FunHook<int(int16_t)> key_to_ascii_hook{
         // special handling for Num Lock (because ToAscii API does not support it)
         switch (key & KEY_MASK) {
             // Numpad keys that always work
-            case KEY_PADMULTIPLY: return static_cast<int>('*');
-            case KEY_PADMINUS: return static_cast<int>('-');
-            case KEY_PADPLUS: return static_cast<int>('+');
+            case KEY_PADMULTIPLY:
+                return static_cast<int>('*');
+            case KEY_PADMINUS:
+                return static_cast<int>('-');
+            case KEY_PADPLUS:
+                return static_cast<int>('+');
             // Disable Numpad Enter key because game is not prepared for getting new line character from this function
-            case KEY_PADENTER: return empty_result;
+            case KEY_PADENTER:
+                return empty_result;
         }
         if (GetKeyState(VK_NUMLOCK) & 1) {
             switch (key & KEY_MASK) {
-                case KEY_PAD7: return static_cast<int>('7');
-                case KEY_PAD8: return static_cast<int>('8');
-                case KEY_PAD9: return static_cast<int>('9');
-                case KEY_PAD4: return static_cast<int>('4');
-                case KEY_PAD5: return static_cast<int>('5');
-                case KEY_PAD6: return static_cast<int>('6');
-                case KEY_PAD1: return static_cast<int>('1');
-                case KEY_PAD2: return static_cast<int>('2');
-                case KEY_PAD3: return static_cast<int>('3');
-                case KEY_PAD0: return static_cast<int>('0');
-                case KEY_PADPERIOD: return static_cast<int>('.');
+                case KEY_PAD7:
+                    return static_cast<int>('7');
+                case KEY_PAD8:
+                    return static_cast<int>('8');
+                case KEY_PAD9:
+                    return static_cast<int>('9');
+                case KEY_PAD4:
+                    return static_cast<int>('4');
+                case KEY_PAD5:
+                    return static_cast<int>('5');
+                case KEY_PAD6:
+                    return static_cast<int>('6');
+                case KEY_PAD1:
+                    return static_cast<int>('1');
+                case KEY_PAD2:
+                    return static_cast<int>('2');
+                case KEY_PAD3:
+                    return static_cast<int>('3');
+                case KEY_PAD0:
+                    return static_cast<int>('0');
+                case KEY_PADPERIOD:
+                    return static_cast<int>('.');
             }
         }
         BYTE key_state[256] = {0};
@@ -75,7 +90,7 @@ FunHook<int(int16_t)> key_to_ascii_hook{
 
 int get_key_name(int key, char* buf, size_t buf_len)
 {
-     LONG lparam = (key & 0x7F) << 16;
+    LONG lparam = (key & 0x7F) << 16;
     if (key & 0x80) {
         lparam |= 1 << 24;
     }

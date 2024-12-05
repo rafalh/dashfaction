@@ -37,7 +37,7 @@ void monitor_refresh_all()
 
 CallHook<int(rf::bm::Format, int, int)> bm_create_user_bitmap_monitor_hook{
     0x00412547,
-    []([[ maybe_unused ]] rf::bm::Format pixel_fmt, int w, int h) {
+    []([[maybe_unused]] rf::bm::Format pixel_fmt, int w, int h) {
         return bm_create_user_bitmap_monitor_hook.call_target(rf::bm::FORMAT_RENDER_TARGET, w, h);
     },
 };
@@ -97,7 +97,7 @@ void replace_monitor_screen_bitmap(rf::Monitor& mon, int hbm)
     auto clutter = rf::obj_from_handle(mon.clutter_handle);
     auto vmesh = clutter->vmesh;
     int num_materials;
-    rf::MeshMaterial *materials;
+    rf::MeshMaterial* materials;
     rf::vmesh_get_materials_array(vmesh, &num_materials, &materials);
     for (int i = 0; i < num_materials; ++i) {
         auto& mat = materials[i];
@@ -113,14 +113,14 @@ FunHook<void(rf::Monitor&)> monitor_update_static_hook{
     [](rf::Monitor& mon) {
         // monitor is no longer displaying view from camera so its texture usage must be changed
         // from render target to dynamic texture
-        //ensure_monitor_bitmap_is_dynamic(mon);
+        // ensure_monitor_bitmap_is_dynamic(mon);
         if (!(mon.flags & rf::MF_BM_RENDERED)) {
             // very good idea but needs more work on UVs...
             auto hbm = rf::bm::load("gls_noise01.tga", -1, true);
             replace_monitor_screen_bitmap(mon, hbm);
             mon.flags |= rf::MF_BM_RENDERED;
         }
-        //monitor_update_static_hook.call_target(mon);
+        // monitor_update_static_hook.call_target(mon);
     },
 };
 #endif
@@ -153,9 +153,7 @@ FunHook<void(rf::Monitor&)> monitor_update_off_hook{
 
 CodeInjection render_corpse_in_monitor_patch{
     0x00412905,
-    []() {
-        rf::player_render_held_corpse(rf::local_player);
-    },
+    []() { rf::player_render_held_corpse(rf::local_player); },
 };
 
 void monitor_do_patch()

@@ -22,7 +22,7 @@ void unprotect_mem(void* ptr, unsigned len)
     }
 }
 
-extern "C" size_t subhook_disasm(void *src, int32_t *reloc_op_offset);
+extern "C" size_t subhook_disasm(void* src, int32_t* reloc_op_offset);
 
 size_t get_instruction_len(void* ptr)
 {

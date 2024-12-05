@@ -18,4 +18,3 @@ CodeBuffer::~CodeBuffer()
         HeapFree(get_code_heap(), 0, m_ptr);
     }
 }
-

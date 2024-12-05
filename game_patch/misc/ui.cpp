@@ -12,7 +12,7 @@
 #define DEBUG_UI_LAYOUT 0
 #define SHARP_UI_TEXT 1
 
-static inline void debug_ui_layout([[ maybe_unused ]] rf::ui::Gadget& gadget)
+static inline void debug_ui_layout([[maybe_unused]] rf::ui::Gadget& gadget)
 {
 #if DEBUG_UI_LAYOUT
     int x = gadget.GetAbsoluteX() * ui_scale_x;
@@ -24,7 +24,10 @@ static inline void debug_ui_layout([[ maybe_unused ]] rf::ui::Gadget& gadget)
 #endif
 }
 
-void __fastcall UiButton_create(rf::ui::Button& this_, int, const char *normal_bm, const char *selected_bm, int x, int y, int id, const char *text, int font)
+void __fastcall UiButton_create(
+    rf::ui::Button& this_, int, const char* normal_bm, const char* selected_bm, int x, int y, int id, const char* text,
+    int font
+)
 {
     this_.key = id;
     this_.x = x;
@@ -46,7 +49,7 @@ void __fastcall UiButton_create(rf::ui::Button& this_, int, const char *normal_b
 }
 FunHook UiButton_create_hook{0x004574D0, UiButton_create};
 
-void __fastcall UiButton_set_text(rf::ui::Button& this_, int, const char *text, int font)
+void __fastcall UiButton_set_text(rf::ui::Button& this_, int, const char* text, int font)
 {
     delete[] this_.text;
     this_.text = strdup(text);
@@ -63,7 +66,9 @@ void __fastcall UiButton_render(rf::ui::Button& this_)
 
     if (this_.bg_bitmap >= 0) {
         rf::gr::set_color(255, 255, 255, 255);
-        rf::gr::bitmap_scaled(this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, rf::gr::bitmap_clamp_mode);
+        rf::gr::bitmap_scaled(
+            this_.bg_bitmap, x, y, w, h, 0, 0, this_.w, this_.h, false, false, rf::gr::bitmap_clamp_mode
+        );
     }
 
     if (!this_.enabled) {
@@ -99,7 +104,9 @@ void __fastcall UiButton_render(rf::ui::Button& this_)
 }
 FunHook UiButton_render_hook{0x004577A0, UiButton_render};
 
-void __fastcall UiLabel_create(rf::ui::Label& this_, int, rf::ui::Gadget *parent, int x, int y, const char *text, int font)
+void __fastcall UiLabel_create(
+    rf::ui::Label& this_, int, rf::ui::Gadget* parent, int x, int y, const char* text, int font
+)
 {
     this_.parent = parent;
     this_.x = x;
@@ -115,7 +122,9 @@ void __fastcall UiLabel_create(rf::ui::Label& this_, int, rf::ui::Gadget *parent
 }
 FunHook UiLabel_create_hook{0x00456B60, UiLabel_create};
 
-void __fastcall UiLabel_create2(rf::ui::Label& this_, int, rf::ui::Gadget *parent, int x, int y, int w, int h, const char *text, int font)
+void __fastcall UiLabel_create2(
+    rf::ui::Label& this_, int, rf::ui::Gadget* parent, int x, int y, int w, int h, const char* text, int font
+)
 {
     this_.parent = parent;
     this_.x = x;
@@ -137,7 +146,7 @@ void __fastcall UiLabel_create2(rf::ui::Label& this_, int, rf::ui::Gadget *paren
 }
 FunHook UiLabel_create2_hook{0x00456C20, UiLabel_create2};
 
-void __fastcall UiLabel_set_text(rf::ui::Label& this_, int, const char *text, int font)
+void __fastcall UiLabel_set_text(rf::ui::Label& this_, int, const char* text, int font)
 {
     delete[] this_.text;
     this_.text = strdup(text);
@@ -175,7 +184,9 @@ void __fastcall UiLabel_render(rf::ui::Label& this_)
 }
 FunHook UiLabel_render_hook{0x00456ED0, UiLabel_render};
 
-void __fastcall UiInputBox_create(rf::ui::InputBox& this_, int, rf::ui::Gadget *parent, int x, int y, const char *text, int font, int w)
+void __fastcall UiInputBox_create(
+    rf::ui::InputBox& this_, int, rf::ui::Gadget* parent, int x, int y, const char* text, int font, int w
+)
 {
     this_.parent = parent;
     this_.x = x;
@@ -202,7 +213,9 @@ void __fastcall UiInputBox_render(rf::ui::InputBox& this_, void*)
     int y = static_cast<int>(this_.get_absolute_y() * rf::ui::scale_y);
     int clip_x, clip_y, clip_w, clip_h;
     rf::gr::get_clip(&clip_x, &clip_y, &clip_w, &clip_h);
-    rf::gr::set_clip(x, y, this_.max_text_width, static_cast<int>(this_.h * rf::ui::scale_y + 5)); // for some reason input fields are too thin
+    rf::gr::set_clip(
+        x, y, this_.max_text_width, static_cast<int>(this_.h * rf::ui::scale_y + 5)
+    ); // for some reason input fields are too thin
     int text_offset_x = static_cast<int>(1 * rf::ui::scale_x);
     rf::gr::string(text_offset_x, 0, this_.text, this_.font);
 
@@ -220,7 +233,7 @@ void __fastcall UiInputBox_render(rf::ui::InputBox& this_, void*)
 }
 FunHook UiInputBox_render_hook{0x004570E0, UiInputBox_render};
 
-void __fastcall UiCycler_add_item(rf::ui::Cycler& this_, int, const char *text, int font)
+void __fastcall UiCycler_add_item(rf::ui::Cycler& this_, int, const char* text, int font)
 {
     if (this_.num_items < rf::ui::Cycler::max_items) {
         this_.items_text[this_.num_items] = strdup(text);
@@ -258,9 +271,11 @@ FunHook UiCycler_render_hook{0x00457F40, UiCycler_render};
 
 CallHook<void(int*, int*, const char*, int, int, char, int)> popup_set_text_gr_split_str_hook{
     0x00455A7D,
-    [](int *n_chars, int *start_indices, const char *str, int max_pixel_w, int max_lines, char ignore_char, int font) {
+    [](int* n_chars, int* start_indices, const char* str, int max_pixel_w, int max_lines, char ignore_char, int font) {
         max_pixel_w = static_cast<int>(max_pixel_w * rf::ui::scale_x);
-        popup_set_text_gr_split_str_hook.call_target(n_chars, start_indices, str, max_pixel_w, max_lines, ignore_char, font);
+        popup_set_text_gr_split_str_hook.call_target(
+            n_chars, start_indices, str, max_pixel_w, max_lines, ignore_char, font
+        );
     },
 };
 
@@ -275,10 +290,10 @@ static bool is_any_font_modded()
     bool rfpc_small_modded = rfpc_small_checksum != 0xAABA52E6u;
     bool any_font_modded = rfpc_large_modded || rfpc_medium_modded || rfpc_small_modded;
     if (any_font_modded) {
-        xlog::info("Detected modded fonts: rfpc-large {} ({:08X}) rfpc-medium {} ({:08X}) rfpc-small {} ({:08X})",
-            rfpc_large_modded, rfpc_large_checksum,
-            rfpc_medium_modded, rfpc_medium_checksum,
-            rfpc_small_modded, rfpc_small_checksum
+        xlog::info(
+            "Detected modded fonts: rfpc-large {} ({:08X}) rfpc-medium {} ({:08X}) rfpc-small {} ({:08X})",
+            rfpc_large_modded, rfpc_large_checksum, rfpc_medium_modded, rfpc_medium_checksum, rfpc_small_modded,
+            rfpc_small_checksum
         );
     }
     return any_font_modded;
@@ -293,7 +308,7 @@ FunHook<void()> menu_init_hook{
         if (rf::ui::scale_y > 1.0f && !is_any_font_modded()) {
             int large_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 14.5f))); // 32
             int medium_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 9.0f))); // 20
-            int small_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 7.5f))); // 16
+            int small_font_size = std::min(128, static_cast<int>(std::round(rf::ui::scale_y * 7.5f)));  // 16
             xlog::info("UI font sizes: {} {} {}", large_font_size, medium_font_size, small_font_size);
 
             rf::ui::large_font = rf::gr::load_font(std::format("boldfont.ttf:{}", large_font_size).c_str());
@@ -305,10 +320,10 @@ FunHook<void()> menu_init_hook{
     },
 };
 
-auto UiInputBox_add_char = reinterpret_cast<bool (__thiscall*)(void *this_, char c)>(0x00457260);
+auto UiInputBox_add_char = reinterpret_cast<bool(__thiscall*)(void* this_, char c)>(0x00457260);
 
 extern FunHook<bool __fastcall(void*, int, rf::Key)> UiInputBox_process_key_hook;
-bool __fastcall UiInputBox_process_key_new(void *this_, int edx, rf::Key key)
+bool __fastcall UiInputBox_process_key_new(void* this_, int edx, rf::Key key)
 {
     if (key == (rf::KEY_V | rf::KEY_CTRLED)) {
         char buf[256];
@@ -320,7 +335,7 @@ bool __fastcall UiInputBox_process_key_new(void *this_, int edx, rf::Key key)
     }
     return UiInputBox_process_key_hook.call_target(this_, edx, key);
 }
-FunHook<bool __fastcall(void *this_, int edx, rf::Key key)> UiInputBox_process_key_hook{
+FunHook<bool __fastcall(void* this_, int edx, rf::Key key)> UiInputBox_process_key_hook{
     0x00457300,
     UiInputBox_process_key_new,
 };

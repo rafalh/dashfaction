@@ -64,10 +64,10 @@ namespace rf
 
     struct Object
     {
-        GRoom *room;
+        GRoom* room;
         Vector3 correct_pos;
-        Object *next_obj;
-        Object *prev_obj;
+        Object* next_obj;
+        Object* prev_obj;
         String name;
         int uid;
         ObjectType type;
@@ -81,7 +81,7 @@ namespace rf
         Vector3 last_pos;
         float radius;
         ObjectFlags obj_flags;
-        VMesh *vmesh;
+        VMesh* vmesh;
         int vmesh_submesh;
         PhysicsData p_data;
         ObjFriendliness friendliness;
@@ -92,7 +92,7 @@ namespace rf
         Matrix3 host_orient;
         Vector3 start_pos;
         Matrix3 start_orient;
-        int *emitter_list_head;
+        int* emitter_list_head;
         int root_bone_index;
         char killer_netid;
         int server_handle;
@@ -137,4 +137,5 @@ namespace rf
 }
 
 template<>
-struct EnableEnumBitwiseOperators<rf::ObjectFlags> : std::true_type {};
+struct EnableEnumBitwiseOperators<rf::ObjectFlags> : std::true_type
+{};

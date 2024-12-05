@@ -6,10 +6,9 @@
 #include <wxx_dialog.h>
 #include <wxx_commondlg.h>
 
-OptionsGraphicsDlg::OptionsGraphicsDlg(GameConfig& conf)
-	: CDialog(IDD_OPTIONS_GRAPHICS), m_conf(conf), m_video_info(nullptr)
-{
-}
+OptionsGraphicsDlg::OptionsGraphicsDlg(GameConfig& conf) :
+    CDialog(IDD_OPTIONS_GRAPHICS), m_conf(conf), m_video_info(nullptr)
+{}
 
 BOOL OptionsGraphicsDlg::OnInitDialog()
 {
@@ -53,7 +52,8 @@ void OptionsGraphicsDlg::UpdateMsaaCombo()
     m_multi_sample_types.push_back(0);
     try {
         BOOL windowed = m_conf.wnd_mode != GameConfig::FULLSCREEN;
-        auto multi_sample_types = m_video_info->get_multisample_types(m_conf.selected_video_card, m_conf.res_backbuffer_format, windowed);
+        auto multi_sample_types =
+            m_video_info->get_multisample_types(m_conf.selected_video_card, m_conf.res_backbuffer_format, windowed);
         for (auto msaa : multi_sample_types) {
             auto s = std::format("MSAAx{}", msaa);
             int idx = m_msaa_combo.AddString(s.c_str());
@@ -62,7 +62,7 @@ void OptionsGraphicsDlg::UpdateMsaaCombo()
             m_multi_sample_types.push_back(msaa);
         }
     }
-    catch (std::exception &e) {
+    catch (std::exception& e) {
         xlog::error("Cannot check available MSAA modes: {}", e.what());
     }
     m_msaa_combo.SetCurSel(selected_msaa);
@@ -76,7 +76,7 @@ void OptionsGraphicsDlg::UpdateAnisotropyCheckbox()
             anisotropy_supported = m_video_info->has_anisotropy_support(m_conf.selected_video_card);
         }
     }
-    catch (std::exception &e) {
+    catch (std::exception& e) {
         xlog::error("Cannot check anisotropy support: {}", e.what());
     }
     if (anisotropy_supported) {
@@ -93,9 +93,15 @@ void OptionsGraphicsDlg::InitToolTip()
     m_tool_tip.AddTool(GetDlgItem(IDC_FAST_ANIMS_CHECK), "Reduce animation smoothness for far models");
     m_tool_tip.AddTool(GetDlgItem(IDC_DISABLE_LOD_CHECK), "Use more detailed LOD models for objects in the distance");
     m_tool_tip.AddTool(GetDlgItem(IDC_ANISOTROPIC_CHECK), "Improve far textures quality");
-    m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
+    m_tool_tip.AddTool(
+        GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK),
+        "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)"
+    );
     m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_MON_RES_CHECK), "Increase monitors and mirrors resolution");
-    m_tool_tip.AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
+    m_tool_tip.AddTool(
+        GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK),
+        "Increase texture color depth - especially visible for lightmaps and shadows"
+    );
 }
 
 void OptionsGraphicsDlg::OnSave()

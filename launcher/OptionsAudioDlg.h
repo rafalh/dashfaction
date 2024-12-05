@@ -8,7 +8,7 @@
 class OptionsAudioDlg : public CDialog
 {
 public:
-	OptionsAudioDlg(GameConfig& conf);
+    OptionsAudioDlg(GameConfig& conf);
     void OnSave();
 
 protected:

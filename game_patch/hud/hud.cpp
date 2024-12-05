@@ -62,7 +62,6 @@ FunHook<void()> hud_render_for_multi_hook{
 ConsoleCommand2 hud_cmd{
     "hud",
     [](std::optional<bool> hud_opt) {
-
         // toggle if no parameter passed
         bool hud_visible = hud_opt.value_or(rf::hud_disabled);
         rf::hud_disabled = !hud_visible;
@@ -78,22 +77,22 @@ void hud_setup_positions(int width)
     xlog::trace("hud_setup_positionsHook({})", width);
 
     switch (width) {
-    case 640:
-        if (height == 480)
-            pos_data = rf::hud_coords_640;
-        break;
-    case 800:
-        if (height == 600)
-            pos_data = rf::hud_coords_800;
-        break;
-    case 1024:
-        if (height == 768)
-            pos_data = rf::hud_coords_1024;
-        break;
-    case 1280:
-        if (height == 1024)
-            pos_data = rf::hud_coords_1280;
-        break;
+        case 640:
+            if (height == 480)
+                pos_data = rf::hud_coords_640;
+            break;
+        case 800:
+            if (height == 600)
+                pos_data = rf::hud_coords_800;
+            break;
+        case 1024:
+            if (height == 768)
+                pos_data = rf::hud_coords_1024;
+            break;
+        case 1280:
+            if (height == 1024)
+                pos_data = rf::hud_coords_1280;
+            break;
     }
     if (pos_data) {
         std::copy(pos_data, pos_data + rf::num_hud_coords, rf::hud_coords);
@@ -149,7 +148,7 @@ void set_big_hud(bool is_big)
     set_big_countdown_counter(is_big);
 
     // TODO: Message Log - Note: it remembers text height in save files so method of recalculation is needed
-    //write_mem<i8>(0x004553DB + 1, is_big ? 127 : 70);
+    // write_mem<i8>(0x004553DB + 1, is_big ? 127 : 70);
 }
 
 ConsoleCommand2 bighud_cmd{
@@ -181,7 +180,8 @@ ConsoleCommand2 hud_coords_cmd{
 };
 #endif
 
-struct ScaledBitmapInfo {
+struct ScaledBitmapInfo
+{
     int bmh = -1;
     float scale = 2.0f;
 };
@@ -220,7 +220,6 @@ const ScaledBitmapInfo& hud_get_scaled_bitmap_info(int bmh)
             int scaled_bm_w, scaled_bm_h;
             rf::bm::get_dimensions(scaled_bm_info.bmh, &scaled_bm_w, &scaled_bm_h);
             scaled_bm_info.scale = static_cast<float>(scaled_bm_w) / static_cast<float>(bm_w);
-
         }
 
         it = scaled_bm_cache.insert({bmh, scaled_bm_info}).first;
@@ -375,7 +374,7 @@ FunHook<void()> hud_init_hook{
 
 CallHook hud_msg_render_gr_get_font_height_hook{
     0x004382DB,
-    []([[ maybe_unused ]] int font_no) {
+    []([[maybe_unused]] int font_no) {
         // Fix wrong font number being used causing line spacing to be invalid
         return rf::gr::get_font_height(rf::hud_text_font_num);
     },

@@ -36,30 +36,29 @@ public:
 
         using namespace asm_regs;
         AsmWriter{m_enter_code}
-            .push(ecx)                      // save ecx
-            .push(edx)                      // save edx
-            .push(this)                     // push enter_handler argument
-            .call(&enter_handler)           // call enter_handler
-            .add(esp, 4)                    // pop enter_handler argument
-            .pop(edx)                       // restore edx
-            .pop(ecx)                       // restore ecx
-            .mov(eax, m_leave_code.get())   // put leave code address into eax
-            .mov(*esp, eax)                 // replace return address by our leave code
-            .jmp(call_addr);                // call oryginal function
+            .push(ecx)                    // save ecx
+            .push(edx)                    // save edx
+            .push(this)                   // push enter_handler argument
+            .call(&enter_handler)         // call enter_handler
+            .add(esp, 4)                  // pop enter_handler argument
+            .pop(edx)                     // restore edx
+            .pop(ecx)                     // restore ecx
+            .mov(eax, m_leave_code.get()) // put leave code address into eax
+            .mov(*esp, eax)               // replace return address by our leave code
+            .jmp(call_addr);              // call oryginal function
         AsmWriter{m_leave_code}
-            .push(0)                        // make place for the return address
-            .push(eax)                      // save eax
-            .push(edx)                      // save edx
-            .push(this)                     // push enter_handler argument
-            .call(&leave_handler)           // call leave_handler
-            .add(esp, 4)                    // pop leave_handler argument
-            .mov(*(esp + 8), eax)           // copy return address returned by leave_handler to the stack
-            .pop(edx)                       // restore edx
-            .pop(eax)                       // restore eax
-            .ret();                         // return to the address returned by leave_handler
+            .push(0)              // make place for the return address
+            .push(eax)            // save eax
+            .push(edx)            // save edx
+            .push(this)           // push enter_handler argument
+            .call(&leave_handler) // call leave_handler
+            .add(esp, 4)          // pop leave_handler argument
+            .mov(*(esp + 8), eax) // copy return address returned by leave_handler to the stack
+            .pop(edx)             // restore edx
+            .pop(eax)             // restore eax
+            .ret();               // return to the address returned by leave_handler
 
-        AsmWriter{m_addr}
-            .call(m_enter_code.get());
+        AsmWriter{m_addr}.call(m_enter_code.get());
     }
 
 private:

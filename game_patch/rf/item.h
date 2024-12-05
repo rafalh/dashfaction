@@ -9,7 +9,7 @@ namespace rf
     {
         String cls_name;
         String v3d_filename;
-        const char *hud_msg_name;
+        const char* hud_msg_name;
         int pickup_msg_single;
         int pickup_msg_multi;
         int pickup_msg_wa_single;
@@ -23,7 +23,7 @@ namespace rf
         int ammo_for_weapon_id;
         int gives_weapon_id;
         int flags; // see ItemInfoFlags
-        int (__cdecl *touch_callback)(int entity_handle, int item_handle, int count);
+        int(__cdecl* touch_callback)(int entity_handle, int item_handle, int count);
         int use_callback_not_sure;
     };
     static_assert(sizeof(ItemInfo) == 0x50);
@@ -36,9 +36,9 @@ namespace rf
 
     struct Item : Object
     {
-        struct Item *next;
-        struct Item *prev;
-        ItemInfo *info;
+        struct Item* next;
+        struct Item* prev;
+        ItemInfo* info;
         int info_index;
         String name;
         int count;
@@ -56,6 +56,6 @@ namespace rf
     static auto& item_info = addr_as_ref<ItemInfo[96]>(0x006430A0);
     static auto& num_item_types = addr_as_ref<int>(0x00644EA0);
 
-    static auto& item_lookup_type = addr_as_ref<int(const char *name)>(0x00459430);
-    static auto& item_restore_mesh = addr_as_ref<void(Item *item, const char *mesh_name)>(0x00459BB0);
+    static auto& item_lookup_type = addr_as_ref<int(const char* name)>(0x00459430);
+    static auto& item_restore_mesh = addr_as_ref<void(Item* item, const char* mesh_name)>(0x00459BB0);
 }

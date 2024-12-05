@@ -32,14 +32,14 @@ void hud_render_team_scores()
     int box_w = g_big_team_scores_hud ? 370 : 185;
     int box_h = g_big_team_scores_hud ? 80 : 55;
     int box_x = 10;
-    int box_y = clip_h - box_h - 10; // clip_h - 65
-    int miniflag_x = box_x + 7; // 17
+    int box_y = clip_h - box_h - 10;                                  // clip_h - 65
+    int miniflag_x = box_x + 7;                                       // 17
     int miniflag_label_x = box_x + (g_big_team_scores_hud ? 45 : 33); // 43
     int max_miniflag_label_w = box_w - (g_big_team_scores_hud ? 80 : 55);
-    int red_miniflag_y = box_y + 4; // clip_h - 61
+    int red_miniflag_y = box_y + 4;                                  // clip_h - 61
     int blue_miniflag_y = box_y + (g_big_team_scores_hud ? 42 : 30); // clip_h - 35
-    int red_miniflag_label_y = red_miniflag_y + 4; // clip_h - 57
-    int blue_miniflag_label_y = blue_miniflag_y + 4; // clip_h - 31
+    int red_miniflag_label_y = red_miniflag_y + 4;                   // clip_h - 57
+    int blue_miniflag_label_y = blue_miniflag_y + 4;                 // clip_h - 31
     int flag_x = g_big_team_scores_hud ? 410 : 205;
     float flag_scale = g_big_team_scores_hud ? 1.5f : 1.0f;
 
@@ -114,7 +114,9 @@ void hud_render_team_scores()
             else {
                 miniflag_hilight_y = blue_miniflag_y;
             }
-            hud_scaled_bitmap(rf::hud_miniflag_hilight_bmh, miniflag_x, miniflag_hilight_y, miniflag_scale, rf::hud_flag_gr_mode);
+            hud_scaled_bitmap(
+                rf::hud_miniflag_hilight_bmh, miniflag_x, miniflag_hilight_y, miniflag_scale, rf::hud_flag_gr_mode
+            );
         }
         hud_scaled_bitmap(rf::hud_miniflag_red_bmh, miniflag_x, red_miniflag_y, miniflag_scale, rf::hud_flag_gr_mode);
         hud_scaled_bitmap(rf::hud_miniflag_blue_bmh, miniflag_x, blue_miniflag_y, miniflag_scale, rf::hud_flag_gr_mode);
@@ -164,11 +166,7 @@ CallHook<void(int, int, int, rf::gr::Mode)> hud_render_power_ups_gr_bitmap_hook{
 
 FunHook<void()> render_level_info_hook{
     0x00477180,
-    []() {
-        gr_font_run_with_default(hud_get_default_font(), [&]() {
-            render_level_info_hook.call_target();
-        });
-    },
+    []() { gr_font_run_with_default(hud_get_default_font(), [&]() { render_level_info_hook.call_target(); }); },
 };
 
 FunHook<void()> multi_hud_init_hook{

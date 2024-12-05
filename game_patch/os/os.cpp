@@ -36,8 +36,7 @@ LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_para
 {
     // xlog::trace("{:08x}: msg {} {:x} {:x}", GetTickCount(), get_win_msg_name(msg), w_param, l_param);
     if (rf::main_wnd && wnd_handle != rf::main_wnd) {
-        xlog::warn("Got unknown window in the window procedure: hwnd {} msg {}",
-            static_cast<void*>(wnd_handle), msg);
+        xlog::warn("Got unknown window in the window procedure: hwnd {} msg {}", static_cast<void*>(wnd_handle), msg);
     }
 
     for (int i = 0; i < rf::num_msg_handlers; ++i) {
@@ -45,45 +44,45 @@ LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_para
     }
 
     switch (msg) {
-    case WM_ACTIVATE:
-        if (!rf::is_dedicated_server) {
-            // Show cursor if window is not active
-            if (w_param) {
-                ShowCursor(FALSE);
-                while (ShowCursor(FALSE) >= 0)
-                    ;
+        case WM_ACTIVATE:
+            if (!rf::is_dedicated_server) {
+                // Show cursor if window is not active
+                if (w_param) {
+                    ShowCursor(FALSE);
+                    while (ShowCursor(FALSE) >= 0)
+                        ;
+                }
+                else {
+                    ShowCursor(TRUE);
+                    while (ShowCursor(TRUE) < 0)
+                        ;
+                }
             }
-            else {
-                ShowCursor(TRUE);
-                while (ShowCursor(TRUE) < 0)
-                    ;
-            }
-        }
 
-        rf::is_main_wnd_active = w_param;
-        return 0; //DefWindowProcA(wnd_handle, msg, w_param, l_param);
+            rf::is_main_wnd_active = w_param;
+            return 0; // DefWindowProcA(wnd_handle, msg, w_param, l_param);
 
-    case WM_QUIT:
-    case WM_CLOSE:
-    case WM_DESTROY:
-        rf::close_app_req = 1;
-        break;
+        case WM_QUIT:
+        case WM_CLOSE:
+        case WM_DESTROY:
+            rf::close_app_req = 1;
+            break;
 
-    case WM_PAINT:
-        if (rf::is_dedicated_server)
-            ++rf::console_redraw_counter;
-        return DefWindowProcA(wnd_handle, msg, w_param, l_param);
+        case WM_PAINT:
+            if (rf::is_dedicated_server)
+                ++rf::console_redraw_counter;
+            return DefWindowProcA(wnd_handle, msg, w_param, l_param);
 
-    default:
-        return DefWindowProcA(wnd_handle, msg, w_param, l_param);
+        default:
+            return DefWindowProcA(wnd_handle, msg, w_param, l_param);
     }
 
     return 0;
 }
 
-static FunHook<void(const char *, const char *, bool, bool)> os_init_window_server_hook{
+static FunHook<void(const char*, const char*, bool, bool)> os_init_window_server_hook{
     0x00524B70,
-    [](const char *wclass, const char *title, bool hooks, bool server_console) {
+    [](const char* wclass, const char* title, bool hooks, bool server_console) {
         if (server_console) {
             win32_console_init();
         }
@@ -103,7 +102,7 @@ static FunHook<void()> os_close_hook{
 
 static FunHook<void(char*, bool)> os_parse_params_hook{
     0x00523320,
-    [](char *cmdline, bool skip_first) {
+    [](char* cmdline, bool skip_first) {
         std::string buf;
         bool quote = false;
         while (true) {
@@ -113,8 +112,9 @@ static FunHook<void(char*, bool)> os_parse_params_hook{
             if ((!quote && c == ' ') || c == '\0') {
                 if (skip_first) {
                     skip_first = false;
-                } else {
-                    rf::CmdArg &cmd_arg = rf::cmdline_args[rf::cmdline_num_args++];
+                }
+                else {
+                    rf::CmdArg& cmd_arg = rf::cmdline_args[rf::cmdline_num_args++];
                     cmd_arg.arg = static_cast<char*>(rf::operator_new(buf.size() + 1));
                     std::strcpy(cmd_arg.arg, buf.c_str());
                     cmd_arg.is_done = false;
@@ -123,9 +123,11 @@ static FunHook<void(char*, bool)> os_parse_params_hook{
                 if (!c) {
                     break;
                 }
-            } else if (c == '"') {
+            }
+            else if (c == '"') {
                 quote = !quote;
-            } else {
+            }
+            else {
                 buf += c;
             }
         }

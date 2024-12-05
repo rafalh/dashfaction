@@ -10,17 +10,16 @@
 
 namespace rf::console
 {
-    using CommandFuncPtr = void(*)();
+    using CommandFuncPtr = void (*)();
 
     struct Command
     {
-        const char *name;
-        const char *help;
+        const char* name;
+        const char* help;
         CommandFuncPtr func;
 
-        inline static const auto init =
-            reinterpret_cast<void(__thiscall*)(Command* this_, const char* name, const char* help, CommandFuncPtr func)>(
-                0x00509A70);
+        inline static const auto init = reinterpret_cast<
+            void(__thiscall*)(Command* this_, const char* name, const char* help, CommandFuncPtr func)>(0x00509A70);
     };
     static_assert(sizeof(Command) == 0xC);
 
@@ -65,7 +64,7 @@ namespace rf::console
         output(s.c_str(), nullptr);
     }
 
-    //static auto& commands = addr_as_ref<ConsoleCommand*[30]>(0x01775530);
+    // static auto& commands = addr_as_ref<ConsoleCommand*[30]>(0x01775530);
     static auto& num_commands = addr_as_ref<int>(0x0177567C);
 
     static auto& run = addr_as_ref<int>(0x01775110);

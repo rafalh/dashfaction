@@ -20,8 +20,8 @@ namespace rf
         int obj_handle;
         int bitmap_handle;
         int is_liquid;
-        GFace *hit_face;
-        short *hit_face_v3d;
+        GFace* hit_face;
+        short* hit_face_v3d;
     };
     static_assert(sizeof(PCollisionOut) == 0x44);
 
@@ -63,8 +63,8 @@ namespace rf
     };
     static_assert(sizeof(PhysicsData) == 0x170);
 
-    static auto& physics_create_object = addr_as_ref<void(PhysicsData *pd, ObjectCreateInfo *oci)>(0x0049EC90);
-    static auto& physics_delete_object = addr_as_ref<void(PhysicsData *pd)>(0x0049F1D0);
+    static auto& physics_create_object = addr_as_ref<void(PhysicsData* pd, ObjectCreateInfo* oci)>(0x0049EC90);
+    static auto& physics_delete_object = addr_as_ref<void(PhysicsData* pd)>(0x0049F1D0);
 
     template<>
     inline void VArray<PCollisionSphere>::add(PCollisionSphere element)

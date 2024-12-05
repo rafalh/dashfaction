@@ -11,9 +11,10 @@
 #include "../bmpman/bmpman.h"
 #include "../bmpman/fmt_conv_templates.h"
 
-bool bm_convert_format(void* dst_bits_ptr, rf::bm::Format dst_fmt, const void* src_bits_ptr,
-                           rf::bm::Format src_fmt, int width, int height, int dst_pitch, int src_pitch,
-                           const uint8_t* palette)
+bool bm_convert_format(
+    void* dst_bits_ptr, rf::bm::Format dst_fmt, const void* src_bits_ptr, rf::bm::Format src_fmt, int width, int height,
+    int dst_pitch, int src_pitch, const uint8_t* palette
+)
 {
 #if DEBUG_PERF
     static auto& color_conv_perf = PerfAggregator::create("bm_convert_format");
@@ -23,9 +24,12 @@ bool bm_convert_format(void* dst_bits_ptr, rf::bm::Format dst_fmt, const void* s
         call_with_format(src_fmt, [=](auto s) {
             call_with_format(dst_fmt, [=](auto d) {
                 SurfacePixelFormatConverter<decltype(s)::value, decltype(d)::value> conv{
-                    src_bits_ptr, dst_bits_ptr,
-                    static_cast<size_t>(src_pitch), static_cast<size_t>(dst_pitch),
-                    static_cast<size_t>(width), static_cast<size_t>(height),
+                    src_bits_ptr,
+                    dst_bits_ptr,
+                    static_cast<size_t>(src_pitch),
+                    static_cast<size_t>(dst_pitch),
+                    static_cast<size_t>(width),
+                    static_cast<size_t>(height),
                     palette,
                 };
                 conv();
@@ -34,7 +38,10 @@ bool bm_convert_format(void* dst_bits_ptr, rf::bm::Format dst_fmt, const void* s
         return true;
     }
     catch (const std::exception& e) {
-        xlog::error("Pixel format conversion failed ({} -> {}): {}", static_cast<int>(src_fmt), static_cast<int>(dst_fmt), e.what());
+        xlog::error(
+            "Pixel format conversion failed ({} -> {}): {}", static_cast<int>(src_fmt), static_cast<int>(dst_fmt),
+            e.what()
+        );
         return false;
     }
 }
@@ -58,10 +65,8 @@ rf::Color bm_get_pixel(uint8_t* data, rf::bm::Format format, int stride_in_bytes
         PixelsReader<decltype(s)::value> rdr{ptr};
         PixelColor<rf::bm::FORMAT_8888_ARGB> color = rdr.read();
         result.set(
-            static_cast<uint8_t>(color.r.value),
-            static_cast<uint8_t>(color.g.value),
-            static_cast<uint8_t>(color.b.value),
-            static_cast<uint8_t>(color.a.value)
+            static_cast<uint8_t>(color.r.value), static_cast<uint8_t>(color.g.value),
+            static_cast<uint8_t>(color.b.value), static_cast<uint8_t>(color.a.value)
         );
     });
     return result;

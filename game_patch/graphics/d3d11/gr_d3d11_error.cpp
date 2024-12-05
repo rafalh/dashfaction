@@ -4,7 +4,9 @@
 
 namespace df::gr::d3d11
 {
-    #define GR_D3D11_ERROR_CASE(hr) case hr: return #hr;
+#define GR_D3D11_ERROR_CASE(hr) \
+    case hr:                    \
+        return #hr;
 
     static ID3D11Device* g_device;
 
@@ -19,7 +21,7 @@ namespace df::gr::d3d11
             GR_D3D11_ERROR_CASE(S_FALSE)
             GR_D3D11_ERROR_CASE(DXGI_ERROR_ACCESS_DENIED)
             GR_D3D11_ERROR_CASE(DXGI_ERROR_ACCESS_LOST)
-            //GR_D3D11_ERROR_CASE(DXGI_ERROR_ALREADY_EXISTS)
+            // GR_D3D11_ERROR_CASE(DXGI_ERROR_ALREADY_EXISTS)
             GR_D3D11_ERROR_CASE(DXGI_ERROR_CANNOT_PROTECT_CONTENT)
             GR_D3D11_ERROR_CASE(DXGI_ERROR_DEVICE_HUNG)
             GR_D3D11_ERROR_CASE(DXGI_ERROR_DEVICE_REMOVED)
@@ -47,7 +49,8 @@ namespace df::gr::d3d11
             // GR_D3D11_ERROR_CASE(D3D11_ERROR_DEFERRED_CONTEXT_MAP_WITHOUT_INITIAL_DISCARD)
             // GR_D3D11_ERROR_CASE(D3DERR_INVALIDCALL)
             // GR_D3D11_ERROR_CASE(D3DERR_WASSTILLDRAWING)
-            default: return "-";
+            default:
+                return "-";
         }
     }
 
@@ -59,10 +62,10 @@ namespace df::gr::d3d11
 
             ComPtr<ID3D11InfoQueue> info_queue;
             if (SUCCEEDED(debug->QueryInterface(__uuidof(ID3D11InfoQueue), (void**)&info_queue))) {
-    #ifndef NDEBUG
+#ifndef NDEBUG
                 info_queue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
                 info_queue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
-    #endif
+#endif
             }
         }
     }

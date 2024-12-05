@@ -92,7 +92,8 @@ bool should_swap_weapon_alt_fire(rf::Player* player)
     return false;
 }
 
-bool is_player_weapon_on(rf::Player* player, bool alt_fire) {
+bool is_player_weapon_on(rf::Player* player, bool alt_fire)
+{
     if (!player) {
         player = rf::local_player;
     }
@@ -115,39 +116,34 @@ FunHook<void(rf::Player*, bool, bool)> player_fire_primary_weapon_hook{
     },
 };
 
-CodeInjection stop_continous_primary_fire_patch{
-    0x00430EC5,
-    [](auto& regs) {
-        rf::Entity* entity = regs.esi;
-        if (is_player_weapon_on(entity->local_player, false)) {
-            regs.eip = 0x00430EDF;
-        }
-        else {
-            regs.eip = 0x00430EF2;
-        }
-    }
-};
+CodeInjection stop_continous_primary_fire_patch{0x00430EC5, [](auto& regs) {
+                                                    rf::Entity* entity = regs.esi;
+                                                    if (is_player_weapon_on(entity->local_player, false)) {
+                                                        regs.eip = 0x00430EDF;
+                                                    }
+                                                    else {
+                                                        regs.eip = 0x00430EF2;
+                                                    }
+                                                }};
 
-CodeInjection stop_continous_alternate_fire_patch{
-    0x00430F09,
-    [](auto& regs) {
-        rf::Entity* entity = regs.esi;
-        if (is_player_weapon_on(entity->local_player, true)) {
-            regs.eip = 0x00430F23;
-        }
-        else {
-            regs.eip = 0x00430F36;
-        }
-    }
-};
+CodeInjection stop_continous_alternate_fire_patch{0x00430F09, [](auto& regs) {
+                                                      rf::Entity* entity = regs.esi;
+                                                      if (is_player_weapon_on(entity->local_player, true)) {
+                                                          regs.eip = 0x00430F23;
+                                                      }
+                                                      else {
+                                                          regs.eip = 0x00430F36;
+                                                      }
+                                                  }};
 
 ConsoleCommand2 swap_assault_rifle_controls_cmd{
     "swap_assault_rifle_controls",
     []() {
         g_game_config.swap_assault_rifle_controls = !g_game_config.swap_assault_rifle_controls;
         g_game_config.save();
-        rf::console::print("Swap assault rifle controls: {}",
-                     g_game_config.swap_assault_rifle_controls ? "enabled" : "disabled");
+        rf::console::print(
+            "Swap assault rifle controls: {}", g_game_config.swap_assault_rifle_controls ? "enabled" : "disabled"
+        );
     },
     "Swap Assault Rifle controls",
 };
@@ -157,8 +153,7 @@ ConsoleCommand2 swap_grenade_controls_cmd{
     []() {
         g_game_config.swap_grenade_controls = !g_game_config.swap_grenade_controls;
         g_game_config.save();
-        rf::console::print("Swap grenade controls: {}",
-                     g_game_config.swap_grenade_controls ? "enabled" : "disabled");
+        rf::console::print("Swap grenade controls: {}", g_game_config.swap_grenade_controls ? "enabled" : "disabled");
     },
     "Swap grenade controls",
 };
@@ -202,15 +197,12 @@ FunHook<void(rf::Player*, rf::ControlConfigAction, bool)> player_execute_action_
     },
 };
 
-FunHook<bool(rf::Player*)> player_is_local_hook{
-    0x004A68D0,
-    [](rf::Player* player) {
-        if (multi_spectate_is_spectating()) {
-            return false;
-        }
-        return player_is_local_hook.call_target(player);
-    }
-};
+FunHook<bool(rf::Player*)> player_is_local_hook{0x004A68D0, [](rf::Player* player) {
+                                                    if (multi_spectate_is_spectating()) {
+                                                        return false;
+                                                    }
+                                                    return player_is_local_hook.call_target(player);
+                                                }};
 
 bool player_is_dead_and_not_spectating(rf::Player* player)
 {
@@ -260,18 +252,21 @@ ConsoleCommand2 damage_screen_flash_cmd{
     []() {
         g_game_config.damage_screen_flash = !g_game_config.damage_screen_flash;
         g_game_config.save();
-        rf::console::print("Damage screen flash effect is {}", g_game_config.damage_screen_flash ? "enabled" : "disabled");
+        rf::console::print(
+            "Damage screen flash effect is {}", g_game_config.damage_screen_flash ? "enabled" : "disabled"
+        );
     },
     "Toggle damage screen flash effect",
 };
 
 CallHook<void(rf::VMesh*, rf::Vector3*, rf::Matrix3*, void*)> player_cockpit_vmesh_render_hook{
     0x004A7907,
-    [](rf::VMesh *vmesh, rf::Vector3 *pos, rf::Matrix3 *orient, void *params) {
+    [](rf::VMesh* vmesh, rf::Vector3* pos, rf::Matrix3* orient, void* params) {
         rf::Matrix3 new_orient = *orient;
 
         if (string_equals_ignore_case(rf::vmesh_get_name(vmesh), "driller01.vfx")) {
-            float m = static_cast<float>(rf::gr::screen_width()) / static_cast<float>(rf::gr::screen_height()) / (4.0 / 3.0);
+            float m =
+                static_cast<float>(rf::gr::screen_width()) / static_cast<float>(rf::gr::screen_height()) / (4.0 / 3.0);
             new_orient.rvec *= m;
         }
 
@@ -282,7 +277,7 @@ CallHook<void(rf::VMesh*, rf::Vector3*, rf::Matrix3*, void*)> player_cockpit_vme
 CodeInjection sr_load_player_weapon_anims_injection{
     0x004B4F9E,
     [](auto& regs) {
-        rf::Entity *ep = regs.ebp;
+        rf::Entity* ep = regs.ebp;
         static auto& entity_update_weapon_animations = addr_as_ref<void(void*, int)>(0x0042AB20);
         entity_update_weapon_animations(ep, ep->ai.current_primary_weapon);
     },

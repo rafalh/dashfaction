@@ -3,10 +3,7 @@
 #include "LauncherApp.h"
 #include <wxx_commondlg.h>
 
-OptionsInterfaceDlg::OptionsInterfaceDlg(GameConfig& conf)
-	: CDialog(IDD_OPTIONS_INTERFACE), m_conf(conf)
-{
-}
+OptionsInterfaceDlg::OptionsInterfaceDlg(GameConfig& conf) : CDialog(IDD_OPTIONS_INTERFACE), m_conf(conf) {}
 
 BOOL OptionsInterfaceDlg::OnInitDialog()
 {
@@ -36,7 +33,9 @@ void OptionsInterfaceDlg::InitToolTip()
     m_tool_tip.AddTool(GetDlgItem(IDC_BIG_HUD_CHECK), "Make HUD bigger in the game");
     m_tool_tip.AddTool(GetDlgItem(IDC_SCOREBOARD_ANIM_CHECK), "Scoreboard open/close animations");
     m_tool_tip.AddTool(GetDlgItem(IDC_FPS_COUNTER_CHECK), "Enable FPS counter in right-top corner of the screen");
-    m_tool_tip.AddTool(GetDlgItem(IDC_KEEP_LAUNCHER_OPEN_CHECK), "Keep launcher window open after game or editor launch");
+    m_tool_tip.AddTool(
+        GetDlgItem(IDC_KEEP_LAUNCHER_OPEN_CHECK), "Keep launcher window open after game or editor launch"
+    );
 }
 
 void OptionsInterfaceDlg::OnSave()

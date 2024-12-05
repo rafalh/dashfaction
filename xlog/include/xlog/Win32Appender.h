@@ -5,9 +5,9 @@
 namespace xlog
 {
 
-class Win32Appender : public Appender
-{
-    void append(Level level, const std::string& formatted_message) override;
-};
+    class Win32Appender : public Appender
+    {
+        void append(Level level, const std::string& formatted_message) override;
+    };
 
 }

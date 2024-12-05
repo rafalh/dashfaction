@@ -13,8 +13,10 @@ static CrashHandlerConfig g_config;
 
 void CrashHandlerStubProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD thread_id)
 {
-    xlog::error("Unhandled exception: ExceptionAddress=0x{} ExceptionCode=0x{:x}",
-        exception_ptrs->ExceptionRecord->ExceptionAddress, exception_ptrs->ExceptionRecord->ExceptionCode);
+    xlog::error(
+        "Unhandled exception: ExceptionAddress=0x{} ExceptionCode=0x{:x}",
+        exception_ptrs->ExceptionRecord->ExceptionAddress, exception_ptrs->ExceptionRecord->ExceptionCode
+    );
     for (unsigned i = 0; i < exception_ptrs->ExceptionRecord->NumberParameters; ++i)
         xlog::error("ExceptionInformation[{}]=0x{:x}", i, exception_ptrs->ExceptionRecord->ExceptionInformation[i]);
     xlog::flush();
@@ -22,8 +24,10 @@ void CrashHandlerStubProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD 
     HANDLE process_handle = nullptr;
     HANDLE event_handle = nullptr;
     do {
-        if (!DuplicateHandle(GetCurrentProcess(), GetCurrentProcess(), GetCurrentProcess(), &process_handle, 0, TRUE,
-                             DUPLICATE_SAME_ACCESS))
+        if (!DuplicateHandle(
+                GetCurrentProcess(), GetCurrentProcess(), GetCurrentProcess(), &process_handle, 0, TRUE,
+                DUPLICATE_SAME_ACCESS
+            ))
             break;
 
         SECURITY_ATTRIBUTES sec_attribs = {sizeof(sec_attribs), nullptr, TRUE};
@@ -36,13 +40,20 @@ void CrashHandlerStubProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD 
         startup_info.cb = sizeof(startup_info);
 
         WCHAR cmd_line[256];
-        std::swprintf(cmd_line, std::size(cmd_line), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p 0x%p", g_module_path,
-                      exception_ptrs, process_handle, thread_id, event_handle, &g_config);
+        std::swprintf(
+            cmd_line, std::size(cmd_line), L"%ls\\CrashHandler.exe 0x%p 0x%p %lu 0x%p 0x%p", g_module_path,
+            exception_ptrs, process_handle, thread_id, event_handle, &g_config
+        );
         xlog::infof("Running crash handler: %ls", cmd_line);
 
         PROCESS_INFORMATION proc_info;
-        if (!CreateProcessW(nullptr, cmd_line, nullptr, nullptr, TRUE, 0, nullptr, nullptr, &startup_info, &proc_info)) {
-            xlog::errorf("Failed to start CrashHandler process - CreateProcessW %ls failed with error %lu", cmd_line, GetLastError());
+        if (!CreateProcessW(
+                nullptr, cmd_line, nullptr, nullptr, TRUE, 0, nullptr, nullptr, &startup_info, &proc_info
+            )) {
+            xlog::errorf(
+                "Failed to start CrashHandler process - CreateProcessW %ls failed with error %lu", cmd_line,
+                GetLastError()
+            );
             break;
         }
 
@@ -64,8 +75,10 @@ static LONG WINAPI CrashHandlerExceptionFilter(PEXCEPTION_POINTERS exception_ptr
     return g_old_exception_filter ? g_old_exception_filter(exception_ptrs) : EXCEPTION_EXECUTE_HANDLER;
 }
 
-static void InvalidParameterHandler(const wchar_t* expression, const wchar_t* function, const wchar_t* file,
-                                    unsigned line, [[maybe_unused]] uintptr_t reserved)
+static void InvalidParameterHandler(
+    const wchar_t* expression, const wchar_t* function, const wchar_t* file, unsigned line,
+    [[maybe_unused]] uintptr_t reserved
+)
 {
     xlog::errorf("Invalid parameter detected in function %ls. File: %ls Line: %d", function, file, line);
     xlog::errorf("Expression: %ls", expression);

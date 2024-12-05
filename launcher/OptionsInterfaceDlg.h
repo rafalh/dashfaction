@@ -8,7 +8,7 @@
 class OptionsInterfaceDlg : public CDialog
 {
 public:
-	OptionsInterfaceDlg(GameConfig& conf);
+    OptionsInterfaceDlg(GameConfig& conf);
     void OnSave();
 
 protected:

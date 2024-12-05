@@ -53,8 +53,7 @@ class AddrCaller
     uintptr_t addr_;
 
 public:
-    constexpr AddrCaller(uintptr_t addr) : addr_(addr)
-    {}
+    constexpr AddrCaller(uintptr_t addr) : addr_(addr) {}
 
     template<typename RetVal = void, typename... A>
     constexpr RetVal c_call(A... args)

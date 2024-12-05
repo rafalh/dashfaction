@@ -9,8 +9,8 @@ namespace rf
 
     struct Clutter : Object
     {
-        struct Clutter *next;
-        struct Clutter *prev;
+        struct Clutter* next;
+        struct Clutter* prev;
         ClutterInfo* info;
         int info_index;
         int corpse_index;
@@ -20,7 +20,7 @@ namespace rf
         int dmg_type_that_killed_me;
         Timestamp emitter_kill_timestamp;
         Timestamp corpse_create_timestamp;
-        VMesh *corpse_vmesh_handle;
+        VMesh* corpse_vmesh_handle;
         int current_skin_index;
         VArray<int> links;
         bool already_spawned_glass;
@@ -36,11 +36,10 @@ namespace rf
         MONITOR_STATE_STATIC = 0x2,
     };
 
-
     struct Monitor
     {
-        Monitor *next;
-        Monitor *prev;
+        Monitor* next;
+        Monitor* prev;
         int state;
         int clutter_handle;
         int camera_handle;
@@ -66,5 +65,5 @@ namespace rf
     static auto& clutter_list = addr_as_ref<Clutter>(0x005C9360);
     static auto& monitor_list = addr_as_ref<Monitor>(0x005C98A8);
 
-    static auto& clutter_restore_mesh = addr_as_ref<void(Clutter *clutter, const char *mesh_name)>(0x00410ED0);
+    static auto& clutter_restore_mesh = addr_as_ref<void(Clutter* clutter, const char* mesh_name)>(0x00410ED0);
 }

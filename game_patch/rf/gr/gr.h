@@ -15,8 +15,7 @@ namespace rf::gr
         ubyte blue;
         ubyte alpha;
 
-        constexpr Color(ubyte r, ubyte g, ubyte b, ubyte a = 255) :
-            red(r), green(g), blue(b), alpha(a) {}
+        constexpr Color(ubyte r, ubyte g, ubyte b, ubyte a = 255) : red(r), green(g), blue(b), alpha(a) {}
 
         void set(ubyte r, ubyte g, ubyte b, ubyte a)
         {
@@ -32,7 +31,7 @@ namespace rf::gr
     struct BaseVertex
     {
         Vector3 world_pos; // world or clip space
-        float sx; // screen space
+        float sx;          // screen space
         float sy;
         float sw;
         ubyte codes;
@@ -130,7 +129,10 @@ namespace rf::gr
     public:
         constexpr Mode() = default;
         constexpr Mode(TextureSource ts, ColorSource cs, AlphaSource as, AlphaBlend ab, ZbufferType zbt, FogType ft) :
-            value((ts << ts_shift) | (cs << cs_shift) | (as << as_shift) | (ab << ab_shift) | (zbt << zbt_shift) | (ft << ft_shift))
+            value(
+                (ts << ts_shift) | (cs << cs_shift) | (as << as_shift) | (ab << ab_shift) | (zbt << zbt_shift) |
+                (ft << ft_shift)
+            )
         {}
 
         [[nodiscard]] bool operator==(const Mode& other) const = default;
@@ -274,7 +276,7 @@ namespace rf::gr
         int bm_handle;
         int section;
         bm::Format format;
-        uint8_t *data;
+        uint8_t* data;
         int w;
         int h;
         int stride_in_bytes;
@@ -338,16 +340,23 @@ namespace rf::gr
     static auto& tcache_remove_ref = addr_as_ref<void(int bm_handle)>(0x0050E870);
     static auto& close = addr_as_ref<void()>(0x0050CBE0);
     static auto& set_gamma = addr_as_ref<void(float)>(0x0050CE70);
-    static auto& set_texture = addr_as_ref<void (int bitmap_handle, int bitmap_handle2)>(0x0050D060);
-    static auto& tmapper = addr_as_ref<void (int nv, Vertex **verts, TMapperFlags vertex_attributes, Mode mode)>(0x0050DF80);
+    static auto& set_texture = addr_as_ref<void(int bitmap_handle, int bitmap_handle2)>(0x0050D060);
+    static auto& tmapper =
+        addr_as_ref<void(int nv, Vertex** verts, TMapperFlags vertex_attributes, Mode mode)>(0x0050DF80);
     static auto& lighting_enabled = addr_as_ref<bool()>(0x004DB8B0);
-    static auto& cull_bounding_box = addr_as_ref<bool (const Vector3& mn, const Vector3& mx)>(0x00518750);
-    static auto& poly = addr_as_ref<bool (int num, Vertex **vertices, TMapperFlags vertex_attributes, Mode mode, bool constant_sw, float sw)>(0x005159A0);
-    static auto& rotate_vertex = addr_as_ref<ubyte (Vertex *vertex_out, const Vector3& vec_in)>(0x00518360);
-    static auto& world_poly = addr_as_ref<bool (int bm_handle, int n_verts, const Vector3* verts, const Vector2* uvs, Mode mode, const Color& color)>(0x00517110);
+    static auto& cull_bounding_box = addr_as_ref<bool(const Vector3& mn, const Vector3& mx)>(0x00518750);
+    static auto& poly = addr_as_ref<
+        bool(int num, Vertex** vertices, TMapperFlags vertex_attributes, Mode mode, bool constant_sw, float sw)>(
+        0x005159A0
+    );
+    static auto& rotate_vertex = addr_as_ref<ubyte(Vertex* vertex_out, const Vector3& vec_in)>(0x00518360);
+    static auto& world_poly = addr_as_ref<
+        bool(int bm_handle, int n_verts, const Vector3* verts, const Vector2* uvs, Mode mode, const Color& color)>(
+        0x00517110
+    );
     static auto& start_instance = addr_as_ref<void(const Vector3& pos, const Matrix3& orient)>(0x00517F00);
     static auto& stop_instance = addr_as_ref<void()>(0x00517F20);
-    static auto& project_vertex = addr_as_ref<ubyte (Vertex *p)>(0x00518440);
+    static auto& project_vertex = addr_as_ref<ubyte(Vertex* p)>(0x00518440);
 
     inline void set_color(ubyte r, ubyte g, ubyte b, ubyte a = screen.current_color.alpha)
     {
@@ -384,7 +393,10 @@ namespace rf::gr
         AddrCaller{0x0050D0A0}.c_call(bm_handle, x, y, w, h, sx, sy, mode);
     }
 
-    inline void bitmap_scaled(int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x = false, bool flip_y = false, Mode mode = bitmap_wrap_mode)
+    inline void bitmap_scaled(
+        int bm_handle, int x, int y, int w, int h, int sx, int sy, int sw, int sh, bool flip_x = false,
+        bool flip_y = false, Mode mode = bitmap_wrap_mode
+    )
     {
         AddrCaller{0x0050D250}.c_call(bm_handle, x, y, w, h, sx, sy, sw, sh, flip_x, flip_y, mode);
     }

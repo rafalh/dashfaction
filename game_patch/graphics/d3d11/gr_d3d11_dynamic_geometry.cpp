@@ -11,7 +11,9 @@ namespace df::gr::d3d11
     constexpr int batch_max_vertex = 6000;
     constexpr int batch_max_index = 10000;
 
-    DynamicGeometryRenderer::DynamicGeometryRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context) :
+    DynamicGeometryRenderer::DynamicGeometryRenderer(
+        ComPtr<ID3D11Device> device, ShaderManager& shader_manager, RenderContext& render_context
+    ) :
         device_{device}, render_context_(render_context),
         vertex_ring_buffer_{batch_max_vertex, D3D11_BIND_VERTEX_BUFFER, device_, render_context.device_context()},
         index_ring_buffer_{batch_max_index, D3D11_BIND_INDEX_BUFFER, device_, render_context.device_context()}
@@ -29,8 +31,10 @@ namespace df::gr::d3d11
         }
         auto [start_index, num_index] = index_ring_buffer_.submit();
 
-        xlog::trace("Drawing dynamic geometry num_vertex {} num_index {} texture {}",
-            num_vertex, num_index, rf::bm::get_filename(state_.textures[0]));
+        xlog::trace(
+            "Drawing dynamic geometry num_vertex {} num_index {} texture {}", num_vertex, num_index,
+            rf::bm::get_filename(state_.textures[0])
+        );
 
         render_context_.set_vertex_buffer(vertex_ring_buffer_.get_buffer(), sizeof(GpuTransformedVertex));
         render_context_.set_index_buffer(index_ring_buffer_.get_buffer());
@@ -91,7 +95,9 @@ namespace df::gr::d3d11
         };
     }
 
-    void DynamicGeometryRenderer::add_poly(int nv, const gr::Vertex **vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, gr::Mode mode)
+    void DynamicGeometryRenderer::add_poly(
+        int nv, const gr::Vertex** vertices, int vertex_attributes, const std::array<int, 2>& tex_handles, gr::Mode mode
+    )
     {
         int num_index = (nv - 2) * 3;
         if (nv > batch_max_vertex || num_index > batch_max_index) {
@@ -140,7 +146,8 @@ namespace df::gr::d3d11
             out_vert.diffuse = pack_color(color);
             out_vert.u0 = in_vert.u1;
             out_vert.v0 = in_vert.v1;
-            //xlog::info("vert[{}]: pos <{:.2f} {:.2f} {:.2f}> uv <{:.2f} {:.2f}>", i, out_vert.x, out_vert.y, in_vert.sw, out_vert.u0, out_vert.v0);
+            // xlog::info("vert[{}]: pos <{:.2f} {:.2f} {:.2f}> uv <{:.2f} {:.2f}>", i, out_vert.x, out_vert.y,
+            // in_vert.sw, out_vert.u0, out_vert.v0);
 
             if (i >= 2) {
                 *(gpu_ind_ptr++) = base_vertex;
@@ -150,7 +157,7 @@ namespace df::gr::d3d11
         }
     }
 
-    void DynamicGeometryRenderer::line(const gr::Vertex **vertices, rf::gr::Mode mode, bool is_3d)
+    void DynamicGeometryRenderer::line(const gr::Vertex** vertices, rf::gr::Mode mode, bool is_3d)
     {
         constexpr int num_verts = 2;
         constexpr int num_inds = 2;
@@ -198,7 +205,10 @@ namespace df::gr::d3d11
         line(verts_ptrs, mode, false);
     }
 
-    void DynamicGeometryRenderer::bitmap(int bm_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x, bool flip_y, gr::Mode mode)
+    void DynamicGeometryRenderer::bitmap(
+        int bm_handle, float x, float y, float w, float h, float sx, float sy, float sw, float sh, bool flip_x,
+        bool flip_y, gr::Mode mode
+    )
     {
         xlog::trace("Drawing bitmap");
         int bm_w, bm_h;

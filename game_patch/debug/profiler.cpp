@@ -161,9 +161,7 @@ private:
 class BaseProfiler
 {
 public:
-    BaseProfiler(const char* name) :
-        m_name(name)
-    {}
+    BaseProfiler(const char* name) : m_name(name) {}
     virtual ~BaseProfiler() = default;
 
     [[nodiscard]] const char* get_name() const
@@ -207,7 +205,7 @@ protected:
     void leave()
     {
         if (!m_is_cpu_in_range) {
-            //xlog::warn("Leaving without entering in CallProfiler");
+            // xlog::warn("Leaving without entering in CallProfiler");
             return;
         }
         m_is_cpu_in_range = false;
@@ -220,12 +218,9 @@ class AddrRangeProfiler : public BaseProfiler
 {
 public:
     AddrRangeProfiler(uintptr_t enter_addr, uintptr_t leave_addr, const char* name) :
-        BaseProfiler(name),
-        m_enter_inject(new CodeInjection{enter_addr, [this]() { enter(); }}),
-        m_leave_inject(new CodeInjection{leave_addr, [this]() { leave(); }}),
-        m_addr(enter_addr)
-    {
-    }
+        BaseProfiler(name), m_enter_inject(new CodeInjection{enter_addr, [this]() { enter(); }}),
+        m_leave_inject(new CodeInjection{leave_addr, [this]() { leave(); }}), m_addr(enter_addr)
+    {}
 
     [[nodiscard]] uintptr_t get_addr() const
     {
@@ -249,8 +244,7 @@ class CallProfiler : public BaseProfiler
 public:
     CallProfiler(uintptr_t addr, const char* name) :
         BaseProfiler(name), m_call_hook(new CallPrePostHook{addr, [this]() { enter(); }, [this]() { leave(); }})
-    {
-    }
+    {}
 
     void install() override
     {
@@ -265,10 +259,8 @@ class FunProfiler : public BaseProfiler
 {
 public:
     FunProfiler(uintptr_t fun_addr, const char* name) :
-        BaseProfiler(name),
-        m_fun_hook(new FunPrePostHook{fun_addr, [this]() { enter(); }, [this]() { leave(); }})
-    {
-    }
+        BaseProfiler(name), m_fun_hook(new FunPrePostHook{fun_addr, [this]() { enter(); }, [this]() { leave(); }})
+    {}
 
     void install() override
     {
@@ -283,7 +275,8 @@ std::vector<std::unique_ptr<BaseProfiler>> g_profilers;
 bool g_profiler_visible = false;
 std::ofstream g_profiler_log;
 
-void install_profiler_patches() {
+void install_profiler_patches()
+{
     static bool installed = false;
     if (!installed) {
         for (auto& p : g_profilers) {
@@ -301,13 +294,8 @@ void profiler_log_init()
     }
     g_profiler_log << "frametime;";
     for (auto& p : g_profilers) {
-        g_profiler_log
-            << p->get_name() << " avg frame time;"
-            << p->get_name() << " num calls;"
-            << p->get_name() << " avg time;"
-            << p->get_name() << " min time;"
-            << p->get_name() << " max time;"
-            ;
+        g_profiler_log << p->get_name() << " avg frame time;" << p->get_name() << " num calls;" << p->get_name()
+                       << " avg time;" << p->get_name() << " min time;" << p->get_name() << " max time;";
     }
     g_profiler_log << '\n';
 }
@@ -320,13 +308,9 @@ void profiler_log_dump()
     g_profiler_log << rf::frametime << ';';
     for (auto& p : g_profilers) {
         const auto& stats = p->stats();
-        g_profiler_log
-            << stats.last_frames_summed_times().avg() << ';'
-            << stats.current_frame_times().count() << ';'
-            << stats.last_times().avg() << ';'
-            << stats.current_frame_times().min().value_or(-1) << ';'
-            << stats.current_frame_times().max().value_or(-1) << ';'
-            ;
+        g_profiler_log << stats.last_frames_summed_times().avg() << ';' << stats.current_frame_times().count() << ';'
+                       << stats.last_times().avg() << ';' << stats.current_frame_times().min().value_or(-1) << ';'
+                       << stats.current_frame_times().max().value_or(-1) << ';';
     }
     g_profiler_log << '\n';
 }
@@ -374,8 +358,10 @@ ConsoleCommand2 profiler_print_cmd{
     []() {
         for (const auto& p : g_profilers) {
             const auto& stats = p->stats();
-            rf::console::print("{}: avg {} avg_frame {}", p->get_name(),
-                stats.last_times().avg(), stats.last_frames_summed_times().avg());
+            rf::console::print(
+                "{}: avg {} avg_frame {}", p->get_name(), stats.last_times().avg(),
+                stats.last_frames_summed_times().avg()
+            );
         }
     },
 };
@@ -385,8 +371,10 @@ ConsoleCommand2 perf_dump_cmd{
     []() {
         rf::console::print("Number of performance aggregators: {}", PerfAggregator::get_instances().size());
         for (const auto& ptr : PerfAggregator::get_instances()) {
-            rf::console::print("{}: calls {}, duration {} us, avg {} us", ptr->get_name(),
-                ptr->get_calls(), ptr->get_total_duration_us(), ptr->get_avg_duration_us());
+            rf::console::print(
+                "{}: calls {}, duration {} us, avg {} us", ptr->get_name(), ptr->get_calls(),
+                ptr->get_total_duration_us(), ptr->get_avg_duration_us()
+            );
         }
     },
 };
@@ -463,8 +451,8 @@ void profiler_init()
     add_profiler<FunProfiler>(0x004D33D0, "       details");
     add_profiler<AddrRangeProfiler>(0x00494B90, 0x00494D3A, "      particles"); // CRASH
 
-    //add_profiler<AddrRangeProfiler>(0x004D34AB, 0x004D34B1, "      any render handler");
-    //add_profiler<CallProfiler>(0x004D3499, "      prepare lights");
+    // add_profiler<AddrRangeProfiler>(0x004D34AB, 0x004D34B1, "      any render handler");
+    // add_profiler<CallProfiler>(0x004D3499, "      prepare lights");
 
     add_profiler<AddrRangeProfiler>(0x00431FFD, 0x00432F55, "  after portal renderer");
     add_profiler<CallProfiler>(0x0043233E, "    glare flares");
@@ -476,7 +464,6 @@ void profiler_init()
     add_profiler<FunProfiler>(0x0048A400, "obj_hit_callback");
     add_profiler<FunProfiler>(0x004D3350, "set_currently_rendered_room");
     add_profiler<FunProfiler>(0x004E6780, "g_proctex_update_water_1");
-
 
     profiler_cmd.register_cmd();
     profiler_log_cmd.register_cmd();
@@ -502,8 +489,10 @@ void profiler_draw_ui()
         for (auto& p : g_profilers) {
             const auto& stats = p->stats();
             if (stats.current_frame_times().count() > 1) {
-                dbg_box.printf(p->get_name(), "%d us (%d calls, single %d us)", stats.last_frames_summed_times().avg(),
-                    stats.current_frame_times().count(), stats.last_times().avg());
+                dbg_box.printf(
+                    p->get_name(), "%d us (%d calls, single %d us)", stats.last_frames_summed_times().avg(),
+                    stats.current_frame_times().count(), stats.last_times().avg()
+                );
             }
             else {
                 dbg_box.printf(p->get_name(), "%d us", stats.last_frames_summed_times().avg());

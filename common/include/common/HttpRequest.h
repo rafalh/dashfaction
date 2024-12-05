@@ -20,7 +20,7 @@ public:
             InternetCloseHandle(m_handle);
     }
 
-    InternetHandle(const InternetHandle&) = delete; // copy constructor
+    InternetHandle(const InternetHandle&) = delete;            // copy constructor
     InternetHandle& operator=(const InternetHandle&) = delete; // assignment operator
 
     InternetHandle(InternetHandle&& other) noexcept : // move constructor
@@ -33,7 +33,7 @@ public:
         return *this;
     }
 
-    InternetHandle &operator=(HINTERNET handle)
+    InternetHandle& operator=(HINTERNET handle)
     {
         if (m_handle)
             InternetCloseHandle(m_handle);

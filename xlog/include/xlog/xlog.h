@@ -2,7 +2,7 @@
 
 // Define helper macro
 #ifdef __GNUC__
-#define XLOG_ATTRIBUTE_FORMAT_PRINTF(format_arg, rest_arg) __attribute__ ((format (printf, format_arg, rest_arg)))
+#define XLOG_ATTRIBUTE_FORMAT_PRINTF(format_arg, rest_arg) __attribute__((format(printf, format_arg, rest_arg)))
 #else
 #define XLOG_ATTRIBUTE_FORMAT_PRINTF(format_arg, rest_arg)
 #endif
@@ -27,8 +27,8 @@ namespace xlog
     }
 
 #ifdef XLOG_PRINTF
-    inline void log(Level level, const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3);
-    inline void log(Level level, const char *format, ...)
+    inline void log(Level level, const char* format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(2, 3);
+    inline void log(Level level, const char* format, ...)
     {
         std::va_list args;
         va_start(args, format);
@@ -51,8 +51,8 @@ namespace xlog
     }
 
 #ifdef XLOG_PRINTF
-    inline void errorf(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
-    inline void errorf(const char *format, ...)
+    inline void errorf(const char* format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+    inline void errorf(const char* format, ...)
     {
         std::va_list args;
         va_start(args, format);
@@ -75,8 +75,8 @@ namespace xlog
     }
 
 #ifdef XLOG_PRINTF
-    inline void warnf(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
-    inline void warnf(const char *format, ...)
+    inline void warnf(const char* format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+    inline void warnf(const char* format, ...)
     {
         std::va_list args;
         va_start(args, format);
@@ -99,8 +99,8 @@ namespace xlog
     }
 
 #ifdef XLOG_PRINTF
-    inline void infof(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
-    inline void infof(const char *format, ...)
+    inline void infof(const char* format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+    inline void infof(const char* format, ...)
     {
         std::va_list args;
         va_start(args, format);
@@ -123,8 +123,8 @@ namespace xlog
     }
 
 #ifdef XLOG_PRINTF
-    inline void debugf(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
-    inline void debugf(const char *format, ...)
+    inline void debugf(const char* format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+    inline void debugf(const char* format, ...)
     {
         std::va_list args;
         va_start(args, format);
@@ -141,7 +141,7 @@ namespace xlog
 #endif
 
     template<typename... Args>
-    inline void tracef(const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
+    inline void tracef(const char* format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(1, 2);
 #ifndef XLOG_DISCARD_TRACE
     template<typename... Args>
     inline void trace(std::format_string<Args...> fmt, Args&&... args)
@@ -150,7 +150,7 @@ namespace xlog
     }
 
 #ifdef XLOG_PRINTF
-    inline void tracef(const char *format, ...)
+    inline void tracef(const char* format, ...)
     {
         std::va_list args;
         va_start(args, format);
@@ -160,14 +160,10 @@ namespace xlog
 #endif
 
 #else
-    inline void trace([[ maybe_unused ]] const char *format, ...)
-    {
-    }
+    inline void trace([[maybe_unused]] const char* format, ...) {}
 
 #ifdef XLOG_PRINTF
-    inline void tracef([[ maybe_unused ]] const char *format, ...)
-    {
-    }
+    inline void tracef([[maybe_unused]] const char* format, ...) {}
 #endif
 
 #endif
@@ -198,13 +194,13 @@ namespace xlog
 #define INFO(...) xlog::info(__VA_ARGS__)
 #define TRACE(...) xlog::trace(__VA_ARGS__)
 
-#define LOG_ONCE(lvl, ...) \
-    do { \
+#define LOG_ONCE(lvl, ...)        \
+    do {                          \
         static bool skip = false; \
-        if (!skip) {\
-            lvl(__VA_ARGS__); \
-            skip = true; \
-        } \
+        if (!skip) {              \
+            lvl(__VA_ARGS__);     \
+            skip = true;          \
+        }                         \
     } while (false)
 #define ERR_ONCE(...) LOG_ONCE(xlog::error, __VA_ARGS__)
 #define WARN_ONCE(...) LOG_ONCE(xlog::warn, __VA_ARGS__)

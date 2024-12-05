@@ -49,7 +49,6 @@ struct GameConfig
     CfgVar<bool> nearest_texture_filtering = false;
     CfgVar<unsigned> msaa = 0;
 
-
     CfgVar<bool> high_scanner_res = true;
     CfgVar<bool> high_monitor_res = true;
     CfgVar<bool> true_color_textures = true;
@@ -74,7 +73,9 @@ struct GameConfig
     static constexpr unsigned default_update_rate = 200000; // T1/LAN in stock launcher
     CfgVar<unsigned> update_rate = default_update_rate;
 
-    CfgVar<unsigned> force_port{0, [](auto val) { return std::min<unsigned>(val, std::numeric_limits<uint16_t>::max()); }};
+    CfgVar<unsigned> force_port{0, [](auto val) {
+                                    return std::min<unsigned>(val, std::numeric_limits<uint16_t>::max());
+                                }};
 
     // Input
     CfgVar<bool> direct_input = false;

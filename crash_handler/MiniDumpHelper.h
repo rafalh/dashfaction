@@ -42,6 +42,6 @@ public:
 
 private:
     bool is_data_section_needed(const WCHAR* module_name);
-    static BOOL CALLBACK mini_dump_callback(PVOID param, const PMINIDUMP_CALLBACK_INPUT input,
-                                            PMINIDUMP_CALLBACK_OUTPUT output);
+    static BOOL CALLBACK
+    mini_dump_callback(PVOID param, const PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output);
 };

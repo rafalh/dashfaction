@@ -24,7 +24,9 @@ int CrashReportApp::Run()
     Win32xx::LoadCommonControls();
 
     // Create the report
-    ProgressDlg prepare_report_dlg("Preparing crash report... Please wait.", [&, this]() { PrepareReport(cmd_line_info); });
+    ProgressDlg prepare_report_dlg("Preparing crash report... Please wait.", [&, this]() {
+        PrepareReport(cmd_line_info);
+    });
     prepare_report_dlg.DoModal();
     prepare_report_dlg.ThrowIfError();
 
@@ -44,15 +46,17 @@ int CrashReportApp::Run()
         ProgressDlg send_report_dlg("Sending crash report... Please wait.", [this]() { SendReport(); });
         send_report_dlg.DoModal();
         send_report_dlg.ThrowIfError();
-        Message(nullptr, "Crash report has been sent. Thank you!", nullptr,
-                MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL);
+        Message(
+            nullptr, "Crash report has been sent. Thank you!", nullptr,
+            MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TASKMODAL
+        );
     }
 
     return 0;
 }
 
-void CrashReportApp::ArchiveReport(const char* crash_dump_filename, const char* exc_info_filename) try
-{
+void CrashReportApp::ArchiveReport(const char* crash_dump_filename, const char* exc_info_filename)
+try {
     std::string output_dir = m_config.output_dir;
     CreateDirectoryA(output_dir.c_str(), nullptr);
 
@@ -61,16 +65,14 @@ void CrashReportApp::ArchiveReport(const char* crash_dump_filename, const char* 
     zip.add_file(crash_dump_filename, "minidump.dmp");
     zip.add_file(exc_info_filename, "exception.txt");
     const char* log_file_name = "app.log";
-    const char* last_slash_ptr = std::max(
-        std::strrchr(m_config.log_file, '\\'),
-        std::strrchr(m_config.log_file, '/')
-    );
+    const char* last_slash_ptr = std::max(std::strrchr(m_config.log_file, '\\'), std::strrchr(m_config.log_file, '/'));
     if (last_slash_ptr) {
         log_file_name = last_slash_ptr + 1;
     }
     try {
         zip.add_file(m_config.log_file, log_file_name);
-    } catch (...) {
+    }
+    catch (...) {
         // log file may not exist yet - ignore exception
     }
     zip.close();
@@ -100,8 +102,8 @@ std::string CrashReportApp::GetArchivedReportFilePath() const
     return archive_path_name;
 }
 
-void CrashReportApp::PrepareReport(const CommandLineInfo& cmd_line_info) try
-{
+void CrashReportApp::PrepareReport(const CommandLineInfo& cmd_line_info)
+try {
     auto* exception_ptrs = cmd_line_info.GetExceptionPtrs();
     HANDLE process_handle = cmd_line_info.GetProcessHandle();
     auto thread_id = cmd_line_info.GetThreadId();
@@ -141,8 +143,8 @@ catch (...) {
     std::throw_with_nested(std::runtime_error("failed to prepare crash report"));
 }
 
-void CrashReportApp::SendReport() const try
-{
+void CrashReportApp::SendReport() const
+try {
     auto file_path = GetArchivedReportFilePath();
     std::ifstream file(file_path, std::ios_base::in | std::ios_base::binary);
     if (!file)
@@ -168,7 +170,7 @@ catch (...) {
     std::throw_with_nested(std::runtime_error("failed to send crash report"));
 }
 
-int CrashReportApp::Message(HWND hwnd, const char *text, const char *title, int flags)
+int CrashReportApp::Message(HWND hwnd, const char* text, const char* title, int flags)
 {
     if (GetSystemMetrics(SM_CMONITORS) > 0) {
         return MessageBoxA(hwnd, text, title, flags);

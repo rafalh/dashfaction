@@ -53,22 +53,25 @@ HttpSession::HttpSession(const char* user_agent)
 
 void HttpSession::set_connect_timeout(unsigned long timeout_ms)
 {
-    if (!InternetSetOptionA(m_inet, INTERNET_OPTION_CONNECT_TIMEOUT, const_cast<unsigned long*>(&timeout_ms),
-                            sizeof(timeout_ms)))
+    if (!InternetSetOptionA(
+            m_inet, INTERNET_OPTION_CONNECT_TIMEOUT, const_cast<unsigned long*>(&timeout_ms), sizeof(timeout_ms)
+        ))
         THROW_WIN32_ERROR();
 }
 
 void HttpSession::set_send_timeout(unsigned long timeout_ms)
 {
-    if (!InternetSetOptionA(m_inet, INTERNET_OPTION_SEND_TIMEOUT, const_cast<unsigned long*>(&timeout_ms),
-                       sizeof(timeout_ms)))
+    if (!InternetSetOptionA(
+            m_inet, INTERNET_OPTION_SEND_TIMEOUT, const_cast<unsigned long*>(&timeout_ms), sizeof(timeout_ms)
+        ))
         THROW_WIN32_ERROR();
 }
 
 void HttpSession::set_receive_timeout(unsigned long timeout_ms)
 {
-    if (!InternetSetOptionA(m_inet, INTERNET_OPTION_RECEIVE_TIMEOUT, const_cast<unsigned long*>(&timeout_ms),
-                       sizeof(timeout_ms)))
+    if (!InternetSetOptionA(
+            m_inet, INTERNET_OPTION_RECEIVE_TIMEOUT, const_cast<unsigned long*>(&timeout_ms), sizeof(timeout_ms)
+        ))
         THROW_WIN32_ERROR();
 }
 
@@ -142,8 +145,7 @@ void HttpRequest::send(std::string_view body)
 
     DWORD dw_size = sizeof(DWORD);
     DWORD status_code;
-    if (!HttpQueryInfoA(m_req, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status_code, &dw_size,
-                        nullptr)) {
+    if (!HttpQueryInfoA(m_req, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status_code, &dw_size, nullptr)) {
         THROW_WIN32_ERROR();
     }
 
@@ -203,7 +205,8 @@ std::string encode_uri_component(std::string_view value)
     for (char c : value) {
         if (is_uri_reserved_char(c)) {
             std::format_to(std::back_inserter(result), "%{:02X}", static_cast<unsigned char>(c));
-        } else {
+        }
+        else {
             result += c;
         }
     }

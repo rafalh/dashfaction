@@ -31,7 +31,6 @@ namespace rf
         {
             AddrCaller{0x00416190}.this_call(this);
         }
-
     };
     static_assert(sizeof(VMeshCollisionInput) == 0x68);
 
@@ -40,7 +39,7 @@ namespace rf
         float fraction;
         Vector3 hit_point;
         Vector3 hit_normal;
-        short *triangle_indices;
+        short* triangle_indices;
 
         VMeshCollisionOutput()
         {
@@ -68,26 +67,31 @@ namespace rf
         TexMap texture_maps[2];
         int framerate;
         int num_mix_frames;
-        int *mix;
+        int* mix;
         float specular_level;
         float glossiness;
         float reflection_amount;
         char refl_tex_name[36];
         int refl_tex_handle;
         int num_self_illumination_frames;
-        float *self_illumination;
+        float* self_illumination;
         int num_opacity_frames;
-        int *opacity;
+        int* opacity;
     };
     static_assert(sizeof(MeshMaterial) == 0xC8);
 
-    static auto& vmesh_get_type = addr_as_ref<VMeshType(VMesh *vmesh)>(0x00502B00);
+    static auto& vmesh_get_type = addr_as_ref<VMeshType(VMesh* vmesh)>(0x00502B00);
     static auto& vmesh_get_name = addr_as_ref<const char*(VMesh* vmesh)>(0x00503470);
-    static auto& vmesh_get_num_cspheres = addr_as_ref<int(VMesh *vmesh)>(0x00503250);
-    static auto& vmesh_get_csphere = addr_as_ref<bool(VMesh *vmesh, int index, Vector3 *pos, float *radius)>(0x00503270);
-    static auto& vmesh_collide = addr_as_ref<bool(VMesh *vmesh, VMeshCollisionInput *in, VMeshCollisionOutput *out, bool clear)>(0x005031F0);
-    static auto& vmesh_calc_lighting_data_size = addr_as_ref<int(VMesh *vmesh)>(0x00503F50);
-    static auto& vmesh_update_lighting_data = addr_as_ref<int(VMesh *vmesh, GRoom *room, const Vector3 &pos, const Matrix3 &orient, void *mesh_lighting_data)>(0x00504000);
+    static auto& vmesh_get_num_cspheres = addr_as_ref<int(VMesh* vmesh)>(0x00503250);
+    static auto& vmesh_get_csphere =
+        addr_as_ref<bool(VMesh* vmesh, int index, Vector3* pos, float* radius)>(0x00503270);
+    static auto& vmesh_collide =
+        addr_as_ref<bool(VMesh* vmesh, VMeshCollisionInput* in, VMeshCollisionOutput* out, bool clear)>(0x005031F0);
+    static auto& vmesh_calc_lighting_data_size = addr_as_ref<int(VMesh* vmesh)>(0x00503F50);
+    static auto& vmesh_update_lighting_data = addr_as_ref<
+        int(VMesh* vmesh, GRoom* room, const Vector3& pos, const Matrix3& orient, void* mesh_lighting_data)>(0x00504000
+    );
     static auto& vmesh_stop_all_actions = addr_as_ref<void(VMesh* vmesh)>(0x00503400);
-    static auto& vmesh_get_materials_array = addr_as_ref<void(VMesh *vmesh, int *num_materials_out, MeshMaterial **materials_array_out)>(0x00503650);
+    static auto& vmesh_get_materials_array =
+        addr_as_ref<void(VMesh* vmesh, int* num_materials_out, MeshMaterial** materials_array_out)>(0x00503650);
 }

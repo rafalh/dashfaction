@@ -24,8 +24,8 @@ static FunHook<void(rf::Player*)> player_fpgun_update_state_anim_hook{
         if (player != rf::local_player) {
             rf::Entity* entity = rf::entity_from_handle(player->entity_handle);
             if (entity) {
-                float horz_speed_pow2 = entity->p_data.vel.x * entity->p_data.vel.x +
-                                          entity->p_data.vel.z * entity->p_data.vel.z;
+                float horz_speed_pow2 =
+                    entity->p_data.vel.x * entity->p_data.vel.x + entity->p_data.vel.z * entity->p_data.vel.z;
                 int state = rf::WS_IDLE;
                 if (rf::entity_weapon_is_on(entity->handle, entity->ai.current_primary_weapon))
                     state = rf::WS_LOOP_FIRE;
@@ -83,7 +83,8 @@ void player_fpgun_reload_meshes(bool force)
     }
     auto& fpgun_meshes_current_mp_character = addr_as_ref<int>(0x005A0AEC);
     auto& fpgun_meshes_current_team = addr_as_ref<int>(0x005A0AF0);
-    if (g_fpgun_main_player->settings.multi_character != fpgun_meshes_current_mp_character || fpgun_team != fpgun_meshes_current_team || force) {
+    if (g_fpgun_main_player->settings.multi_character != fpgun_meshes_current_mp_character ||
+        fpgun_team != fpgun_meshes_current_team || force) {
         rf::player_fpgun_delete_meshes();
         rf::player_fpgun_load_meshes();
         auto* entity = rf::entity_from_handle(g_fpgun_main_player->entity_handle);
@@ -99,9 +100,7 @@ void player_fpgun_reload_meshes(bool force)
 
 ConsoleCommand2 reload_fpgun_cmd{
     "d_reload_fpgun",
-    []() {
-        player_fpgun_reload_meshes(true);
-    },
+    []() { player_fpgun_reload_meshes(true); },
 };
 
 #endif // NDEBUG
@@ -151,8 +150,9 @@ CallHook<void(rf::Matrix3&, rf::Vector3&, float, bool, bool)> player_fpgun_rende
     [](rf::Matrix3& viewer_orient, rf::Vector3& viewer_pos, float horizontal_fov, bool zbuffer_flag, bool z_scale) {
         horizontal_fov *= g_game_config.fpgun_fov_scale;
         horizontal_fov = gr_scale_fov_hor_plus(horizontal_fov);
-        player_fpgun_render_gr_setup_3d_hook
-            .call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
+        player_fpgun_render_gr_setup_3d_hook.call_target(
+            viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale
+        );
     },
 };
 
@@ -183,11 +183,11 @@ void player_fpgun_do_patch()
     AsmWriter(0x004AA23E).nop(6); // player_fpgun_set_state
     AsmWriter(0x004AE0DF).nop(2); // player_fpgun_get_vmesh_handle
 
-    AsmWriter(0x004A938F).nop(6);               // player_fpgun_play_anim
+    AsmWriter(0x004A938F).nop(6);                          // player_fpgun_play_anim
     write_mem<u8>(0x004A952C, asm_opcodes::jmp_rel_short); // player_fpgun_is_in_state_anim
-    AsmWriter(0x004AA56D).nop(6);               // player_fpgun_set_next_state_anim
-    AsmWriter(0x004AA6E7).nop(6);               // player_fpgun_process
-    AsmWriter(0x004AE384).nop(6);               // player_fpgun_page_in
+    AsmWriter(0x004AA56D).nop(6);                          // player_fpgun_set_next_state_anim
+    AsmWriter(0x004AA6E7).nop(6);                          // player_fpgun_process
+    AsmWriter(0x004AE384).nop(6);                          // player_fpgun_page_in
     write_mem<u8>(0x004ACE2C, asm_opcodes::jmp_rel_short); // player_fpgun_get_zoom
 
     write_mem_ptr(0x004AE569 + 2, &g_fpgun_main_player); // player_fpgun_load_meshes
@@ -219,7 +219,7 @@ void player_fpgun_do_patch()
 
     if (g_game_config.high_scanner_res) {
         // Improved Railgun Scanner resolution
-        constexpr int8_t scanner_resolution = 120;        // default is 64, max is 127 (signed byte)
+        constexpr int8_t scanner_resolution = 120;         // default is 64, max is 127 (signed byte)
         write_mem<u8>(0x004325E6 + 1, scanner_resolution); // gameplay_render_frame
         write_mem<u8>(0x004325E8 + 1, scanner_resolution);
         write_mem<u8>(0x004A34BB + 1, scanner_resolution); // player_allocate

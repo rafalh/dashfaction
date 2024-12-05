@@ -14,7 +14,7 @@
 #define VARRAY_OOB_CHECK 0
 #define EMULATE_PACKET_LOSS 0
 #define PACKET_LOSS_RATE 10 // every n packet is lost
-#endif // NDEBUG
+#endif                      // NDEBUG
 
 #if MEMORY_TRACKING
 constexpr uint32_t BOUND_MARKER = 0xDEADBEEF;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <windows.h>
 
 class DynamicLinkLibrary
 {
@@ -12,9 +13,7 @@ public:
 
     DynamicLinkLibrary(const DynamicLinkLibrary& other) = delete;
 
-    DynamicLinkLibrary(DynamicLinkLibrary&& other) noexcept
-        : handle_(std::exchange(other.handle_, nullptr))
-    {}
+    DynamicLinkLibrary(DynamicLinkLibrary&& other) noexcept : handle_(std::exchange(other.handle_, nullptr)) {}
 
     ~DynamicLinkLibrary()
     {
@@ -41,7 +40,7 @@ public:
     {
         static_assert(std::is_pointer_v<T>);
         // Note: double cast is needed to fix cast-function-type GCC warning
-        return reinterpret_cast<T>(reinterpret_cast<void(*)()>(GetProcAddress(handle_, name)));
+        return reinterpret_cast<T>(reinterpret_cast<void (*)()>(GetProcAddress(handle_, name)));
     }
 
 private:

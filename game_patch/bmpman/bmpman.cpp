@@ -72,49 +72,53 @@ bool bm_is_compressed_format(rf::bm::Format format)
 }
 
 FunHook<rf::bm::Type(const char*, int*, int*, rf::bm::Format*, int*, int*, int*, int*, int*, int*, int)>
-bm_read_header_hook{
-    0x0050FCB0,
-    [](const char* filename, int* width_out, int* height_out, rf::bm::Format *pixel_fmt_out, int *num_levels_out,
-    int *num_levels_external_mips_out, int *num_frames_out, int *fps_out, int *total_bytes_m2v_out,
-    int *vbm_ver_out, int a11) {
+    bm_read_header_hook{
+        0x0050FCB0,
+        [](const char* filename, int* width_out, int* height_out, rf::bm::Format* pixel_fmt_out, int* num_levels_out,
+           int* num_levels_external_mips_out, int* num_frames_out, int* fps_out, int* total_bytes_m2v_out,
+           int* vbm_ver_out, int a11) {
+            *num_levels_external_mips_out = 1;
+            *num_levels_out = 1;
+            *fps_out = 0;
+            *num_frames_out = 1;
+            *total_bytes_m2v_out = -1;
+            *vbm_ver_out = 1;
 
-        *num_levels_external_mips_out = 1;
-        *num_levels_out = 1;
-        *fps_out = 0;
-        *num_frames_out = 1;
-        *total_bytes_m2v_out = -1;
-        *vbm_ver_out = 1;
-
-        rf::File dds_file;
-        std::string filename_without_ext{get_filename_without_ext(filename)};
-        auto dds_filename = filename_without_ext + ".dds";
-        if (dds_file.open(dds_filename.c_str()) == 0) {
-            xlog::trace("Loading {}", dds_filename);
-            auto bm_type = read_dds_header(dds_file, width_out, height_out, pixel_fmt_out, num_levels_out);
-            if (bm_type != rf::bm::TYPE_NONE) {
-                return bm_type;
+            rf::File dds_file;
+            std::string filename_without_ext{get_filename_without_ext(filename)};
+            auto dds_filename = filename_without_ext + ".dds";
+            if (dds_file.open(dds_filename.c_str()) == 0) {
+                xlog::trace("Loading {}", dds_filename);
+                auto bm_type = read_dds_header(dds_file, width_out, height_out, pixel_fmt_out, num_levels_out);
+                if (bm_type != rf::bm::TYPE_NONE) {
+                    return bm_type;
+                }
             }
-        }
 
-        xlog::trace("Loading bitmap header for '{}'", filename);
-        auto bm_type = bm_read_header_hook.call_target(filename, width_out, height_out, pixel_fmt_out, num_levels_out,
-            num_levels_external_mips_out, num_frames_out, fps_out, total_bytes_m2v_out, vbm_ver_out, a11);
-        xlog::trace("Bitmap header for '{}': type {} size {}x{} pixel_fmt {} levels {} frames {}",
-            filename, bm_type, *width_out, *height_out, *pixel_fmt_out, *num_levels_out, *num_frames_out);
+            xlog::trace("Loading bitmap header for '{}'", filename);
+            auto bm_type = bm_read_header_hook.call_target(
+                filename, width_out, height_out, pixel_fmt_out, num_levels_out, num_levels_external_mips_out,
+                num_frames_out, fps_out, total_bytes_m2v_out, vbm_ver_out, a11
+            );
+            xlog::trace(
+                "Bitmap header for '{}': type {} size {}x{} pixel_fmt {} levels {} frames {}", filename, bm_type,
+                *width_out, *height_out, *pixel_fmt_out, *num_levels_out, *num_frames_out
+            );
 
-        // Sanity checks
-        // Prevents heap corruption when width = 0 or height = 0
-        if (*width_out <= 0 || *height_out <= 0 || *pixel_fmt_out == rf::bm::FORMAT_NONE || *num_levels_out < 1 || *num_frames_out < 1) {
-            bm_type = rf::bm::TYPE_NONE;
-        }
+            // Sanity checks
+            // Prevents heap corruption when width = 0 or height = 0
+            if (*width_out <= 0 || *height_out <= 0 || *pixel_fmt_out == rf::bm::FORMAT_NONE || *num_levels_out < 1 ||
+                *num_frames_out < 1) {
+                bm_type = rf::bm::TYPE_NONE;
+            }
 
-        if (bm_type == rf::bm::TYPE_NONE) {
-            xlog::warn("Failed load bitmap header for '{}'", filename);
-        }
+            if (bm_type == rf::bm::TYPE_NONE) {
+                xlog::warn("Failed load bitmap header for '{}'", filename);
+            }
 
-        return bm_type;
-    },
-};
+            return bm_type;
+        },
+    };
 
 FunHook<rf::bm::Format(int, void**, void**)> bm_lock_hook{
     0x00510780,

@@ -73,9 +73,7 @@ CodeInjection after_full_game_init_hook{
 
 CodeInjection cleanup_game_hook{
     0x004B2821,
-    []() {
-        debug_cleanup();
-    },
+    []() { debug_cleanup(); },
 };
 
 static void maybe_autosave()
@@ -278,7 +276,10 @@ void log_system_info()
         if (wine_ver)
             xlog::info("Running on Wine: {}", wine_ver.value());
 
-        xlog::info("Running as {} (elevation type: {})", is_current_user_admin() ? "admin" : "user", get_process_elevation_type());
+        xlog::info(
+            "Running as {} (elevation type: {})", is_current_user_admin() ? "admin" : "user",
+            get_process_elevation_type()
+        );
         xlog::info("CPU Brand: {}", get_cpu_brand());
         xlog::info("CPU ID: {}", get_cpu_id());
         LARGE_INTEGER qpc_freq;
@@ -302,7 +303,10 @@ void load_config()
     }
 
     // Log information from config
-    xlog::info("Resolution: {}x{}x{}", g_game_config.res_width.value(), g_game_config.res_height.value(), g_game_config.res_bpp.value());
+    xlog::info(
+        "Resolution: {}x{}x{}", g_game_config.res_width.value(), g_game_config.res_height.value(),
+        g_game_config.res_bpp.value()
+    );
     xlog::info("Window Mode: {}", static_cast<int>(g_game_config.wnd_mode.value()));
     xlog::info("Max FPS: {}", g_game_config.max_fps.value());
     xlog::info("Allow Overwriting Game Files: {}", g_game_config.allow_overwrite_game_files.value());

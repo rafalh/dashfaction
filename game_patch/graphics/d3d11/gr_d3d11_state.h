@@ -12,7 +12,8 @@ namespace df::gr::d3d11
     public:
         StateManager(ComPtr<ID3D11Device> device);
 
-        ID3D11RasterizerState* lookup_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias = 0, bool depth_clip_enable = true)
+        ID3D11RasterizerState*
+        lookup_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias = 0, bool depth_clip_enable = true)
         {
             auto key = std::make_tuple(cull_mode, depth_bias, depth_clip_enable);
             auto it = rasterizer_state_cache_.find(key);
@@ -20,7 +21,8 @@ namespace df::gr::d3d11
                 return it->second;
             }
             auto rasterizer_state = create_rasterizer_state(cull_mode, depth_bias, depth_clip_enable);
-            auto p = rasterizer_state_cache_.emplace(key, create_rasterizer_state(cull_mode, depth_bias, depth_clip_enable));
+            auto p =
+                rasterizer_state_cache_.emplace(key, create_rasterizer_state(cull_mode, depth_bias, depth_clip_enable));
             return p.first->second;
         }
 
@@ -70,7 +72,8 @@ namespace df::gr::d3d11
         }
 
     private:
-        ComPtr<ID3D11RasterizerState> create_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias, bool depth_clip_enable);
+        ComPtr<ID3D11RasterizerState>
+        create_rasterizer_state(D3D11_CULL_MODE cull_mode, int depth_bias, bool depth_clip_enable);
         ComPtr<ID3D11SamplerState> create_sampler_state(rf::gr::TextureSource ts);
         ComPtr<ID3D11BlendState> create_blend_state(rf::gr::AlphaBlend ab);
         ComPtr<ID3D11DepthStencilState> create_depth_stencil_state(gr::ZbufferType zbt);

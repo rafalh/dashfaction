@@ -11,8 +11,7 @@ struct PerfAggregator
     unsigned total_duration_us_ = 0;
     static std::vector<std::unique_ptr<PerfAggregator>> instances_;
 
-    PerfAggregator(std::string&& name) : name_(name)
-    {}
+    PerfAggregator(std::string&& name) : name_(name) {}
 
 public:
     static PerfAggregator& create(std::string&& name)

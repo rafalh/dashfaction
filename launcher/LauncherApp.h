@@ -18,7 +18,7 @@ public:
 
 private:
     static void MigrateConfig();
-    int Message(HWND hwnd, const char *text, const char *title, int flags);
+    int Message(HWND hwnd, const char* text, const char* title, int flags);
 };
 
 inline LauncherApp* GetLauncherApp()

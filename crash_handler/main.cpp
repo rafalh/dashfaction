@@ -2,8 +2,8 @@
 #include <common/error/error-utils.h>
 #include <format>
 
-int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
-{
+int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+try {
     // Start Win32++
     CrashReportApp app;
 
@@ -11,8 +11,7 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
     return app.Run(); // NOLINT(clang-analyzer-core.StackAddressEscape)
 }
 // catch all unhandled CException types
-catch (const Win32xx::CException &e)
-{
+catch (const Win32xx::CException& e) {
     // Display the exception and quit
     std::string msg = std::format("{}\nerror {}: {}", e.GetText(), e.GetError(), e.GetErrorString());
     MessageBox(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);

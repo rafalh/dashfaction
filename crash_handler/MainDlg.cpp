@@ -7,9 +7,7 @@
 #include <wxx_dialog.h>
 #include "res/resource.h"
 
-MainDlg::MainDlg() : CDialog(IDD_MAIN)
-{
-}
+MainDlg::MainDlg() : CDialog(IDD_MAIN) {}
 
 BOOL MainDlg::OnInitDialog()
 {
@@ -52,21 +50,20 @@ INT_PTR MainDlg::DialogProc(UINT msg, WPARAM wparam, LPARAM lparam)
     return CDialog::DialogProc(msg, wparam, lparam);
 }
 
-LRESULT MainDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
+LRESULT MainDlg::OnNotify([[maybe_unused]] WPARAM wparam, LPARAM lparam)
 {
     auto& nmhdr = *reinterpret_cast<LPNMHDR>(lparam);
-    switch (nmhdr.code)
-    {
-    case NM_CLICK:
-        // Fall through to the next case.
-    case NM_RETURN:
-        if (nmhdr.idFrom == IDC_OPEN_REPORT) {
-            OpenArchivedReport();
-        }
-        else if (nmhdr.idFrom == IDC_ADDITIONAL_INFO) {
-            OpenAdditionalInfoDlg();
-        }
-        break;
+    switch (nmhdr.code) {
+        case NM_CLICK:
+            // Fall through to the next case.
+        case NM_RETURN:
+            if (nmhdr.idFrom == IDC_OPEN_REPORT) {
+                OpenArchivedReport();
+            }
+            else if (nmhdr.idFrom == IDC_ADDITIONAL_INFO) {
+                OpenAdditionalInfoDlg();
+            }
+            break;
     }
     return 0;
 }

@@ -19,12 +19,12 @@ namespace rf
 
     struct EmitterPair
     {
-        ParticleEmitter *pemitter;
+        ParticleEmitter* pemitter;
         int sound_emitter_handle;
         Vector3 emitting_pos;
-        EmitterPair *next;
-        EmitterPair *prev;
-        GRoom *room;
+        EmitterPair* next;
+        EmitterPair* prev;
+        GRoom* room;
     };
     static_assert(sizeof(EmitterPair) == 0x20);
 
@@ -66,7 +66,7 @@ namespace rf
         VArray<ClimbRegion*> ladders;
         VArray<PushRegion*> pushers;
         EmitterPairSet ep_set;
-        GSolid *geometry;
+        GSolid* geometry;
         int flags;
         float time;
         float global_time;
@@ -76,7 +76,8 @@ namespace rf
     };
     static_assert(sizeof(LevelInfo) == 0x154);
 
-    enum LevelFlags {
+    enum LevelFlags
+    {
         LEVEL_LOADED = 1,
     };
 

@@ -21,9 +21,12 @@ public:
     unsigned get_format_from_bpp(unsigned bpp) override
     {
         switch (bpp) {
-            case 16: return static_cast<unsigned>(DXGI_FORMAT_B5G6R5_UNORM);
-            case 32: return static_cast<unsigned>(DXGI_FORMAT_B8G8R8A8_UNORM);
-            default: return static_cast<unsigned>(DXGI_FORMAT_UNKNOWN);
+            case 16:
+                return static_cast<unsigned>(DXGI_FORMAT_B5G6R5_UNORM);
+            case 32:
+                return static_cast<unsigned>(DXGI_FORMAT_B8G8R8A8_UNORM);
+            default:
+                return static_cast<unsigned>(DXGI_FORMAT_UNKNOWN);
         }
     }
 
@@ -34,8 +37,7 @@ private:
     decltype(D3D11CreateDevice)* m_D3D11CreateDevice;
 };
 
-VideoDeviceInfoProviderD3D11::VideoDeviceInfoProviderD3D11() :
-    m_dxgi_lib{L"dxgi.dll"}, m_d3d11_lib{L"d3d11.dll"}
+VideoDeviceInfoProviderD3D11::VideoDeviceInfoProviderD3D11() : m_dxgi_lib{L"dxgi.dll"}, m_d3d11_lib{L"d3d11.dll"}
 {
     if (!m_dxgi_lib)
         THROW_WIN32_ERROR("Failed to load dxgi.dll");
@@ -83,10 +85,9 @@ std::vector<std::string> VideoDeviceInfoProviderD3D11::get_adapters()
     return adapters;
 }
 
-std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D11::get_resolutions(
-    unsigned adapter,
-    unsigned format
-) {
+std::set<VideoDeviceInfoProvider::Resolution>
+VideoDeviceInfoProviderD3D11::get_resolutions(unsigned adapter, unsigned format)
+{
     ComPtr<IDXGIAdapter> dxgi_adapter = nullptr;
     HRESULT hr = m_factory->EnumAdapters(adapter, &dxgi_adapter);
     if (FAILED(hr)) {
@@ -123,9 +124,9 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D11::get_
     return result;
 }
 
-std::set<unsigned> VideoDeviceInfoProviderD3D11::get_multisample_types(
-    unsigned adapter, unsigned format, [[maybe_unused]] bool windowed
-) {
+std::set<unsigned>
+VideoDeviceInfoProviderD3D11::get_multisample_types(unsigned adapter, unsigned format, [[maybe_unused]] bool windowed)
+{
 
     ComPtr<IDXGIAdapter> dxgi_adapter;
     HRESULT hr = m_factory->EnumAdapters(adapter, &dxgi_adapter);
@@ -135,7 +136,10 @@ std::set<unsigned> VideoDeviceInfoProviderD3D11::get_multisample_types(
     }
 
     ComPtr<ID3D11Device> d3d11_device;
-    hr = m_D3D11CreateDevice(dxgi_adapter, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &d3d11_device, nullptr, nullptr);
+    hr = m_D3D11CreateDevice(
+        dxgi_adapter, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &d3d11_device, nullptr,
+        nullptr
+    );
     if (FAILED(hr)) {
         xlog::error("D3D11CreateDevice failed: {:x}", hr);
         return {};
@@ -151,9 +155,8 @@ std::set<unsigned> VideoDeviceInfoProviderD3D11::get_multisample_types(
     return result;
 }
 
-bool VideoDeviceInfoProviderD3D11::has_anisotropy_support(
-    [[maybe_unused]] unsigned adapter
-) {
+bool VideoDeviceInfoProviderD3D11::has_anisotropy_support([[maybe_unused]] unsigned adapter)
+{
     // 9_1 feature level already supports anistoropy level 2
     return true;
 }

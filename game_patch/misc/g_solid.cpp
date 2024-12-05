@@ -56,8 +56,9 @@ CodeInjection GSurface_calculate_lightmap_color_conv_patch{
         uint8_t* dst_data = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
         int height = surface->height;
         int src_pitch = 3 * src_width;
-        bool success = bm_convert_format(dst_data, lock.format, src_data, rf::bm::FORMAT_888_BGR,
-            src_width, height, lock.stride_in_bytes, src_pitch);
+        bool success = bm_convert_format(
+            dst_data, lock.format, src_data, rf::bm::FORMAT_888_BGR, src_width, height, lock.stride_in_bytes, src_pitch
+        );
         if (!success)
             xlog::error("bm_convert_format failed for geomod (fmt {})", static_cast<int>(lock.format));
         rf::gr::unlock(&lock);
@@ -87,8 +88,10 @@ CodeInjection GSurface_alloc_lightmap_color_conv_patch{
         int dst_pixel_size = bm_bytes_per_pixel(lock.format);
         uint8_t* dst_row_ptr = &lock.data[dst_pixel_size * offset_x + offset_y * lock.stride_in_bytes];
         int src_pitch = 3 * src_width;
-        bool success = bm_convert_format(dst_row_ptr, lock.format, src_data, rf::bm::FORMAT_888_BGR,
-                                                 src_width, height, lock.stride_in_bytes, src_pitch);
+        bool success = bm_convert_format(
+            dst_row_ptr, lock.format, src_data, rf::bm::FORMAT_888_BGR, src_width, height, lock.stride_in_bytes,
+            src_pitch
+        );
         if (!success)
             xlog::error("ConvertBitmapFormat failed for geomod2 (fmt {})", static_cast<int>(lock.format));
         rf::gr::unlock(&lock);
@@ -120,8 +123,8 @@ void gr_copy_water_bitmap(rf::gr::LockInfo& src_lock, rf::gr::LockInfo& dst_lock
     try {
         call_with_format(src_lock.format, [=](auto s) {
             call_with_format(dst_lock.format, [=](auto d) {
-                if constexpr (decltype(s)::value == rf::bm::FORMAT_8_PALETTED
-                    || decltype(d)::value == rf::bm::FORMAT_8_PALETTED) {
+                if constexpr (decltype(s)::value == rf::bm::FORMAT_8_PALETTED ||
+                              decltype(d)::value == rf::bm::FORMAT_8_PALETTED) {
                     assert(false);
                     return;
                 }
@@ -139,7 +142,8 @@ void gr_copy_water_bitmap(rf::gr::LockInfo& src_lock, rf::gr::LockInfo& dst_lock
                         int src_y = t2 + off_arr[t1];
                         int src_x_limited = src_x & (dst_lock.w - 1);
                         int src_y_limited = src_y & (dst_lock.h - 1);
-                        const uint8_t* src_ptr = src_lock.data + src_x_limited * src_pixel_size + src_y_limited * src_lock.stride_in_bytes;
+                        const uint8_t* src_ptr =
+                            src_lock.data + src_x_limited * src_pixel_size + src_y_limited * src_lock.stride_in_bytes;
                         PixelsReader<decltype(s)::value> rdr{src_ptr};
                         wrt.write(rdr.read());
                         ++t1;
@@ -231,13 +235,15 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         if (!rf::gr::lock(lightmap->bm_handle, 0, &lock, rf::gr::LOCK_WRITE_ONLY))
             return;
 
-    #if 1 // cap minimal color channel value as RF does
+#if 1 // cap minimal color channel value as RF does
         for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
             lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
-    #endif
+#endif
 
-        bool success = bm_convert_format(lock.data, lock.format, lightmap->buf,
-            rf::bm::FORMAT_888_BGR, lightmap->w, lightmap->h, lock.stride_in_bytes, 3 * lightmap->w, nullptr);
+        bool success = bm_convert_format(
+            lock.data, lock.format, lightmap->buf, rf::bm::FORMAT_888_BGR, lightmap->w, lightmap->h,
+            lock.stride_in_bytes, 3 * lightmap->w, nullptr
+        );
         if (!success)
             xlog::error("ConvertBitmapFormat failed for lightmap (dest format {})", static_cast<int>(lock.format));
 
@@ -251,7 +257,7 @@ CodeInjection shadow_render_one_injection{
         void* svol = regs.eax;
         auto& bbox_min = struct_field_ref<rf::Vector3>(svol, 0xE4);
         auto& bbox_max = struct_field_ref<rf::Vector3>(svol, 0xF0);
-        rf::MoverBrush *mb = regs.esi;
+        rf::MoverBrush* mb = regs.esi;
         if (!rf::bbox_intersect(bbox_min, bbox_max, mb->p_data.bbox_min, mb->p_data.bbox_max)) {
             regs.eip = 0x004CB1DA;
         }
@@ -279,27 +285,10 @@ CodeInjection g_decal_add_internal_cmp_global_weak_limit_injection{
 void decal_patch_limit(int max_decals)
 {
     unsigned decal_farray_get_addresses[] = {
-        0x00492298,
-        0x004BBEC9,
+        0x00492298, 0x004BBEC9,
 
-        0x004D5515,
-        0x004D5525,
-        0x004D5545,
-        0x004D5579,
-        0x004D5589,
-        0x004D55AD,
-        0x004D55D9,
-        0x004D55E9,
-        0x004D5609,
-        0x004D5635,
-        0x004D5645,
-        0x004D5666,
-        0x004D569E,
-        0x004D56AE,
-        0x004D56CE,
-        0x004D56FA,
-        0x004D570A,
-        0x004D572B,
+        0x004D5515, 0x004D5525, 0x004D5545, 0x004D5579, 0x004D5589, 0x004D55AD, 0x004D55D9, 0x004D55E9, 0x004D5609,
+        0x004D5635, 0x004D5645, 0x004D5666, 0x004D569E, 0x004D56AE, 0x004D56CE, 0x004D56FA, 0x004D570A, 0x004D572B,
     };
     unsigned decal_farray_add_addresses[] = {
         0x004D58AE,
@@ -310,11 +299,7 @@ void decal_patch_limit(int max_decals)
         0x004D67B1,
     };
     unsigned decal_farray_remove_matching_addresses[] = {
-        0x004D6C68,
-        0x004D6C93,
-        0x004D6CB6,
-        0x004D6CE1,
-        0x004D6D10,
+        0x004D6C68, 0x004D6C93, 0x004D6CB6, 0x004D6CE1, 0x004D6D10,
     };
     unsigned decal_farray_ctor_addresses[] = {
         0x004CCC51,
@@ -352,19 +337,19 @@ void decal_patch_limit(int max_decals)
     write_mem<i32>(0x004D5456 + 2, max_decals); // total hard limit,  128 by default
     // Note: total soft level is handled in g_decal_add_internal_cmp_global_weak_limit_injection
     int max_decals_in_room = std::min<int>(max_decals / 3, i8_max);
-    write_mem<i8>(0x004D55C4 + 2, max_decals_in_room); // room hard limit,   48 by default
+    write_mem<i8>(0x004D55C4 + 2, max_decals_in_room);         // room hard limit,   48 by default
     write_mem<i8>(0x004D5620 + 2, max_decals_in_room * 5 / 6); // room soft limit,   40 by default
-    write_mem<i8>(0x004D5689 + 2, max_decals_in_room); // room hard limit,   48 by default
+    write_mem<i8>(0x004D5689 + 2, max_decals_in_room);         // room hard limit,   48 by default
     write_mem<i8>(0x004D56E5 + 2, max_decals_in_room * 5 / 6); // room soft limit,   40 by default
-    write_mem<i8>(0x004D5500 + 2, max_decals_in_room); // solid hard limit,  48 by default
+    write_mem<i8>(0x004D5500 + 2, max_decals_in_room);         // solid hard limit,  48 by default
     write_mem<i8>(0x004D555C + 2, max_decals_in_room * 5 / 6); // solid soft limit,  40 by default
     int max_weapon_decals = std::min<int>(max_decals / 8, i8_max);
-    write_mem<i8>(0x004D5752 + 2, max_weapon_decals);  // weapon hard limit, 16 by default
-    write_mem<i8>(0x004D579F + 2, max_weapon_decals);  // weapon hard limit, 16 by default
-    write_mem<i8>(0x004D57AA + 2, max_weapon_decals * 7 / 8);  // weapon soft limit, 14 by default
+    write_mem<i8>(0x004D5752 + 2, max_weapon_decals);         // weapon hard limit, 16 by default
+    write_mem<i8>(0x004D579F + 2, max_weapon_decals);         // weapon hard limit, 16 by default
+    write_mem<i8>(0x004D57AA + 2, max_weapon_decals * 7 / 8); // weapon soft limit, 14 by default
     int max_geomod_decals = std::min<int>(max_decals / 4, i8_max);
-    write_mem<i8>(0x004D584D + 2, max_geomod_decals);  // geomod hard limit, 32 by default
-    write_mem<i8>(0x004D5852 + 2, max_geomod_decals * 7 / 8);  // geomod soft limit, 30 by default
+    write_mem<i8>(0x004D584D + 2, max_geomod_decals);         // geomod hard limit, 32 by default
+    write_mem<i8>(0x004D5852 + 2, max_geomod_decals * 7 / 8); // geomod soft limit, 30 by default
 }
 
 ConsoleCommand2 max_decals_cmd{
@@ -389,8 +374,10 @@ static void render_rooms_clip_wnds()
         char buf[256];
         std::snprintf(buf, sizeof(buf), "room %d", room->room_index);
         rf::gr::string(room->clip_wnd.left, room->clip_wnd.top, buf);
-        rf::gr::rect_border(room->clip_wnd.left, room->clip_wnd.top,
-            room->clip_wnd.right - room->clip_wnd.left, room->clip_wnd.bot - room->clip_wnd.top);
+        rf::gr::rect_border(
+            room->clip_wnd.left, room->clip_wnd.top, room->clip_wnd.right - room->clip_wnd.left,
+            room->clip_wnd.bot - room->clip_wnd.top
+        );
     }
 }
 

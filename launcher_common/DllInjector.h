@@ -8,9 +8,7 @@ private:
     Process& m_process;
 
 public:
-    DllInjector(Process& process) :
-        m_process(process)
-    {}
+    DllInjector(Process& process) : m_process(process) {}
 
     HMODULE inject_dll(const char* dll_filename, const char* init_fun_name, int timeout);
 

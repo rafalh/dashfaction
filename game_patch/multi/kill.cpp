@@ -155,7 +155,8 @@ FunHook<void(rf::Entity*)> entity_on_death_hook{
     0x0041FDC0,
     [](rf::Entity* entity) {
         // Reset fpgun animation when player dies
-        if (rf::local_player && entity->handle == rf::local_player->entity_handle && rf::local_player->weapon_mesh_handle) {
+        if (rf::local_player && entity->handle == rf::local_player->entity_handle &&
+            rf::local_player->weapon_mesh_handle) {
             player_fpgun_on_player_death(rf::local_player);
         }
         entity_on_death_hook.call_target(entity);
@@ -164,9 +165,7 @@ FunHook<void(rf::Entity*)> entity_on_death_hook{
 
 ConsoleCommand2 kill_messages_cmd{
     "kill_messages",
-    []() {
-        kill_messages = !kill_messages;
-    },
+    []() { kill_messages = !kill_messages; },
     "Toggles printing of kill messages in the chatbox and the game console",
 };
 
@@ -174,12 +173,7 @@ void multi_kill_do_patch()
 {
     // Player kill handling
     using namespace asm_regs;
-    AsmWriter(0x00420703)
-        .push(ebx)
-        .push(edi)
-        .call(on_player_kill)
-        .add(esp, 8)
-        .jmp(0x00420B03);
+    AsmWriter(0x00420703).push(ebx).push(edi).call(on_player_kill).add(esp, 8).jmp(0x00420B03);
 
     // Change player stats structure
     write_mem<i8>(0x004A33B5 + 1, sizeof(PlayerStatsNew));

@@ -42,10 +42,10 @@ DebugFlagDesc g_debug_flags[] = {
     {addr_as_ref<bool>(0x009BB5AC), "objrender"},
     {g_dbg_geometry_rendering_stats, "roomstats"},
     // geometry rendering
-    {addr_as_ref<bool>(0x009BB594), "trans", true}, // transparent_faces
-    {addr_as_ref<bool>(0x009BB598), "room", true}, // show_rooms
-    {addr_as_ref<bool>(0x009BB59C), "portal", true}, // show_portals
-    {addr_as_ref<bool>(0x009BB5A4), "lightmap", true}, // show_lightmaps
+    {addr_as_ref<bool>(0x009BB594), "trans", true},      // transparent_faces
+    {addr_as_ref<bool>(0x009BB598), "room", true},       // show_rooms
+    {addr_as_ref<bool>(0x009BB59C), "portal", true},     // show_portals
+    {addr_as_ref<bool>(0x009BB5A4), "lightmap", true},   // show_lightmaps
     {addr_as_ref<bool>(0x009BB5A8), "nolightmap", true}, // fullbright
     {addr_as_ref<bool>(0x009BB5B0), "show_invisible_faces", true},
 };

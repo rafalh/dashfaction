@@ -8,7 +8,7 @@ namespace rf
     private:
         int num = 0;
         int capacity = 0;
-        T *elements = nullptr;
+        T* elements = nullptr;
 
     public:
         [[nodiscard]] int size() const

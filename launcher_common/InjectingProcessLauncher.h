@@ -20,8 +20,9 @@ private:
     bool m_resumed = false;
 
 public:
-    InjectingProcessLauncher(const char* app_name, const char* work_dir, const char* command_line,
-                             STARTUPINFO& startup_info, int timeout);
+    InjectingProcessLauncher(
+        const char* app_name, const char* work_dir, const char* command_line, STARTUPINFO& startup_info, int timeout
+    );
 
     ~InjectingProcessLauncher()
     {

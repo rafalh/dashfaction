@@ -20,8 +20,8 @@
 
 namespace rf
 {
-static auto& draw_scoreboard = addr_as_ref<void(bool draw)>(0x00470860);
-static auto& fit_scoreboard_string = addr_as_ref<String* (String* result, String::Pod str, int cx_max)>(0x00471EC0);
+    static auto& draw_scoreboard = addr_as_ref<void(bool draw)>(0x00470860);
+    static auto& fit_scoreboard_string = addr_as_ref<String*(String* result, String::Pod str, int cx_max)>(0x00471EC0);
 }
 
 constexpr float ENTER_ANIM_MS = 100.0f;
@@ -107,10 +107,14 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
             rf::gr::set_color(0xD0, 0x20, 0x20, 0xFF);
             int team_scores_font = rf::scoreboard_big_font;
             auto red_score_str = std::to_string(red_score);
-            rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x + w * 1 / 6, cur_y + 10, red_score_str.c_str(), team_scores_font);
+            rf::gr::string_aligned(
+                rf::gr::ALIGN_CENTER, x + w * 1 / 6, cur_y + 10, red_score_str.c_str(), team_scores_font
+            );
             rf::gr::set_color(0x20, 0x20, 0xD0, 0xFF);
             auto blue_score_str = std::to_string(blue_score);
-            rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x + w * 5 / 6, cur_y + 10, blue_score_str.c_str(), team_scores_font);
+            rf::gr::string_aligned(
+                rf::gr::ALIGN_CENTER, x + w * 5 / 6, cur_y + 10, blue_score_str.c_str(), team_scores_font
+            );
         }
 
         cur_y += 60;
@@ -119,8 +123,10 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
     return cur_y - y;
 }
 
-int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int y, int w, float scale,
-    rf::NetGameType game_type, bool dry_run = false)
+int draw_scoreboard_players(
+    const std::vector<rf::Player*>& players, int x, int y, int w, float scale, rf::NetGameType game_type,
+    bool dry_run = false
+)
 {
     int initial_y = y;
     int font_h = rf::gr::get_font_height(-1);
@@ -179,7 +185,9 @@ int draw_scoreboard_players(const std::vector<rf::Player*>& players, int x, int 
             hud_scaled_bitmap(status_bm, status_x, static_cast<int>(y + 2 * scale), scale);
 
             rf::String player_name_stripped;
-            rf::fit_scoreboard_string(&player_name_stripped, player->name, name_w - static_cast<int>(12 * scale)); // Note: this destroys Name
+            rf::fit_scoreboard_string(
+                &player_name_stripped, player->name, name_w - static_cast<int>(12 * scale)
+            ); // Note: this destroys Name
             rf::gr::string(name_x, y, player_name_stripped);
 
 #if DEBUG_SCOREBOARD
@@ -328,7 +336,9 @@ void draw_scoreboard_internal_new(bool draw)
     if (group_by_team) {
         int table_w = (w - left_padding - middle_padding - right_padding) / 2;
         draw_scoreboard_players(left_players, x + left_padding, y, table_w, scale, game_type);
-        draw_scoreboard_players(right_players, x + left_padding + table_w + middle_padding, y, table_w, scale, game_type);
+        draw_scoreboard_players(
+            right_players, x + left_padding + table_w + middle_padding, y, table_w, scale, game_type
+        );
     }
     else {
         int table_w = w - left_padding - right_padding;

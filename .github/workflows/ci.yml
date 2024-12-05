@@ -53,3 +53,14 @@ jobs:
       shell: cmd
       working-directory: ${{github.workspace}}/build
       run: cmake --build . --config %BUILD_TYPE% -j 4
+
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check formatting
+        run: tools/format.sh
+        env:
+          CMAKE_FORMAT_FLAGS: -n -Werror

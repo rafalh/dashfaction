@@ -3,10 +3,7 @@
 #include "LauncherApp.h"
 #include <wxx_commondlg.h>
 
-OptionsMiscDlg::OptionsMiscDlg(GameConfig& conf)
-	: CDialog(IDD_OPTIONS_MISC), m_conf(conf)
-{
-}
+OptionsMiscDlg::OptionsMiscDlg(GameConfig& conf) : CDialog(IDD_OPTIONS_MISC), m_conf(conf) {}
 
 BOOL OptionsMiscDlg::OnInitDialog()
 {
@@ -25,7 +22,11 @@ void OptionsMiscDlg::InitToolTip()
 {
     m_tool_tip.Create(*this);
     m_tool_tip.AddTool(GetDlgItem(IDC_FAST_START_CHECK), "Skip game intro videos and go straight to Main Menu");
-    m_tool_tip.AddTool(GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK), "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of level packfiles modyfing common textures/sounds.");
+    m_tool_tip.AddTool(
+        GetDlgItem(IDC_ALLOW_OVERWRITE_GAME_CHECK),
+        "Enable this if you want to modify game content by putting mods into user_maps folder. Can have side effect of "
+        "level packfiles modyfing common textures/sounds."
+    );
     m_tool_tip.AddTool(GetDlgItem(IDC_AUTOSAVE_CHECK), "Automatically save the game after a level transition");
 }
 

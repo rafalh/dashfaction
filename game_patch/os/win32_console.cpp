@@ -55,7 +55,10 @@ static void print_cmd_input_line()
     GetConsoleScreenBufferInfo(win32_console_output_handle, &scr_buf_info);
     WriteConsoleA(win32_console_output_handle, "] ", 2, nullptr, nullptr);
     unsigned offset = std::max(0, rf::console::cmd_line_len - scr_buf_info.dwSize.X + 3);
-    WriteConsoleA(win32_console_output_handle, rf::console::cmd_line + offset, rf::console::cmd_line_len - offset, nullptr, nullptr);
+    WriteConsoleA(
+        win32_console_output_handle, rf::console::cmd_line + offset, rf::console::cmd_line_len - offset, nullptr,
+        nullptr
+    );
     win32_console_input_line_printed = true;
 }
 
@@ -102,8 +105,10 @@ void win32_console_init()
         char* ptr = std::format_to(buf, "(error {})", GetLastError());
         *ptr = '\0';
     }
-    xlog::info("Standard output info: path_name {}, file_type: {}, handle {}",
-        buf, GetFileType(win32_console_output_handle), win32_console_output_handle);
+    xlog::info(
+        "Standard output info: path_name {}, file_type: {}, handle {}", buf, GetFileType(win32_console_output_handle),
+        win32_console_output_handle
+    );
 
     if (!GetFileType(win32_console_output_handle)) {
         if (!AllocConsole()) {
@@ -115,8 +120,10 @@ void win32_console_init()
         std::freopen("CONOUT$", "w", stdout);
         std::freopen("CONOUT$", "w", stderr);
         std::freopen("CONIN$", "r", stdin);
-        xlog::info("Allocated new console, standard output: file_type {}, handle {}",
-            GetFileType(win32_console_output_handle), win32_console_output_handle);
+        xlog::info(
+            "Allocated new console, standard output: file_type {}, handle {}", GetFileType(win32_console_output_handle),
+            win32_console_output_handle
+        );
     }
 
     SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
@@ -125,7 +132,7 @@ void win32_console_init()
     win32_console_is_output_redirected = !GetConsoleMode(win32_console_output_handle, &mode);
     win32_console_is_input_redirected = !GetConsoleMode(win32_console_input_handle, &mode);
     if (!win32_console_is_input_redirected) {
-        SetConsoleMode(win32_console_input_handle, mode & ~ ENABLE_ECHO_INPUT);
+        SetConsoleMode(win32_console_input_handle, mode & ~ENABLE_ECHO_INPUT);
     }
 
     // std::thread input_thread(input_thread_proc);
@@ -236,7 +243,8 @@ void win32_console_new_line()
 void win32_console_update()
 {
     static char prev_cmd_line[sizeof(rf::console::cmd_line)];
-    if (std::strncmp(rf::console::cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0 || !win32_console_input_line_printed) {
+    if (std::strncmp(rf::console::cmd_line, prev_cmd_line, std::size(prev_cmd_line)) != 0 ||
+        !win32_console_input_line_printed) {
         reset_console_cursor_column(true);
         print_cmd_input_line();
         std::strcpy(prev_cmd_line, rf::console::cmd_line);
@@ -257,7 +265,9 @@ void win32_console_poll_input()
         if (!ReadConsoleInput(input_handle, &input_record, 1, &num_read) || num_read == 0)
             break;
         if (input_record.EventType == KEY_EVENT) {
-            rf::key_process_event(input_record.Event.KeyEvent.wVirtualScanCode, input_record.Event.KeyEvent.bKeyDown, 0);
+            rf::key_process_event(
+                input_record.Event.KeyEvent.wVirtualScanCode, input_record.Event.KeyEvent.bKeyDown, 0
+            );
         }
     }
 }

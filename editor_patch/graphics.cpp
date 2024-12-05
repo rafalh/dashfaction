@@ -100,53 +100,51 @@ CodeInjection after_gr_init_hook{
 CodeInjection gr_d3d_line_3d_patch_1{
     0x004E133E,
     [](auto& regs) {
-        bool flush_needed = !red::gr_d3d_buffers_locked
-                         || red::gr_d3d_primitive_type != D3DPT_LINELIST
-                         || red::gr_d3d_max_hw_vertex + 2 > 6000
-                         || red::gr_d3d_max_hw_index + red::gr_d3d_num_indices + 2 > 10000;
+        bool flush_needed = !red::gr_d3d_buffers_locked || red::gr_d3d_primitive_type != D3DPT_LINELIST ||
+                            red::gr_d3d_max_hw_vertex + 2 > 6000 ||
+                            red::gr_d3d_max_hw_index + red::gr_d3d_num_indices + 2 > 10000;
         if (!flush_needed) {
             xlog::trace("Skipping gr_d3d_prepare_buffers");
             regs.eip = 0x004E1343;
         }
         else {
-            xlog::trace("Line drawing requires gr_d3d_prepare_buffers {} {} {} {}",
-                 red::gr_d3d_buffers_locked, red::gr_d3d_primitive_type, red::gr_d3d_max_hw_vertex,
-                 red::gr_d3d_max_hw_index + red::gr_d3d_num_indices);
+            xlog::trace(
+                "Line drawing requires gr_d3d_prepare_buffers {} {} {} {}", red::gr_d3d_buffers_locked,
+                red::gr_d3d_primitive_type, red::gr_d3d_max_hw_vertex,
+                red::gr_d3d_max_hw_index + red::gr_d3d_num_indices
+            );
         }
     },
 };
 
 CallHook<void()> gr_d3d_line_3d_patch_2{
     0x004E1528,
-    []() {
-        red::gr_d3d_num_vertices += 2;
-    },
+    []() { red::gr_d3d_num_vertices += 2; },
 };
 
 CodeInjection gr_d3d_line_2d_patch_1{
     0x004E10BD,
     [](auto& regs) {
-        bool flush_needed = !red::gr_d3d_buffers_locked
-                         || red::gr_d3d_primitive_type != D3DPT_LINELIST
-                         || red::gr_d3d_max_hw_vertex + 2 > 6000
-                         || red::gr_d3d_max_hw_index + red::gr_d3d_num_indices + 2 > 10000;
+        bool flush_needed = !red::gr_d3d_buffers_locked || red::gr_d3d_primitive_type != D3DPT_LINELIST ||
+                            red::gr_d3d_max_hw_vertex + 2 > 6000 ||
+                            red::gr_d3d_max_hw_index + red::gr_d3d_num_indices + 2 > 10000;
         if (!flush_needed) {
             xlog::trace("Skipping gr_d3d_prepare_buffers");
             regs.eip = 0x004E10C2;
         }
         else {
-            xlog::trace("Line drawing requires gr_d3d_prepare_buffers {} {} {} {}",
-                 red::gr_d3d_buffers_locked, red::gr_d3d_primitive_type, red::gr_d3d_max_hw_vertex,
-                 red::gr_d3d_max_hw_index + red::gr_d3d_num_indices);
+            xlog::trace(
+                "Line drawing requires gr_d3d_prepare_buffers {} {} {} {}", red::gr_d3d_buffers_locked,
+                red::gr_d3d_primitive_type, red::gr_d3d_max_hw_vertex,
+                red::gr_d3d_max_hw_index + red::gr_d3d_num_indices
+            );
         }
     },
 };
 
 CallHook<void()> gr_d3d_line_2d_patch_2{
     0x004E11F2,
-    []() {
-        red::gr_d3d_num_vertices += 2;
-    },
+    []() { red::gr_d3d_num_vertices += 2; },
 };
 
 CodeInjection gr_d3d_poly_patch{
@@ -196,18 +194,19 @@ CodeInjection gr_d3d_render_geometry_face_patch_2{
 
 CallHook<void(int, int, int, int, int, HWND, float, bool, int, D3DFORMAT)> gr_init_hook{
     0x00482B78,
-    [](int max_w, int max_h, int bit_depth, int mode, int window_mode, HWND hwnd, float far_zvalue, bool sync_blit, int video_card, D3DFORMAT backbuffer_format) {
+    [](int max_w, int max_h, int bit_depth, int mode, int window_mode, HWND hwnd, float far_zvalue, bool sync_blit,
+       int video_card, D3DFORMAT backbuffer_format) {
         max_w = GetSystemMetrics(SM_CXSCREEN);
         max_h = GetSystemMetrics(SM_CYSCREEN);
-        gr_init_hook.call_target(max_w, max_h, bit_depth, mode, window_mode, hwnd, far_zvalue, sync_blit, video_card, backbuffer_format);
+        gr_init_hook.call_target(
+            max_w, max_h, bit_depth, mode, window_mode, hwnd, far_zvalue, sync_blit, video_card, backbuffer_format
+        );
     },
 };
 
 CodeInjection gr_init_widescreen_patch{
     0x004B8CD1,
-    []() {
-        red::gr_screen.aspect = 1.0f;
-    },
+    []() { red::gr_screen.aspect = 1.0f; },
 };
 
 FunHook<void(red::Matrix3*, red::Vector3*, float, bool, bool)> gr_setup_3d_hook{
@@ -227,7 +226,7 @@ FunHook<void(red::Matrix3*, red::Vector3*, float, bool, bool)> gr_setup_3d_hook{
             horizontal_fov = h_fov_rad / pi * 180.0f;
             // Clamp the value to avoid artifacts when view is very stretched
             horizontal_fov = std::clamp(horizontal_fov, 60.0f, 120.0f);
-            //xlog::info("fov {}", horizontal_fov);
+            // xlog::info("fov {}", horizontal_fov);
         }
         gr_setup_3d_hook.call_target(viewer_orient, viewer_pos, horizontal_fov, zbuffer_flag, z_scale);
     },
@@ -271,8 +270,8 @@ void ApplyGraphicsPatches()
 #if D3D_HW_VERTEX_PROCESSING
     // Use hardware vertex processing instead of software processing
     write_mem<u8>(0x004EC73E + 1, D3DCREATE_HARDWARE_VERTEXPROCESSING);
-    write_mem<u32>(0x004EBC3D + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
-    write_mem<u32>(0x004EBC77 + 1, D3DUSAGE_DYNAMIC|D3DUSAGE_DONOTCLIP|D3DUSAGE_WRITEONLY);
+    write_mem<u32>(0x004EBC3D + 1, D3DUSAGE_DYNAMIC | D3DUSAGE_DONOTCLIP | D3DUSAGE_WRITEONLY);
+    write_mem<u32>(0x004EBC77 + 1, D3DUSAGE_DYNAMIC | D3DUSAGE_DONOTCLIP | D3DUSAGE_WRITEONLY);
 #endif
 
     // Avoid flushing D3D buffers in GrSetColorRgba

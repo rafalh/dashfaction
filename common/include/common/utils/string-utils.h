@@ -8,7 +8,7 @@
 #include <cctype>
 
 #ifdef __GNUC__
-#define PRINTF_FMT_ATTRIBUTE(fmt_idx, va_idx) __attribute__ ((format (printf, fmt_idx, va_idx)))
+#define PRINTF_FMT_ATTRIBUTE(fmt_idx, va_idx) __attribute__((format(printf, fmt_idx, va_idx)))
 #else
 #define PRINTF_FMT_ATTRIBUTE(fmt_idx, va_idx)
 #endif
@@ -45,9 +45,10 @@ inline std::string string_to_lower(std::string_view str)
 
 inline bool string_equals_ignore_case(std::string_view left, std::string_view right)
 {
-    return left.size() == right.size() && std::equal(left.begin(), left.end(), right.begin(), [](unsigned char a, unsigned char b) {
-        return std::tolower(a) == std::tolower(b);
-    });
+    return left.size() == right.size() &&
+           std::equal(left.begin(), left.end(), right.begin(), [](unsigned char a, unsigned char b) {
+               return std::tolower(a) == std::tolower(b);
+           });
 }
 
 inline bool string_starts_with(std::string_view str, std::string_view prefix)
@@ -82,14 +83,15 @@ inline bool string_contains(std::string_view str, std::string_view infix)
 
 inline bool string_contains_ignore_case(std::string_view str, std::string_view infix)
 {
-    std::string_view::iterator it = std::search(str.begin(), str.end(),
-        infix.begin(), infix.end(),  [](unsigned char a, unsigned char b) {
-        return std::tolower(a) == std::tolower(b);
-    });
+    std::string_view::iterator it =
+        std::search(str.begin(), str.end(), infix.begin(), infix.end(), [](unsigned char a, unsigned char b) {
+            return std::tolower(a) == std::tolower(b);
+        });
     return it != str.end();
 }
 
-inline std::string string_replace(const std::string_view& str, const std::string_view& search, const std::string_view& replacement)
+inline std::string
+string_replace(const std::string_view& str, const std::string_view& search, const std::string_view& replacement)
 {
     std::size_t pos = 0;
     std::string result{str};
@@ -180,4 +182,3 @@ inline std::string_view get_ext_from_filename(std::string_view filename)
     }
     return filename.substr(dot_pos + 1);
 }
-

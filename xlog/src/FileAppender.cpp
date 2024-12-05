@@ -1,8 +1,7 @@
 
 #include <xlog/FileAppender.h>
 
-xlog::FileAppender::FileAppender(const std::string& filename, bool append, bool flush) :
-    flush_(flush)
+xlog::FileAppender::FileAppender(const std::string& filename, bool append, bool flush) : flush_(flush)
 {
     std::ios_base::openmode m = std::ios_base::out;
     if (append)

@@ -27,7 +27,8 @@ struct ParsedFontName
 };
 
 template<typename T = int>
-class TextureAtlasPacker {
+class TextureAtlasPacker
+{
 public:
     void add(int w, int h, T userdata);
     void pack();
@@ -149,9 +150,7 @@ inline void TextureAtlasPacker<T>::pack()
     update_size();
     xlog::trace("Texture atlas usage: {:.2f}", total_pixels_ * 100.0f / (atlas_size_.first * atlas_size_.second));
     // Sort by area (from largest to smallest)
-    std::sort(items_.begin(), items_.end(), [](Item& a, Item& b) {
-        return a.area > b.area;
-    });
+    std::sort(items_.begin(), items_.end(), [](Item& a, Item& b) { return a.area > b.area; });
     // Set positions
     if (!try_pack()) {
         atlas_size_ = {2 * atlas_size_.first, 2 * atlas_size_.second};
@@ -213,8 +212,7 @@ inline void TextureAtlasPacker<T>::update_size()
     atlas_size_ = std::pair{size, size};
 }
 
-GrNewFont::GrNewFont(std::string_view name) :
-    name_{name}
+GrNewFont::GrNewFont(std::string_view name) : name_{name}
 {
     auto [filename, size_x, size_y, digits_only] = parse_font_name(name);
     std::vector<unsigned char> buffer;
@@ -238,8 +236,10 @@ GrNewFont::GrNewFont(std::string_view name) :
     }
 
     xlog::trace("raw height {} ascender {} descender {}", face->height, face->ascender, face->descender);
-    xlog::trace("scaled height {} ascender {} descender {}", face->size->metrics.height / 64,
-        face->size->metrics.ascender / 64, face->size->metrics.descender / 64);
+    xlog::trace(
+        "scaled height {} ascender {} descender {}", face->size->metrics.height / 64, face->size->metrics.ascender / 64,
+        face->size->metrics.descender / 64
+    );
     line_spacing_ = face->size->metrics.height / 64;
     height_ = line_spacing_; //(face->size->metrics.ascender - face->size->metrics.descender) / 64;
     baseline_y_ = face->size->metrics.ascender / 64;
@@ -248,27 +248,9 @@ GrNewFont::GrNewFont(std::string_view name) :
     // Prepare lookup table for translating Windows 1252 characters (encoding used by RF) into Unicode codepoints
 
     static std::pair<int, int> win_1252_char_ranges[]{
-        {0x20, 0x7E},
-        {0x8C, 0x8C},
-        {0x99, 0x99},
-        {0x9C, 0x9C},
-        {0x9F, 0x9F},
-        {0xA6, 0xA7},
-        {0xA9, 0xAB},
-        {0xAE, 0xAE},
-        {0xB0, 0xB0},
-        {0xC0, 0xC2},
-        {0xC4, 0xCB},
-        {0xCE, 0xCF},
-        {0xD2, 0xD4},
-        {0xD6, 0xD6},
-        {0xD9, 0xDC},
-        {0xDF, 0xE2},
-        {0xE4, 0xEB},
-        {0xEE, 0xEF},
-        {0xF2, 0xF4},
-        {0xF6, 0xF6},
-        {0xF9, 0xFC},
+        {0x20, 0x7E}, {0x8C, 0x8C}, {0x99, 0x99}, {0x9C, 0x9C}, {0x9F, 0x9F}, {0xA6, 0xA7}, {0xA9, 0xAB},
+        {0xAE, 0xAE}, {0xB0, 0xB0}, {0xC0, 0xC2}, {0xC4, 0xCB}, {0xCE, 0xCF}, {0xD2, 0xD4}, {0xD6, 0xD6},
+        {0xD9, 0xDC}, {0xDF, 0xE2}, {0xE4, 0xEB}, {0xEE, 0xEF}, {0xF2, 0xF4}, {0xF6, 0xF6}, {0xF9, 0xFC},
     };
 
     // Prepare character mapping and array of unicode code points
@@ -331,8 +313,10 @@ GrNewFont::GrNewFont(std::string_view name) :
 
         auto [glyph_bm_x, glyph_bm_y] = atlas_packer.get_pos(codepoint);
 
-        xlog::trace("glyph {:x} bitmap x {} y {} w {} h {} left {} top {} advance {}", codepoint, glyph_bm_x, glyph_bm_y,
-            glyph_bm_w, glyph_bm_h, slot->bitmap_left, slot->bitmap_top, slot->advance.x >> 6);
+        xlog::trace(
+            "glyph {:x} bitmap x {} y {} w {} h {} left {} top {} advance {}", codepoint, glyph_bm_x, glyph_bm_y,
+            glyph_bm_w, glyph_bm_h, slot->bitmap_left, slot->bitmap_top, slot->advance.x >> 6
+        );
 
         GlyphInfo glyph_info;
         glyph_info.advance_x = slot->advance.x >> 6;
@@ -345,7 +329,10 @@ GrNewFont::GrNewFont(std::string_view name) :
 
         int pixel_size = bm_bytes_per_pixel(lock.format);
         auto* dst_ptr = bitmap_bits + glyph_bm_y * lock.stride_in_bytes + glyph_bm_x * pixel_size;
-        bm_convert_format(dst_ptr, lock.format, bitmap.buffer, rf::bm::FORMAT_8_ALPHA, bitmap.width, bitmap.rows, lock.stride_in_bytes, bitmap.pitch);
+        bm_convert_format(
+            dst_ptr, lock.format, bitmap.buffer, rf::bm::FORMAT_8_ALPHA, bitmap.width, bitmap.rows,
+            lock.stride_in_bytes, bitmap.pitch
+        );
 
         glyphs_.push_back(glyph_info);
     }
@@ -372,8 +359,11 @@ void GrNewFont::draw(int x, int y, std::string_view text, rf::gr::Mode state) co
             if (glyph_idx != -1) {
                 const auto& glyph_info = glyphs_[glyph_idx];
                 if (glyph_info.bm_w) {
-                    //rf::gr::rect(pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h);
-                    rf::gr::bitmap_ex(bitmap_, pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h, glyph_info.bm_x, glyph_info.bm_y, state);
+                    // rf::gr::rect(pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h);
+                    rf::gr::bitmap_ex(
+                        bitmap_, pen_x + glyph_info.x, pen_y + glyph_info.y, glyph_info.bm_w, glyph_info.bm_h,
+                        glyph_info.bm_x, glyph_info.bm_y, state
+                    );
                 }
                 pen_x += glyph_info.advance_x;
             }
@@ -385,7 +375,8 @@ void GrNewFont::draw(int x, int y, std::string_view text, rf::gr::Mode state) co
     current_string_y = y;
 }
 
-void GrNewFont::draw_aligned(rf::gr::TextAlignment alignment, int x, int y, std::string_view text, rf::gr::Mode state) const
+void GrNewFont::draw_aligned(rf::gr::TextAlignment alignment, int x, int y, std::string_view text, rf::gr::Mode state)
+    const
 {
     size_t cur_pos = 0;
     while (cur_pos < text.size()) {
@@ -462,9 +453,9 @@ void gr_font_set_default(int font_id)
 
 FunHook<int(const char*, int)> gr_init_font_hook{
     0x0051F6E0,
-    [](const char *name, int reserved) {
+    [](const char* name, int reserved) {
         if (rf::is_dedicated_server) {
-           return -1;
+            return -1;
         }
         if (string_ends_with(name, ".vf")) {
             return gr_init_font_hook.call_target(name, reserved);
@@ -515,7 +506,7 @@ FunHook<int(int)> gr_get_font_height_hook{
 
 FunHook<void(int, int, const char*, int, rf::gr::Mode)> gr_string_hook{
     0x0051FEB0,
-    [](int x, int y, const char *text, int font_num, rf::gr::Mode mode) {
+    [](int x, int y, const char* text, int font_num, rf::gr::Mode mode) {
         if (font_num == -1) {
             font_num = g_default_font_id;
         }
@@ -531,7 +522,7 @@ FunHook<void(int, int, const char*, int, rf::gr::Mode)> gr_string_hook{
 
 FunHook<void(int*, int*, const char*, int, int)> gr_get_string_size_hook{
     0x0051F530,
-    [](int *out_width, int *out_height, const char *text, int text_len, int font_num) {
+    [](int* out_width, int* out_height, const char* text, int text_len, int font_num) {
         if (font_num == -1) {
             font_num = g_default_font_id;
         }
@@ -554,16 +545,14 @@ FunHook<void(int*, int*, const char*, int, int)> gr_get_string_size_hook{
 
 CodeInjection gr_create_font_increment_number_injection{
     0x0051F800,
-    []() {
-        rf::gr::num_fonts++;
-    },
+    []() { rf::gr::num_fonts++; },
 };
 
 void gr_font_apply_patch()
 {
     // Fix font texture leak
-    // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is reloaded.
-    // Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
+    // Original code sets bitmap handle in all fonts to -1 on level unload. On next font usage the font bitmap is
+    // reloaded. Note: font bitmaps are dynamic (USERBMAP) so they cannot be found by name unlike normal bitmaps.
     AsmWriter(0x0051F3E0).ret();
     gr_load_font_internal_fix_texture_ref.install();
 

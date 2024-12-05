@@ -29,17 +29,17 @@ StaticBufferResizePatch<rf::Object*> obj_ptr_array_resize_patch{
     old_obj_limit,
     obj_limit,
     {
-         {0x0040A0F7},
-         {0x004867B5},
-         {0x00486854},
-         {0x00486D51},
-         {0x00486E38},
-         {0x00487572},
-         {0x0048759E},
-         {0x004875B4},
-         {0x0048A78A},
-         {0x00486D70, true},
-         {0x0048A7A1, true},
+        {0x0040A0F7},
+        {0x004867B5},
+        {0x00486854},
+        {0x00486D51},
+        {0x00486E38},
+        {0x00487572},
+        {0x0048759E},
+        {0x004875B4},
+        {0x0048A78A},
+        {0x00486D70, true},
+        {0x0048A7A1, true},
     },
 };
 
@@ -56,7 +56,8 @@ StaticBufferResizePatch<int> obj_multi_handle_mapping_resize_patch{
     },
 };
 
-static struct {
+static struct
+{
     int count;
     rf::Object* objects[obj_limit];
 } g_sim_obj_array;
@@ -180,7 +181,7 @@ CodeInjection sort_clutter_patch{
         clutter->prev->next = clutter;
         // Set up needed registers
         regs.eax = addr_as_ref<int>(regs.esp + 0xD0 + 0x18); // killable
-        regs.ecx = addr_as_ref<int>(0x005C9358) + 1; // num_clutter_objs
+        regs.ecx = addr_as_ref<int>(0x005C9358) + 1;         // num_clutter_objs
         regs.eip = 0x00410A03;
     },
 };
@@ -211,7 +212,7 @@ CodeInjection object_find_room_optimization{
         // Check if object is in room bounding box to handle leaving room by a hole
         if (obj->room && rf::ix_point_in_box(obj->pos, obj->room->bbox_min, obj->room->bbox_max)) {
             // Pass original room to GSolid::find_new_room so it can execute a faster code path
-            addr_as_ref<rf::GRoom*>(regs.esp) = obj->room; // orig_room
+            addr_as_ref<rf::GRoom*>(regs.esp) = obj->room;               // orig_room
             addr_as_ref<rf::Vector3*>(regs.esp + 4) = &obj->correct_pos; // orig_pos
         }
     },
@@ -223,7 +224,7 @@ void object_do_patch()
     obj_create_hook.install();
 
     // Change object limit
-    //obj_free_slot_buffer_resize_patch.install();
+    // obj_free_slot_buffer_resize_patch.install();
     obj_ptr_array_resize_patch.install();
     obj_multi_handle_mapping_resize_patch.install();
     write_mem<u32>(0x0040A0F0 + 1, obj_limit);

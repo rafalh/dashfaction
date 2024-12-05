@@ -2,11 +2,13 @@
 
 #include <patch_common/MemUtils.h>
 
-namespace rf {
+namespace rf
+{
     struct Player;
 }
 
-namespace rf::sr {
+namespace rf::sr
+{
     constexpr uint8_t MAX_GOAL_CREATE_EVENTS = 8;
     constexpr uint8_t MAX_ALARM_SIREN_EVENTS = 8;
     constexpr uint8_t MAX_WHEN_DEAD_EVENTS = 20;
@@ -57,7 +59,7 @@ namespace rf::sr {
     };
     static_assert(sizeof(LevelData) == 0x18720);
 
-    static auto& save_game = addr_as_ref<bool(const char *filename, Player *pp)>(0x004B3B30);
+    static auto& save_game = addr_as_ref<bool(const char* filename, Player* pp)>(0x004B3B30);
     static auto& can_save_now = addr_as_ref<bool()>(0x004B61A0);
 
     static auto& savegame_path = addr_as_ref<char[260]>(0x007DB3EC);

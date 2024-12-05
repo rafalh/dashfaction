@@ -20,8 +20,8 @@
 #endif
 
 #define INIT_TIMEOUT 10000
-#define RF_120_NA_SHA1  "f94f2e3f565d18f75ab6066e77f73a62a593fe03"
-#define RF_120_NA_4GB_SHA1  "4140f7619b6427c170542c66178b47bd48795a99"
+#define RF_120_NA_SHA1 "f94f2e3f565d18f75ab6066e77f73a62a593fe03"
+#define RF_120_NA_4GB_SHA1 "4140f7619b6427c170542c66178b47bd48795a99"
 #define RED_120_NA_SHA1 "b4f421bfa9343362d7cc565e9f7ab8c6cc36f3a2"
 #define TABLES_VPP_SHA1 "ded5e1b5932f47044ba760699d5931fda6bdc8ba"
 
@@ -37,11 +37,13 @@ std::string PatchedAppLauncher::get_patch_dll_path()
     // Get GetFinalPathNameByHandleA function address dynamically in order to support Windows XP
     using GetFinalPathNameByHandleA_Type = decltype(GetFinalPathNameByHandleA);
     HMODULE kernel32_module = GetModuleHandleA("kernel32");
-    auto* GetFinalPathNameByHandleA_ptr = reinterpret_cast<GetFinalPathNameByHandleA_Type*>(reinterpret_cast<void(*)()>(
-        GetProcAddress(kernel32_module, "GetFinalPathNameByHandleA")));
+    auto* GetFinalPathNameByHandleA_ptr = reinterpret_cast<GetFinalPathNameByHandleA_Type*>(
+        reinterpret_cast<void (*)()>(GetProcAddress(kernel32_module, "GetFinalPathNameByHandleA"))
+    );
     // Make sure path is pointing to an actual module and not a symlink
     if (GetFinalPathNameByHandleA_ptr) {
-        HANDLE file_handle = CreateFileA(buf.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
+        HANDLE file_handle =
+            CreateFileA(buf.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
         if (file_handle != INVALID_HANDLE_VALUE) {
             buf.resize(MAX_PATH);
 
@@ -104,17 +106,14 @@ void PatchedAppLauncher::launch()
             proc_launcher.wait(INFINITE);
         }
     }
-    catch (const Win32Error& e)
-    {
+    catch (const Win32Error& e) {
         if (e.error() == ERROR_ELEVATION_REQUIRED)
             throw PrivilegeElevationRequiredException();
         throw;
     }
-    catch (const ProcessTerminatedError&)
-    {
-        throw LauncherError(
-            "Game process has terminated before injection!\n"
-            "Check your Red Faction installation.");
+    catch (const ProcessTerminatedError&) {
+        throw LauncherError("Game process has terminated before injection!\n"
+                            "Check your Red Faction installation.");
     }
 }
 
@@ -142,7 +141,8 @@ void PatchedAppLauncher::verify_before_launch()
     if (!PathFileExistsA(tables_vpp_path.c_str())) {
         throw LauncherError(
             "Game directory validation has failed.\nPlease make sure game executable specified in options is located "
-            "inside a valid Red Faction installation root directory.");
+            "inside a valid Red Faction installation root directory."
+        );
     }
 }
 
@@ -242,7 +242,6 @@ bool GameLauncher::check_app_hash(const std::string& sha1)
 {
     return sha1 == RF_120_NA_SHA1 || sha1 == RF_120_NA_4GB_SHA1;
 }
-
 
 EditorLauncher::EditorLauncher() : PatchedAppLauncher("DashEditor.dll")
 {

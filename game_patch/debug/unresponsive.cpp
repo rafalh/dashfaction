@@ -20,7 +20,8 @@ ConsoleCommand2 hang_cmd{
     "d_hang",
     []() {
         int start = rf::timer_get(1000);
-        while (rf::timer_get(1000) - start < 6000) {}
+        while (rf::timer_get(1000) - start < 6000) {
+        }
     },
 };
 #endif

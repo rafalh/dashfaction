@@ -62,14 +62,17 @@ void InjectingProcessLauncher::wait_for_process_initialization(uintptr_t entry_p
 }
 
 InjectingProcessLauncher::InjectingProcessLauncher(
-    const char* app_name, const char* work_dir, const char* command_line, STARTUPINFO& startup_info, int timeout)
+    const char* app_name, const char* work_dir, const char* command_line, STARTUPINFO& startup_info, int timeout
+)
 {
     xlog::info("Creating suspended process");
     PROCESS_INFORMATION process_info;
     ZeroMemory(&process_info, sizeof(process_info));
     xlog::info("Calling CreateProcessA app_name {}, command_line {}, work_dir {}", app_name, command_line, work_dir);
-    BOOL result = CreateProcessA(app_name, const_cast<char*>(command_line), nullptr, nullptr, TRUE, CREATE_SUSPENDED,
-                                 nullptr, work_dir, &startup_info, &process_info);
+    BOOL result = CreateProcessA(
+        app_name, const_cast<char*>(command_line), nullptr, nullptr, TRUE, CREATE_SUSPENDED, nullptr, work_dir,
+        &startup_info, &process_info
+    );
     xlog::info("CreateProcessA returned {}", result);
     if (!result) {
         THROW_WIN32_ERROR();

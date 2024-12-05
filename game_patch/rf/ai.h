@@ -21,13 +21,13 @@ namespace rf
     struct AiPathInfo
     {
         int num_nodes;
-        GPathNode *nodes[4];
+        GPathNode* nodes[4];
         int previous_goal;
         int current_goal;
         GPathNode start_node;
         GPathNode end_node;
-        GPathNode *adjacent_node1;
-        GPathNode *adjacent_node2;
+        GPathNode* adjacent_node1;
+        GPathNode* adjacent_node2;
         Timestamp shortcut_next_check;
         int waypoint_list_index;
         int goal_waypoint_index;
@@ -108,7 +108,6 @@ namespace rf
         AI_COVER_STYLE_STAND = 0x2,
     };
 
-
     enum AiCooperation
     {
         AI_UNCOOPERATIVE = 0x0,
@@ -116,10 +115,9 @@ namespace rf
         AI_COOPERATIVE = 0x2,
     };
 
-
     struct AiInfo
     {
-        Entity *ep;
+        Entity* ep;
         int current_primary_weapon;
         int current_secondary_weapon;
         int ammo[32];
@@ -218,7 +216,7 @@ namespace rf
     static_assert(sizeof(AiInfo) == 0x534);
 
     static auto& ai_get_attack_range = addr_as_ref<float(AiInfo& ai)>(0x004077A0);
-    static auto& ai_has_weapon = addr_as_ref<bool(AiInfo *ai_info, int weapon_type)>(0x00403250);
+    static auto& ai_has_weapon = addr_as_ref<bool(AiInfo* ai_info, int weapon_type)>(0x00403250);
 
     static auto& ai_pause = addr_as_ref<bool>(0x005AF46D);
 }

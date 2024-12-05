@@ -8,11 +8,8 @@
 #include <wxx_commondlg.h>
 
 OptionsDisplayDlg::OptionsDisplayDlg(GameConfig& conf, OptionsGraphicsDlg& graphics_dlg) :
-    CDialog(IDD_OPTIONS_DISPLAY),
-    m_conf(conf),
-    m_graphics_dlg(graphics_dlg)
-{
-}
+    CDialog(IDD_OPTIONS_DISPLAY), m_conf(conf), m_graphics_dlg(graphics_dlg)
+{}
 
 BOOL OptionsDisplayDlg::OnInitDialog()
 {
@@ -61,9 +58,17 @@ void OptionsDisplayDlg::InitToolTip()
     m_tool_tip.AddTool(GetDlgItem(IDC_RENDERER_COMBO), "Graphics API used for rendering");
     m_tool_tip.AddTool(GetDlgItem(IDC_ADAPTER_COMBO), "Graphics card/adapter used for rendering");
     m_tool_tip.AddTool(GetDlgItem(IDC_RENDERING_CACHE_EDIT), "RAM allocated for level geometry rendering, max 32 MB");
-    m_tool_tip.AddTool(GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution is supposed to work in Windowed/Borderless mode only");
-    m_tool_tip.AddTool(GetDlgItem(IDC_VSYNC_CHECK), "Enable vertical synchronization (should limit FPS to monitor refresh rate - usually 60)");
-    m_tool_tip.AddTool(GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - maximal value is 240 - high FPS can trigger minor bugs in game");
+    m_tool_tip.AddTool(
+        GetDlgItem(IDC_RESOLUTIONS_COMBO), "Please select resolution from provided dropdown list - custom resolution "
+                                           "is supposed to work in Windowed/Borderless mode only"
+    );
+    m_tool_tip.AddTool(
+        GetDlgItem(IDC_VSYNC_CHECK),
+        "Enable vertical synchronization (should limit FPS to monitor refresh rate - usually 60)"
+    );
+    m_tool_tip.AddTool(
+        GetDlgItem(IDC_MAX_FPS_EDIT), "FPS limit - maximal value is 240 - high FPS can trigger minor bugs in game"
+    );
 }
 
 void OptionsDisplayDlg::UpdateAdapterCombo()
@@ -75,7 +80,7 @@ void OptionsDisplayDlg::UpdateAdapterCombo()
     int selected_idx = -1;
     try {
         auto adapters = m_video_info->get_adapters();
-        for (const auto &adapter : adapters) {
+        for (const auto& adapter : adapters) {
             int idx = m_adapter_combo.AddString(adapter.c_str());
             if (idx < 0)
                 throw std::runtime_error("failed to add string to combo box");
@@ -83,7 +88,7 @@ void OptionsDisplayDlg::UpdateAdapterCombo()
                 selected_idx = idx;
         }
     }
-    catch (std::exception &e) {
+    catch (std::exception& e) {
         xlog::error("Cannot get video adapters: {}", e.what());
     }
     if (selected_idx != -1)
@@ -101,14 +106,14 @@ void OptionsDisplayDlg::UpdateResolutionCombo()
     try {
         auto format = m_video_info->get_format_from_bpp(m_conf.res_bpp);
         auto resolutions = m_video_info->get_resolutions(m_conf.selected_video_card, format);
-        for (const auto &res : resolutions) {
+        for (const auto& res : resolutions) {
             buf.Format("%dx%d", res.width, res.height);
             int pos = m_res_combo.AddString(buf);
             if (m_conf.res_width == res.width && m_conf.res_height == res.height)
                 selected_res = pos;
         }
     }
-    catch (std::exception &e) {
+    catch (std::exception& e) {
         // Only 'Disabled' option available. Log error in console.
         xlog::error("Cannot get available screen resolutions: {}", e.what());
     }
@@ -150,7 +155,7 @@ void OptionsDisplayDlg::UpdateColorDepthCombo()
     m_color_depth_combo.SetCurSel(m_conf.res_bpp == 16 ? index_16 : index_32);
 }
 
-BOOL OptionsDisplayDlg::OnCommand(WPARAM wparam, [[ maybe_unused ]] LPARAM lparam)
+BOOL OptionsDisplayDlg::OnCommand(WPARAM wparam, [[maybe_unused]] LPARAM lparam)
 {
     if (HIWORD(wparam) == CBN_SELCHANGE) {
         switch (LOWORD(wparam)) {
@@ -177,9 +182,9 @@ void OptionsDisplayDlg::OnSave()
     m_conf.selected_video_card = m_adapter_combo.GetCurSel();
 
     CString resolution_str = GetDlgItemTextA(IDC_RESOLUTIONS_COMBO);
-    char *ptr = const_cast<char*>(resolution_str.c_str());
-    const char *width_str = strtok(ptr, "x");
-    const char *height_str = strtok(nullptr, "x");
+    char* ptr = const_cast<char*>(resolution_str.c_str());
+    const char* width_str = strtok(ptr, "x");
+    const char* height_str = strtok(nullptr, "x");
     if (width_str && height_str) {
         m_conf.res_width = atoi(width_str);
         m_conf.res_height = atoi(height_str);

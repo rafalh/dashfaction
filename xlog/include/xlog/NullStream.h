@@ -3,14 +3,14 @@
 namespace xlog
 {
 
-class NullStream
-{
-public:
-    template<typename T>
-    NullStream& operator<<(const T&)
+    class NullStream
     {
-        return *this;
-    }
-};
+    public:
+        template<typename T>
+        NullStream& operator<<(const T&)
+        {
+            return *this;
+        }
+    };
 
 }

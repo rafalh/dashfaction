@@ -33,45 +33,31 @@ namespace df::gr::d3d11
     static auto& gr_decal_mode = addr_as_ref<gr::Mode>(0x01808318);
     static auto& gr_solid_mode = addr_as_ref<gr::Mode>(0x01808328);
     static auto& gr_solid_alpha_mode = addr_as_ref<gr::Mode>(0x0180832C);
-    static auto& geo_cache_rooms = addr_as_ref<GRoom*[256]>(0x01375DB4);
+    static auto& geo_cache_rooms = addr_as_ref<GRoom* [256]>(0x01375DB4);
     static auto& geo_cache_num_rooms = addr_as_ref<int>(0x013761B8);
     static auto& sky_room_center = addr_as_ref<Vector3>(0x0088FB10);
     static auto& sky_room_offset = addr_as_ref<rf::Vector3>(0x0087BB00);
 
-    static auto& set_currently_rendered_room = addr_as_ref<void (GRoom *room)>(0x004D3350);
+    static auto& set_currently_rendered_room = addr_as_ref<void(GRoom* room)>(0x004D3350);
 
     static gr::Mode sky_room_opaque_mode{
-        gr::TEXTURE_SOURCE_WRAP,
-        gr::COLOR_SOURCE_TEXTURE,
-        gr::ALPHA_SOURCE_TEXTURE,
-        gr::ALPHA_BLEND_NONE,
-        gr::ZBUFFER_TYPE_FULL,
-        gr::FOG_NOT_ALLOWED,
+        gr::TEXTURE_SOURCE_WRAP, gr::COLOR_SOURCE_TEXTURE, gr::ALPHA_SOURCE_TEXTURE,
+        gr::ALPHA_BLEND_NONE,    gr::ZBUFFER_TYPE_FULL,    gr::FOG_NOT_ALLOWED,
     };
 
     static gr::Mode sky_room_alpha_mode{
-        gr::TEXTURE_SOURCE_WRAP,
-        gr::COLOR_SOURCE_TEXTURE,
-        gr::ALPHA_SOURCE_TEXTURE,
-        gr::ALPHA_BLEND_ALPHA,
-        gr::ZBUFFER_TYPE_READ,
-        gr::FOG_NOT_ALLOWED,
+        gr::TEXTURE_SOURCE_WRAP, gr::COLOR_SOURCE_TEXTURE, gr::ALPHA_SOURCE_TEXTURE,
+        gr::ALPHA_BLEND_ALPHA,   gr::ZBUFFER_TYPE_READ,    gr::FOG_NOT_ALLOWED,
     };
 
     static gr::Mode alpha_detail_fullbright_mode{
-        gr::TEXTURE_SOURCE_WRAP,
-        gr::COLOR_SOURCE_TEXTURE,
-        gr::ALPHA_SOURCE_TEXTURE,
-        gr::ALPHA_BLEND_ALPHA,
-        gr::ZBUFFER_TYPE_FULL_ALPHA_TEST,
-        gr::FOG_ALLOWED,
+        gr::TEXTURE_SOURCE_WRAP, gr::COLOR_SOURCE_TEXTURE,         gr::ALPHA_SOURCE_TEXTURE,
+        gr::ALPHA_BLEND_ALPHA,   gr::ZBUFFER_TYPE_FULL_ALPHA_TEST, gr::FOG_ALLOWED,
     };
 
     static inline bool should_render_face(GFace* face)
     {
-        return !face->attributes.is_portal() &&
-            !face->attributes.is_invisible() &&
-            !face->attributes.is_show_sky();
+        return !face->attributes.is_portal() && !face->attributes.is_invisible() && !face->attributes.is_show_sky();
     }
 
     static inline gr::Mode determine_decal_mode(GDecal* decal)
@@ -122,7 +108,9 @@ namespace df::gr::d3d11
     class SolidGeometryBuffers
     {
     public:
-        SolidGeometryBuffers(const std::vector<GpuVertex>& vb_data, const std::vector<ushort>& ib_data, ID3D11Device* device);
+        SolidGeometryBuffers(
+            const std::vector<GpuVertex>& vb_data, const std::vector<ushort>& ib_data, ID3D11Device* device
+        );
 
         void bind_buffers(RenderContext& render_context)
         {
@@ -135,7 +123,9 @@ namespace df::gr::d3d11
         ComPtr<ID3D11Buffer> index_buffer_;
     };
 
-    SolidGeometryBuffers::SolidGeometryBuffers(const std::vector<GpuVertex>& vb_data, const std::vector<ushort>& ib_data, ID3D11Device* device)
+    SolidGeometryBuffers::SolidGeometryBuffers(
+        const std::vector<GpuVertex>& vb_data, const std::vector<ushort>& ib_data, ID3D11Device* device
+    )
     {
         if (vb_data.empty() || ib_data.empty()) {
             return;
@@ -147,9 +137,7 @@ namespace df::gr::d3d11
             D3D11_USAGE_IMMUTABLE,
         };
         D3D11_SUBRESOURCE_DATA vb_subres_data{vb_data.data(), 0, 0};
-        DF_GR_D3D11_CHECK_HR(
-            device->CreateBuffer(&vb_desc, &vb_subres_data, &vertex_buffer_)
-        );
+        DF_GR_D3D11_CHECK_HR(device->CreateBuffer(&vb_desc, &vb_subres_data, &vertex_buffer_));
 
         CD3D11_BUFFER_DESC ib_desc{
             sizeof(ib_data[0]) * ib_data.size(),
@@ -157,9 +145,7 @@ namespace df::gr::d3d11
             D3D11_USAGE_IMMUTABLE,
         };
         D3D11_SUBRESOURCE_DATA ib_subres_data{ib_data.data(), 0, 0};
-        DF_GR_D3D11_CHECK_HR(
-            device->CreateBuffer(&ib_desc, &ib_subres_data, &index_buffer_)
-        );
+        DF_GR_D3D11_CHECK_HR(device->CreateBuffer(&ib_desc, &ib_subres_data, &index_buffer_));
     }
 
     struct SolidBatch
@@ -223,7 +209,7 @@ namespace df::gr::d3d11
         for (SolidBatch& b : batches) {
             render_context.set_mode(b.mode);
             render_context.set_textures(b.textures[0], b.textures[1]);
-            //xlog::warn("DrawIndexed {} {}", b.num_indices, b.start_index);
+            // xlog::warn("DrawIndexed {} {}", b.num_indices, b.start_index);
             render_context.draw_indexed(b.num_indices, b.start_index, b.base_vertex);
         }
     }
@@ -346,7 +332,8 @@ namespace df::gr::d3d11
         while (dp) {
             if (dp->my_decal->flags & DF_LEVEL_DECAL) {
                 rf::gr::Mode mode = determine_decal_mode(dp->my_decal);
-                std::array<int, 2> textures = normalize_texture_handles_for_mode(mode, {dp->my_decal->bitmap_id, lightmap_tex});
+                std::array<int, 2> textures =
+                    normalize_texture_handles_for_mode(mode, {dp->my_decal->bitmap_id, lightmap_tex});
                 DecalPolyBatchKey dp_key = std::make_tuple(render_type, textures[0], textures[1], mode);
                 batched_decal_polys_[dp_key].push_back(dp);
                 ++num_dp;
@@ -410,9 +397,7 @@ namespace df::gr::d3d11
             std::size_t num_indices = ib_data.size() - start_index;
             std::array<int, 2> textures = {texture_1, texture_2};
             gr::Mode mode = determine_face_mode(render_type, texture_2 != -1, is_sky_);
-            batches.get_batches(render_type).emplace_back(
-                start_index, num_indices, base_vertex, textures, mode
-            );
+            batches.get_batches(render_type).emplace_back(start_index, num_indices, base_vertex, textures, mode);
         }
         for (auto& e : batched_decal_polys_) {
             const GRenderCacheBuilder::DecalPolyBatchKey& key = e.first;
@@ -455,9 +440,7 @@ namespace df::gr::d3d11
             }
             int num_indices = ib_data.size() - start_index;
             std::array<int, 2> textures = {texture_1, texture_2};
-            batches.get_batches(render_type).emplace_back(
-                start_index, num_indices, base_vertex, textures, mode
-            );
+            batches.get_batches(render_type).emplace_back(start_index, num_indices, base_vertex, textures, mode);
         }
 
         SolidGeometryBuffers geometry_buffers{vb_data, ib_data, device};
@@ -496,8 +479,7 @@ namespace df::gr::d3d11
         return state_ == 2;
     }
 
-    RoomRenderCache::RoomRenderCache(GSolid* solid, GRoom* room, ID3D11Device* device) :
-        room_(room), solid_(solid)
+    RoomRenderCache::RoomRenderCache(GSolid* solid, GRoom* room, ID3D11Device* device) : room_(room), solid_(solid)
     {
         update(device);
     }
@@ -513,8 +495,10 @@ namespace df::gr::d3d11
             return;
         }
 
-        xlog::debug("Creating render cache for room {} - verts {} inds {} batches {}", room_->room_index,
-            builder.get_num_verts(), builder.get_num_inds(), builder.get_num_batches());
+        xlog::debug(
+            "Creating render cache for room {} - verts {} inds {} batches {}", room_->room_index,
+            builder.get_num_verts(), builder.get_num_inds(), builder.get_num_batches()
+        );
 
         cache_ = std::optional{builder.build(device)};
 
@@ -534,25 +518,22 @@ namespace df::gr::d3d11
         }
     }
 
-    SolidRenderer::SolidRenderer(ComPtr<ID3D11Device> device, ShaderManager& shader_manager,
-        [[maybe_unused]] StateManager& state_manager, DynamicGeometryRenderer& dyn_geo_renderer,
-        RenderContext& render_context) :
-        device_{std::move(device)}, context_{render_context.device_context()}, dyn_geo_renderer_{dyn_geo_renderer}, render_context_(render_context)
+    SolidRenderer::SolidRenderer(
+        ComPtr<ID3D11Device> device, ShaderManager& shader_manager, [[maybe_unused]] StateManager& state_manager,
+        DynamicGeometryRenderer& dyn_geo_renderer, RenderContext& render_context
+    ) :
+        device_{std::move(device)}, context_{render_context.device_context()}, dyn_geo_renderer_{dyn_geo_renderer},
+        render_context_(render_context)
     {
         vertex_shader_ = shader_manager.get_vertex_shader(VertexShaderId::standard);
         pixel_shader_ = shader_manager.get_pixel_shader(PixelShaderId::standard);
     }
 
-    SolidRenderer::~SolidRenderer()
-    {}
+    SolidRenderer::~SolidRenderer() {}
 
     static gr::Mode dynamic_decal_mode{
-        gr::TEXTURE_SOURCE_CLAMP,
-        gr::COLOR_SOURCE_VERTEX,
-        gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE,
-        gr::ALPHA_BLEND_ALPHA,
-        gr::ZBUFFER_TYPE_READ,
-        gr::FOG_ALLOWED,
+        gr::TEXTURE_SOURCE_CLAMP, gr::COLOR_SOURCE_VERTEX, gr::ALPHA_SOURCE_VERTEX_TIMES_TEXTURE,
+        gr::ALPHA_BLEND_ALPHA,    gr::ZBUFFER_TYPE_READ,   gr::FOG_ALLOWED,
     };
 
     static void render_face_dynamic_decals(GFace* face)
@@ -584,14 +565,14 @@ namespace df::gr::d3d11
 
         for (int i = 0; i < num_rooms; ++i) {
             GRoom* room = rooms[i];
-            for (GFace& face: room->face_list) {
+            for (GFace& face : room->face_list) {
                 if (should_render_face(&face) && !face.attributes.is_see_thru()) {
                     render_face_dynamic_decals(&face);
                 }
             }
             for (GRoom* detail_room : room->detail_rooms) {
                 if (detail_room->room_to_render_with == room) {
-                    for (GFace& face: detail_room->face_list) {
+                    for (GFace& face : detail_room->face_list) {
                         if (should_render_face(&face) && !face.attributes.is_see_thru()) {
                             render_face_dynamic_decals(&face);
                         }
@@ -605,7 +586,7 @@ namespace df::gr::d3d11
     void SolidRenderer::render_alpha_detail_dynamic_decals(rf::GRoom* detail_room)
     {
         before_render_decals();
-        for (GFace& face: detail_room->face_list) {
+        for (GFace& face : detail_room->face_list) {
             if (should_render_face(&face) && face.attributes.is_see_thru()) {
                 render_face_dynamic_decals(&face);
             }
@@ -613,11 +594,13 @@ namespace df::gr::d3d11
         after_render_decals();
     }
 
-    void SolidRenderer::render_movable_solid_dynamic_decals(rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient)
+    void SolidRenderer::render_movable_solid_dynamic_decals(
+        rf::GSolid* solid, const rf::Vector3& pos, const rf::Matrix3& orient
+    )
     {
         gr::start_instance(pos, orient);
         before_render_decals();
-        for (GFace& face: solid->face_list) {
+        for (GFace& face : solid->face_list) {
             if (should_render_face(&face)) {
                 render_face_dynamic_decals(&face);
             }
@@ -683,7 +666,7 @@ namespace df::gr::d3d11
         xlog::debug("Room render cache clear");
 
         if (rf::level.geometry) {
-            for (rf::GRoom* room: rf::level.geometry->all_rooms) {
+            for (rf::GRoom* room : rf::level.geometry->all_rooms) {
                 room->geo_cache = nullptr;
             }
         }
@@ -694,7 +677,7 @@ namespace df::gr::d3d11
         geo_cache_num_rooms = 0;
     }
 
-    void SolidRenderer::render_sky_room(GRoom *room)
+    void SolidRenderer::render_sky_room(GRoom* room)
     {
         xlog::trace("Rendering sky room {} cache {}", room->room_index, room->geo_cache);
         before_render(sky_room_offset, rf::identity_matrix);
@@ -728,7 +711,7 @@ namespace df::gr::d3d11
         return it->second.get();
     }
 
-    void SolidRenderer::render_alpha_detail(GRoom *room, GSolid *solid)
+    void SolidRenderer::render_alpha_detail(GRoom* room, GSolid* solid)
     {
         xlog::trace("Rendering alpha detail room {}", room->room_index);
         if (room->face_list.empty()) {
@@ -764,7 +747,8 @@ namespace df::gr::d3d11
             // Note: calling set_currently_rendered_room could improve culling here but it breaks some levels
             // if a detail brush is contained in multiple normal rooms
             for (GRoom* detail_room : room->detail_rooms) {
-                if (detail_room->room_to_render_with == room && !gr::cull_bounding_box(detail_room->bbox_min, detail_room->bbox_max)) {
+                if (detail_room->room_to_render_with == room &&
+                    !gr::cull_bounding_box(detail_room->bbox_min, detail_room->bbox_max)) {
                     render_detail(solid, detail_room, false);
                 }
             }
@@ -789,10 +773,10 @@ namespace df::gr::d3d11
 
     void SolidRenderer::page_in_solid(rf::GSolid* solid)
     {
-        for (rf::GRoom* room: solid->cached_normal_room_list) {
+        for (rf::GRoom* room : solid->cached_normal_room_list) {
             get_or_create_normal_room_cache(solid, room);
         }
-        for (rf::GRoom* room: solid->cached_detail_room_list) {
+        for (rf::GRoom* room : solid->cached_detail_room_list) {
             get_or_create_detail_room_cache(solid, room);
         }
     }

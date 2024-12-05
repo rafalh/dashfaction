@@ -31,18 +31,16 @@ private:
     T* new_buf_;
 
 public:
-
-    StaticBufferResizePatch(uintptr_t buf_addr, size_t old_num_elements, size_t new_num_elements,
-        std::vector<RefInfo>&& refs) :
-        buf_addr_(buf_addr), old_num_elements_(old_num_elements),
-        new_num_elements_(new_num_elements), refs_(refs), new_buf_(nullptr)
+    StaticBufferResizePatch(
+        uintptr_t buf_addr, size_t old_num_elements, size_t new_num_elements, std::vector<RefInfo>&& refs
+    ) :
+        buf_addr_(buf_addr), old_num_elements_(old_num_elements), new_num_elements_(new_num_elements), refs_(refs),
+        new_buf_(nullptr)
     {}
 
     template<size_t N>
-    StaticBufferResizePatch(uintptr_t buf_addr, size_t old_num_elements, T (&new_buf)[N],
-        std::vector<RefInfo>&& refs) :
-        buf_addr_(buf_addr), old_num_elements_(old_num_elements),
-        new_num_elements_(N), refs_(refs), new_buf_(new_buf)
+    StaticBufferResizePatch(uintptr_t buf_addr, size_t old_num_elements, T (&new_buf)[N], std::vector<RefInfo>&& refs) :
+        buf_addr_(buf_addr), old_num_elements_(old_num_elements), new_num_elements_(N), refs_(refs), new_buf_(new_buf)
     {}
 
     void install() override
@@ -53,7 +51,8 @@ public:
         if (!new_buf_) {
             // Alloc owned buffer
             // Note: raw memory is used here because it is expected the patched program will call constructors
-            // Note: std::make_unique uses value-initialization so buffer is zero-initialized (just like global variables)
+            // Note: std::make_unique uses value-initialization so buffer is zero-initialized (just like global
+            // variables)
             new_buf_owned_ = std::make_unique<std::byte[]>(new_buf_size);
             new_buf_ = reinterpret_cast<T*>(new_buf_owned_.get());
         }

@@ -33,10 +33,12 @@ namespace rf
 }
 
 // Note: fastcall is used because MSVC does not allow free thiscall functions
-using UiLabel_Create2_Type = void __fastcall(rf::ui::Gadget*, int, rf::ui::Gadget*, int, int, int, int, const char*, int);
+using UiLabel_Create2_Type =
+    void __fastcall(rf::ui::Gadget*, int, rf::ui::Gadget*, int, int, int, int, const char*, int);
 extern CallHook<UiLabel_Create2_Type> UiLabel_create2_version_label_hook;
-void __fastcall UiLabel_create2_version_label(rf::ui::Gadget* self, int edx, rf::ui::Gadget* parent, int x, int y, int w,
-                                             int h, const char* text, int font_id)
+void __fastcall UiLabel_create2_version_label(
+    rf::ui::Gadget* self, int edx, rf::ui::Gadget* parent, int x, int y, int w, int h, const char* text, int font_id
+)
 {
     // if a TC mod is loaded, show the mod name on the main menu
     std::string version_text = rf::mod_param.found()
@@ -96,8 +98,9 @@ int load_easter_egg_image()
     if (!rf::gr::lock(hbm, 0, &lock, rf::gr::LOCK_WRITE_ONLY))
         return -1;
 
-    rf::bm::convert_format(lock.data, lock.format, res_data, rf::bm::FORMAT_8888_ARGB,
-                        easter_egg_size * easter_egg_size);
+    rf::bm::convert_format(
+        lock.data, lock.format, res_data, rf::bm::FORMAT_8888_ARGB, easter_egg_size * easter_egg_size
+    );
     rf::gr::unlock(&lock);
 
     return hbm;
@@ -169,10 +172,12 @@ CodeInjection menu_draw_background_injection{
 
         rf::gr::set_color(255, 255, 255, 255);
         // Use function that accepts float sx
-        //for (int i = 0; i < 100; ++i)
-        gr_bitmap_scaled_float(menu_background_bitmap, 0.0f, 0.0f,
-            static_cast<float>(rf::gr::screen.max_w), static_cast<float>(rf::gr::screen.max_h),
-            menu_background_x, 0.0f, 640.0f, 480.0f, false, false, rf::gr::bitmap_clamp_mode);
+        // for (int i = 0; i < 100; ++i)
+        gr_bitmap_scaled_float(
+            menu_background_bitmap, 0.0f, 0.0f, static_cast<float>(rf::gr::screen.max_w),
+            static_cast<float>(rf::gr::screen.max_h), menu_background_x, 0.0f, 640.0f, 480.0f, false, false,
+            rf::gr::bitmap_clamp_mode
+        );
         regs.eip = 0x00442D94;
     },
 };
@@ -193,9 +198,7 @@ CodeInjection multi_servers_on_list_click_injection{
 
 CodeInjection main_menu_set_music_injection{
     0x0044323C,
-    []() {
-        g_game_music_sig_to_restore = rf::snd_music_sig;
-    },
+    []() { g_game_music_sig_to_restore = rf::snd_music_sig; },
 };
 
 FunHook<void()> main_menu_stop_music_hook{
@@ -209,8 +212,8 @@ FunHook<void()> main_menu_stop_music_hook{
         else if (g_game_music_sig_to_restore != -1) {
             // Music changed when the menu was open - stop the old music
             // Note: In Single Player RF pauses the world when entering the menu so it should not happen
-            //       In Multi Player on the other hand level scripts are still executing in the background and nothing stops
-            //       them from playing new sounds/music. Would be cool to fix it one day...
+            //       In Multi Player on the other hand level scripts are still executing in the background and nothing
+            //       stops them from playing new sounds/music. Would be cool to fix it one day...
             rf::snd_pc_stop(g_game_music_sig_to_restore);
             g_game_music_sig_to_restore = -1;
         }

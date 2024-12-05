@@ -3,10 +3,7 @@
 #include "LauncherApp.h"
 #include <wxx_commondlg.h>
 
-OptionsAudioDlg::OptionsAudioDlg(GameConfig& conf)
-	: CDialog(IDD_OPTIONS_AUDIO), m_conf(conf)
-{
-}
+OptionsAudioDlg::OptionsAudioDlg(GameConfig& conf) : CDialog(IDD_OPTIONS_AUDIO), m_conf(conf) {}
 
 BOOL OptionsAudioDlg::OnInitDialog()
 {
@@ -24,7 +21,10 @@ BOOL OptionsAudioDlg::OnInitDialog()
 void OptionsAudioDlg::InitToolTip()
 {
     m_tool_tip.Create(*this);
-    m_tool_tip.AddTool(GetDlgItem(IDC_LEVEL_SOUNDS_CHECK), "Enable/disable Play Sound and Ambient Sound objects in level. You can also specify volume multiplier by using levelsounds command in game.");
+    m_tool_tip.AddTool(
+        GetDlgItem(IDC_LEVEL_SOUNDS_CHECK), "Enable/disable Play Sound and Ambient Sound objects in level. You can "
+                                            "also specify volume multiplier by using levelsounds command in game."
+    );
     m_tool_tip.AddTool(GetDlgItem(IDC_EAX_SOUND_CHECK), "Enable/disable 3D sound and EAX extension if supported");
 }
 

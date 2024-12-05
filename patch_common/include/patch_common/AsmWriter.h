@@ -13,18 +13,14 @@ public:
     int reg_num;
     int size;
 
-    constexpr explicit AsmReg(int reg_num, int size) :
-        reg_num(reg_num), size(size)
-    {}
+    constexpr explicit AsmReg(int reg_num, int size) : reg_num(reg_num), size(size) {}
 
     constexpr bool operator==(const AsmReg& other) const = default;
 };
 
 struct AsmReg32 : public AsmReg
 {
-    explicit constexpr AsmReg32(int num) :
-        AsmReg(num, 4)
-    {}
+    explicit constexpr AsmReg32(int num) : AsmReg(num, 4) {}
 
     std::pair<AsmReg32, int> operator+(int n) const
     {
@@ -44,16 +40,12 @@ inline std::pair<AsmReg32, int> operator-(std::pair<AsmReg32, int> p, int n)
 
 struct AsmReg16 : public AsmReg
 {
-    explicit constexpr AsmReg16(int num) :
-        AsmReg(num, 2)
-    {}
+    explicit constexpr AsmReg16(int num) : AsmReg(num, 2) {}
 };
 
 struct AsmReg8 : public AsmReg
 {
-    explicit constexpr AsmReg8(int num) :
-        AsmReg(num, 1)
-    {}
+    explicit constexpr AsmReg8(int num) : AsmReg(num, 1) {}
 };
 
 struct AsmRegMem
@@ -66,17 +58,12 @@ struct AsmRegMem
         memory(memory), reg_opt(reg_opt), displacement(displacement)
     {}
 
-    AsmRegMem(AsmReg reg) :
-        memory(false), reg_opt({reg}), displacement(0)
-    {}
+    AsmRegMem(AsmReg reg) : memory(false), reg_opt({reg}), displacement(0) {}
 
-    explicit AsmRegMem(uint32_t addr) :
-        memory(true), displacement(static_cast<int32_t>(addr))
-    {}
+    explicit AsmRegMem(uint32_t addr) : memory(true), displacement(static_cast<int32_t>(addr)) {}
 
     template<typename T>
-    AsmRegMem(T* ptr) :
-        memory(true), displacement(reinterpret_cast<int32_t>(ptr))
+    AsmRegMem(T* ptr) : memory(true), displacement(reinterpret_cast<int32_t>(ptr))
     {}
 };
 
@@ -93,29 +80,29 @@ inline AsmRegMem operator*(std::pair<AsmReg32, int> p)
 namespace asm_regs
 {
 
-namespace asm_reg_num
-{
+    namespace asm_reg_num
+    {
 
-enum
-{
-    AX,
-    CX,
-    DX,
-    BX,
-    SP,
-    BP,
-    SI,
-    DI,
-};
+        enum
+        {
+            AX,
+            CX,
+            DX,
+            BX,
+            SP,
+            BP,
+            SI,
+            DI,
+        };
 
-}
+    }
 
-constexpr AsmReg32 eax(asm_reg_num::AX), ecx(asm_reg_num::CX), edx(asm_reg_num::DX), ebx(asm_reg_num::BX);
-constexpr AsmReg32 esp(asm_reg_num::SP), ebp(asm_reg_num::BP), esi(asm_reg_num::SI), edi(asm_reg_num::DI);
-constexpr AsmReg16 ax(asm_reg_num::AX), cx(asm_reg_num::CX), dx(asm_reg_num::DX), bx(asm_reg_num::BX);
-constexpr AsmReg16 sp(asm_reg_num::SP), bp(asm_reg_num::BP), si(asm_reg_num::SI), di(asm_reg_num::DI);
-constexpr AsmReg8 al(asm_reg_num::AX), cl(asm_reg_num::CX), dl(asm_reg_num::DX), bl(asm_reg_num::BX);
-constexpr AsmReg8 ah(asm_reg_num::SP), ch(asm_reg_num::BP), dh(asm_reg_num::SI), bh(asm_reg_num::DI);
+    constexpr AsmReg32 eax(asm_reg_num::AX), ecx(asm_reg_num::CX), edx(asm_reg_num::DX), ebx(asm_reg_num::BX);
+    constexpr AsmReg32 esp(asm_reg_num::SP), ebp(asm_reg_num::BP), esi(asm_reg_num::SI), edi(asm_reg_num::DI);
+    constexpr AsmReg16 ax(asm_reg_num::AX), cx(asm_reg_num::CX), dx(asm_reg_num::DX), bx(asm_reg_num::BX);
+    constexpr AsmReg16 sp(asm_reg_num::SP), bp(asm_reg_num::BP), si(asm_reg_num::SI), di(asm_reg_num::DI);
+    constexpr AsmReg8 al(asm_reg_num::AX), cl(asm_reg_num::CX), dl(asm_reg_num::DX), bl(asm_reg_num::BX);
+    constexpr AsmReg8 ah(asm_reg_num::SP), ch(asm_reg_num::BP), dh(asm_reg_num::SI), bh(asm_reg_num::DI);
 } // namespace asm_regs
 
 class AsmWriter
@@ -123,9 +110,7 @@ class AsmWriter
 public:
     static constexpr uintptr_t unk_end_addr = UINTPTR_MAX;
 
-    AsmWriter(uintptr_t begin_addr, uintptr_t end_addr = unk_end_addr) :
-        m_addr(begin_addr), m_end_addr(end_addr)
-    {}
+    AsmWriter(uintptr_t begin_addr, uintptr_t end_addr = unk_end_addr) : m_addr(begin_addr), m_end_addr(end_addr) {}
 
     AsmWriter(void* begin_ptr, void* end_ptr = reinterpret_cast<void*>(unk_end_addr)) :
         m_addr(reinterpret_cast<uintptr_t>(begin_ptr)), m_end_addr(reinterpret_cast<uintptr_t>(end_ptr))
@@ -135,7 +120,8 @@ public:
     {
         if (m_end_addr != unk_end_addr) {
             assert(m_addr <= m_end_addr);
-            while (m_addr < m_end_addr) nop();
+            while (m_addr < m_end_addr)
+                nop();
         }
     }
 
@@ -211,7 +197,7 @@ public:
     AsmWriter& pop(const AsmReg16& reg)
     {
         write<u8>(operand_size_override_prefix); // Prefix
-        write<u8>(0x58 | reg.reg_num);        // Opcode
+        write<u8>(0x58 | reg.reg_num);           // Opcode
         return *this;
     }
 
@@ -308,7 +294,7 @@ public:
     AsmWriter& mov(const AsmRegMem& dst_rm, const AsmReg16& src_reg)
     {
         write<u8>(operand_size_override_prefix); // Prefix
-        write<u8>(0x89);                     // Opcode
+        write<u8>(0x89);                         // Opcode
         write_mod_rm(dst_rm, src_reg);
         return *this;
     }
@@ -419,7 +405,7 @@ public:
     AsmWriter& mov(const AsmReg16& dst_reg, int16_t imm)
     {
         write<u8>(operand_size_override_prefix); // Prefix
-        write<u8>(0xB8 | dst_reg.reg_num);     // Opcode
+        write<u8>(0xB8 | dst_reg.reg_num);       // Opcode
         write<i16>(imm);
         return *this;
     }

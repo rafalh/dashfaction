@@ -35,9 +35,9 @@ namespace df::gr::d3d11
         void add_ref(int bm_handle);
         void remove_ref(int bm_handle);
         void mark_dirty(int bm_handle);
-        bool lock(int bm_handle, int section, rf::gr::LockInfo *lock);
-        void unlock(rf::gr::LockInfo *lock);
-        void get_texel(int bm_handle, float u, float v, rf::gr::Color *clr);
+        bool lock(int bm_handle, int section, rf::gr::LockInfo* lock);
+        void unlock(rf::gr::LockInfo* lock);
+        void get_texel(int bm_handle, float u, float v, rf::gr::Color* clr);
         rf::bm::Format read_back_buffer(ID3D11Texture2D* back_buffer, int x, int y, int w, int h, rf::ubyte* data);
         ComPtr<ID3D11ShaderResourceView> create_solid_color_texture(float r, float g, float b, float a);
 
@@ -68,11 +68,14 @@ namespace df::gr::d3d11
             Texture(int bm_handle, DXGI_FORMAT format, ComPtr<ID3D11Texture2D> cpu_texture) :
                 bm_handle{bm_handle}, format{format}, cpu_texture{cpu_texture}
             {}
-            Texture(int bm_handle, DXGI_FORMAT format, ComPtr<ID3D11Texture2D> gpu_texture, ComPtr<ID3D11RenderTargetView> render_target_view) :
-                bm_handle{bm_handle}, format{format}, gpu_texture{gpu_texture}, render_target_view{render_target_view}
+            Texture(
+                int bm_handle, DXGI_FORMAT format, ComPtr<ID3D11Texture2D> gpu_texture,
+                ComPtr<ID3D11RenderTargetView> render_target_view
+            ) : bm_handle{bm_handle}, format{format}, gpu_texture{gpu_texture}, render_target_view{render_target_view}
             {}
 
-            ID3D11ShaderResourceView* get_or_create_texture_view(ID3D11Device* device, ID3D11DeviceContext* device_context)
+            ID3D11ShaderResourceView*
+            get_or_create_texture_view(ID3D11Device* device, ID3D11DeviceContext* device_context)
             {
                 if (!shader_resource_view) {
                     init_shader_resource_view(device, device_context);
@@ -80,7 +83,8 @@ namespace df::gr::d3d11
                 return shader_resource_view;
             }
 
-            ID3D11Texture2D* get_or_create_staging_texture(ID3D11Device* device, ID3D11DeviceContext* device_context, bool copy_from_gpu)
+            ID3D11Texture2D*
+            get_or_create_staging_texture(ID3D11Device* device, ID3D11DeviceContext* device_context, bool copy_from_gpu)
             {
                 if (!cpu_texture) {
                     init_cpu_texture(device, device_context, copy_from_gpu);
@@ -116,7 +120,10 @@ namespace df::gr::d3d11
             return insert_result.first->second;
         }
 
-        Texture create_texture(int bm_handle, rf::bm::Format fmt, int w, int h, rf::ubyte* bits, rf::ubyte* pal, int mip_levels, bool staging);
+        Texture create_texture(
+            int bm_handle, rf::bm::Format fmt, int w, int h, rf::ubyte* bits, rf::ubyte* pal, int mip_levels,
+            bool staging
+        );
         Texture create_render_target(int bm_handle, int w, int h);
         Texture load_texture(int bm_handle, bool staging);
         std::pair<DXGI_FORMAT, rf::bm::Format> determine_supported_texture_format(rf::bm::Format fmt);
@@ -131,6 +138,5 @@ namespace df::gr::d3d11
         ComPtr<ID3D11ShaderResourceView> white_texture_view_;
         ComPtr<ID3D11ShaderResourceView> gray_texture_view_;
         ComPtr<ID3D11ShaderResourceView> black_texture_view_;
-
     };
 }

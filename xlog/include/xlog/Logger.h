@@ -15,9 +15,7 @@ namespace xlog
         Level level_;
 
     public:
-        Logger(std::string name, Level level = Level::trace) :
-            name_(std::move(name)), level_(level)
-        {}
+        Logger(std::string name, Level level = Level::trace) : name_(std::move(name)), level_(level) {}
 
         static Logger& root()
         {
@@ -36,7 +34,7 @@ namespace xlog
         }
 
 #ifdef XLOG_PRINTF
-        void logf(Level level, const char *format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(3, 4)
+        void logf(Level level, const char* format, ...) XLOG_ATTRIBUTE_FORMAT_PRINTF(3, 4)
         {
             std::va_list args;
             va_start(args, format);
@@ -66,7 +64,6 @@ namespace xlog
         {
             log(Level::error, fmt, std::forward<Args>(args)...);
         }
-
 
 #ifdef XLOG_STREAMS
         LogStream error()

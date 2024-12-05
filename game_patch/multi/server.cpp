@@ -31,16 +31,7 @@
 #include "../purefaction/pf.h"
 
 const char* g_rcon_cmd_whitelist[] = {
-    "kick",
-    "level",
-    "server_password",
-    "map",
-    "ban",
-    "ban_ip",
-    "map_ext",
-    "map_rest",
-    "map_next",
-    "map_prev",
+    "kick", "level", "server_password", "map", "ban", "ban_ip", "map_ext", "map_rest", "map_next", "map_prev",
 };
 
 ServerAdditionalConfig g_additional_server_config;
@@ -304,9 +295,9 @@ static void send_private_message_with_stats(rf::Player* player)
         "PLAYER STATS\n"
         "Kills: {} - Deaths: {} - Max Streak: {}\n"
         "Accuracy: {}% ({:.0f}/{:.0f}) - Damage Given: {:.0f} - Damage Taken: {:.0f}",
-        stats->num_kills, stats->num_deaths, stats->max_streak,
-        accuracy, stats->num_shots_hit, stats->num_shots_fired,
-        stats->damage_given, stats->damage_received);
+        stats->num_kills, stats->num_deaths, stats->max_streak, accuracy, stats->num_shots_hit, stats->num_shots_fired,
+        stats->damage_given, stats->damage_received
+    );
     send_chat_line_packet(str.c_str(), player);
 }
 
@@ -315,7 +306,11 @@ bool handle_server_chat_command(std::string_view server_command, rf::Player* sen
     auto [cmd_name, cmd_arg] = strip_by_space(server_command);
 
     if (cmd_name == "info") {
-        send_chat_line_packet(std::format("Server powered by Dash Faction {} (build date: {} {})", VERSION_STR, __DATE__, __TIME__).c_str(), sender);
+        send_chat_line_packet(
+            std::format("Server powered by Dash Faction {} (build date: {} {})", VERSION_STR, __DATE__, __TIME__)
+                .c_str(),
+            sender
+        );
     }
     else if (cmd_name == "vote") {
         auto [vote_name, vote_arg] = strip_by_space(cmd_arg);
@@ -357,9 +352,7 @@ bool check_server_chat_command(const char* msg, rf::Player* sender)
 
 CodeInjection spawn_protection_duration_patch{
     0x0048089A,
-    [](auto& regs) {
-        *static_cast<int*>(regs.esp) = g_additional_server_config.spawn_protection_duration_ms;
-    },
+    [](auto& regs) { *static_cast<int*>(regs.esp) = g_additional_server_config.spawn_protection_duration_ms; },
 };
 
 CodeInjection detect_browser_player_patch{
@@ -459,9 +452,9 @@ CallHook<void(rf::Player*, int, int)> give_default_weapon_ammo_hook{
     },
 };
 
-FunHook<bool (const char*, int)> multi_is_level_matching_game_type_hook{
+FunHook<bool(const char*, int)> multi_is_level_matching_game_type_hook{
     0x00445050,
-    [](const char *filename, int ng_type) {
+    [](const char* filename, int ng_type) {
         if (ng_type == RF_GT_CTF) {
             return string_starts_with_ignore_case(filename, "ctf") || string_starts_with_ignore_case(filename, "pctf");
         }
@@ -526,7 +519,7 @@ CodeInjection multi_on_new_player_injection{
         rf::Player* player = regs.esi;
         in_addr addr;
         addr.S_un.S_addr = ntohl(player->net_data->addr.ip_addr);
-        rf::console::print("{}{} ({})", player->name,  rf::strings::has_joined, inet_ntoa(addr));
+        rf::console::print("{}{} ({})", player->name, rf::strings::has_joined, inet_ntoa(addr));
         regs.eip = 0x0047B051;
     },
 };
@@ -539,15 +532,18 @@ static bool check_player_ac_status([[maybe_unused]] rf::Player* player)
         if (!verified) {
             send_chat_line_packet(
                 "Sorry! Your spawn request was rejected because verification of your client software failed. "
-                "Please use the latest officially released version of Dash Faction. You can get it from dashfaction.com.",
-                player);
+                "Please use the latest officially released version of Dash Faction. You can get it from "
+                "dashfaction.com.",
+                player
+            );
             return false;
         }
 
         int ac_level = pf_get_player_ac_level(player);
         if (ac_level < g_additional_server_config.anticheat_level) {
             auto msg = std::format(
-                "Sorry! Your spawn request was rejected because your client did not pass anti-cheat verification (your level {}, required {}). "
+                "Sorry! Your spawn request was rejected because your client did not pass anti-cheat verification (your "
+                "level {}, required {}). "
                 "Please make sure you do not have any mods installed and that your client software is up to date.",
                 ac_level, g_additional_server_config.anticheat_level
             );
@@ -598,7 +594,7 @@ static bool multi_is_team_game_type()
     return rf::multi_get_game_type() != rf::NG_TYPE_DM;
 }
 
-static void maybe_increment_weapon_hits_stat(int hit_obj_handle, rf::Weapon *wp)
+static void maybe_increment_weapon_hits_stat(int hit_obj_handle, rf::Weapon* wp)
 {
     rf::Entity* attacker_ep = rf::entity_from_handle(wp->parent_handle);
     if (!attacker_ep) {
@@ -625,7 +621,7 @@ static void maybe_increment_weapon_hits_stat(int hit_obj_handle, rf::Weapon *wp)
 
 FunHook<int(rf::LevelCollisionOut*, rf::Weapon*)> multi_lag_comp_handle_hit_hook{
     0x0046F380,
-    [](rf::LevelCollisionOut *col_info, rf::Weapon *wp) {
+    [](rf::LevelCollisionOut* col_info, rf::Weapon* wp) {
         if (rf::is_server) {
             maybe_increment_weapon_hits_stat(col_info->obj_handle, wp);
         }
@@ -635,7 +631,7 @@ FunHook<int(rf::LevelCollisionOut*, rf::Weapon*)> multi_lag_comp_handle_hit_hook
 
 FunHook<void(rf::Entity*, rf::Weapon*)> multi_lag_comp_weapon_fire_hook{
     0x0046F7E0,
-    [](rf::Entity *ep, rf::Weapon *wp) {
+    [](rf::Entity* ep, rf::Weapon* wp) {
         multi_lag_comp_weapon_fire_hook.call_target(ep, wp);
         rf::Player* pp = rf::player_from_entity_handle(ep->handle);
         if (pp && pp->stats) {

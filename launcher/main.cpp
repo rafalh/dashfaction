@@ -25,15 +25,17 @@ void InitCrashHandler()
 {
     auto app_data_dir = Win32xx::GetAppDataPath();
     CrashHandlerConfig config;
-    std::snprintf(config.log_file, std::size(config.log_file), "%s\\Dash Faction\\DashFactionLauncher.log", app_data_dir.c_str());
+    std::snprintf(
+        config.log_file, std::size(config.log_file), "%s\\Dash Faction\\DashFactionLauncher.log", app_data_dir.c_str()
+    );
     std::snprintf(config.output_dir, std::size(config.output_dir), "%s\\Dash Faction", app_data_dir.c_str());
     std::snprintf(config.app_name, std::size(config.app_name), "DashFactionLauncher");
     config.add_known_module("DashFactionLauncher");
     CrashHandlerStubInstall(config);
 }
 
-int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
-{
+int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+try {
     InitLogging();
     InitCrashHandler();
 
@@ -44,7 +46,7 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int) try
     return app.Run(); // NOLINT(clang-analyzer-core.StackAddressEscape)
 }
 // catch all unhandled CException types
-catch (const Win32xx::CException &e) {
+catch (const Win32xx::CException& e) {
     // Display the exception and quit
     std::string msg = std::format("{}\nerror {}: {}", e.GetText(), e.GetError(), e.GetErrorString());
     MessageBox(nullptr, msg.c_str(), nullptr, MB_ICONERROR | MB_OK);

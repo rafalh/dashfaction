@@ -8,7 +8,7 @@
 class OptionsInputDlg : public CDialog
 {
 public:
-	OptionsInputDlg(GameConfig& conf);
+    OptionsInputDlg(GameConfig& conf);
     void OnSave();
 
 protected:

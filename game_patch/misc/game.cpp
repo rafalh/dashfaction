@@ -16,7 +16,7 @@
 #include "../rf/cutscene.h"
 #include "../multi/multi.h"
 
-static std::unique_ptr<std::byte* []> g_screenshot_scanlines_buf;
+static std::unique_ptr<std::byte*[]> g_screenshot_scanlines_buf;
 
 static std::optional<std::string> get_screenshots_dir()
 {
@@ -36,7 +36,7 @@ static std::optional<std::string> get_screenshots_dir()
 
 FunHook<void(char*)> game_print_screen_hook{
     0x004366E0,
-    [](char *filename_used) {
+    [](char* filename_used) {
         static auto& pending_screenshot_filename = addr_as_ref<char[256]>(0x00636F14);
         static auto& dump_tga = addr_as_ref<bool>(0x0063708C);
         static auto& screenshot_pending = addr_as_ref<char>(0x00637085);
@@ -57,12 +57,17 @@ FunHook<void(char*)> game_print_screen_hook{
         while (true) {
             if (counter == 1) {
                 // Don't include the counter here
-                std::snprintf(pending_screenshot_filename, sizeof(pending_screenshot_filename) - 4,
-                    "%s\\%s_%s", screenshots_dir.value().c_str(), time_str, level_filename.c_str());
-            } else {
+                std::snprintf(
+                    pending_screenshot_filename, sizeof(pending_screenshot_filename) - 4, "%s\\%s_%s",
+                    screenshots_dir.value().c_str(), time_str, level_filename.c_str()
+                );
+            }
+            else {
                 // Filename conflict - include a counter
-                std::snprintf(pending_screenshot_filename, sizeof(pending_screenshot_filename) - 4,
-                    "%s\\%s_%d_%s", screenshots_dir.value().c_str(), time_str, counter, level_filename.c_str());
+                std::snprintf(
+                    pending_screenshot_filename, sizeof(pending_screenshot_filename) - 4, "%s\\%s_%d_%s",
+                    screenshots_dir.value().c_str(), time_str, counter, level_filename.c_str()
+                );
             }
             auto filename_with_ext = std::string{pending_screenshot_filename} + dot_ext;
             bool exists = file.find(filename_with_ext.c_str());
@@ -87,7 +92,7 @@ FunHook<void(char*)> game_print_screen_hook{
 CodeInjection jpeg_write_bitmap_overflow_fix1{
     0x0055A066,
     [](auto& regs) {
-        g_screenshot_scanlines_buf = std::make_unique<std::byte* []>(rf::gr::screen.max_h);
+        g_screenshot_scanlines_buf = std::make_unique<std::byte*[]>(rf::gr::screen.max_h);
         regs.ecx = g_screenshot_scanlines_buf.get();
         regs.eip = 0x0055A06D;
     },
@@ -139,12 +144,8 @@ CodeInjection gameplay_render_frame_display_full_screen_image_injection{
         // Change gr mode to one that uses alpha blending for Display_Fullscreen_Image event handling in
         // gameplay_render_frame function. Also ignore current alpha (vertex color).
         static rf::gr::Mode mode{
-            rf::gr::TEXTURE_SOURCE_WRAP,
-            rf::gr::COLOR_SOURCE_TEXTURE,
-            rf::gr::ALPHA_SOURCE_TEXTURE,
-            rf::gr::ALPHA_BLEND_ALPHA,
-            rf::gr::ZBUFFER_TYPE_NONE,
-            rf::gr::FOG_NOT_ALLOWED,
+            rf::gr::TEXTURE_SOURCE_WRAP, rf::gr::COLOR_SOURCE_TEXTURE, rf::gr::ALPHA_SOURCE_TEXTURE,
+            rf::gr::ALPHA_BLEND_ALPHA,   rf::gr::ZBUFFER_TYPE_NONE,    rf::gr::FOG_NOT_ALLOWED,
         };
         regs.edx = mode;
     },
@@ -174,16 +175,12 @@ int letterbox_clip_height()
 
 CodeInjection gameplay_render_frame_cutscene_letterbox_injection{
     0x00431B30,
-    [](auto& regs) {
-        regs.esi = letterbox_clip_height();
-    },
+    [](auto& regs) { regs.esi = letterbox_clip_height(); },
 };
 
 CodeInjection gameplay_render_frame_death_letterbox_injection{
     0x00432A82,
-    [](auto& regs) {
-        regs.edi = letterbox_clip_height();
-    },
+    [](auto& regs) { regs.edi = letterbox_clip_height(); },
 };
 
 void game_apply_patch()

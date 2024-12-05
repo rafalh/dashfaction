@@ -17,10 +17,7 @@ class IpRange
     unsigned mask_;
 
 public:
-    IpRange(unsigned ip, unsigned mask = FULL_MASK) :
-        ip_{ip},
-        mask_{mask}
-    {}
+    IpRange(unsigned ip, unsigned mask = FULL_MASK) : ip_{ip}, mask_{mask} {}
 
     bool operator==(const IpRange& other) const = default;
 
@@ -48,7 +45,8 @@ public:
             unsigned shift = (3 - i) * 8;
             if (is_cidr || (mask_ & (0xFF << shift))) {
                 ss << ((ip_ >> shift) & 0xFF);
-            } else {
+            }
+            else {
                 ss << '*';
             }
             if (i < 3) {
@@ -77,7 +75,8 @@ IpRange IpRange::parse(const std::string& s)
         }
         if (*cur_ptr == '*' && i > 0) {
             break;
-        } else {
+        }
+        else {
             int n = 0;
             auto result = std::from_chars(cur_ptr, end_ptr, n);
             if (result.ec != std::errc{} || n < 0 || n > 255) {
@@ -92,7 +91,8 @@ IpRange IpRange::parse(const std::string& s)
                     throw std::runtime_error("invalid ip");
                 }
                 ++cur_ptr;
-            } else {
+            }
+            else {
                 break;
             }
         }
@@ -154,7 +154,8 @@ public:
             IpRange r = IpRange::parse(s);
             ip_ranges_.push_back(r);
             return true;
-        } catch (const std::exception& e) {
+        }
+        catch (const std::exception& e) {
             xlog::error("Failed to parse banlist entry: {}", s);
             return false;
         }
@@ -184,21 +185,14 @@ public:
 
 FunHook multi_ban_init_hook{
     0x0046D2C0,
-    []() {
-        Banlist::instance().load();
-    },
+    []() { Banlist::instance().load(); },
 };
 
-FunHook multi_ban_shutdown_hook{
-    0x0046D3B0,
-    []() {}
-};
+FunHook multi_ban_shutdown_hook{0x0046D3B0, []() {}};
 
 FunHook multi_ban_is_banned_hook{
     0x0046D010,
-    [](const rf::NetAddr& addr) -> int {
-        return Banlist::instance().is_banned(addr.ip_addr) ? 1 : 0;
-    },
+    [](const rf::NetAddr& addr) -> int { return Banlist::instance().is_banned(addr.ip_addr) ? 1 : 0; },
 };
 
 FunHook multi_ban_validate_ip_hook{
@@ -206,7 +200,8 @@ FunHook multi_ban_validate_ip_hook{
     [](const char* s) {
         try {
             IpRange::parse(s);
-        } catch (const std::exception& e) {
+        }
+        catch (const std::exception& e) {
             xlog::error("Invalid IP range: {}", s);
             return 0;
         }
@@ -243,7 +238,9 @@ std::optional<std::string> multi_ban_unban_last()
 
 #ifndef NDEBUG
 
-#define ok(expr) if (!(expr)) xlog::error("Test failed: {}", #expr)
+#define ok(expr) \
+    if (!(expr)) \
+    xlog::error("Test failed: {}", #expr)
 
 static void test_parsing()
 {
@@ -257,7 +254,8 @@ static void test_parsing()
         ok(IpRange::parse("192.168.17.*").to_string() == "192.168.17.*");
         ok(IpRange::parse("192.168.*.*").to_string() == "192.168.*.*");
         ok(IpRange::parse("192.168.17.17/28").to_string() == "192.168.17.16/28"); // normalized
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         xlog::error("banlist test failed: {}", e.what());
     }
 }

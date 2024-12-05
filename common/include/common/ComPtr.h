@@ -4,27 +4,24 @@ template<typename T>
 class ComPtr
 {
 private:
-    T *m_ptr = nullptr;
+    T* m_ptr = nullptr;
 
 public:
     ComPtr() = default;
 
-    ComPtr(const ComPtr& other) :
-        m_ptr(other.m_ptr)
+    ComPtr(const ComPtr& other) : m_ptr(other.m_ptr)
     {
         if (m_ptr) {
             m_ptr->AddRef();
         }
     }
 
-    ComPtr(ComPtr&& other) :
-        m_ptr(other.m_ptr)
+    ComPtr(ComPtr&& other) : m_ptr(other.m_ptr)
     {
         other.m_ptr = nullptr;
     }
 
-    ComPtr(T* ptr) :
-        m_ptr(ptr)
+    ComPtr(T* ptr) : m_ptr(ptr)
     {
         if (m_ptr) {
             m_ptr->AddRef();

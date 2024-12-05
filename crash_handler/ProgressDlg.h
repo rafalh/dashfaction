@@ -19,8 +19,7 @@ class ProgressDlg : public CDialog
 public:
     ProgressDlg(const std::string title, std::function<void()> callback) :
         CDialog(IDD_PROGRESS), m_title(title), m_callback(callback)
-    {
-    }
+    {}
 
     std::optional<std::string> GetError() const
     {
@@ -56,13 +55,12 @@ private:
         m_thread = std::thread{&ProgressDlg::ThreadProc, this};
     }
 
-    void ThreadProc() try
-    {
+    void ThreadProc()
+    try {
         m_callback();
         PostMessage(WM_CLOSE, 0, 0);
     }
-    catch (std::exception& e)
-    {
+    catch (std::exception& e) {
         m_error = generate_message_for_exception(e);
         PostMessage(WM_CLOSE, 0, 0);
     }

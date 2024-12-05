@@ -28,9 +28,7 @@ CallHook<void(int, int, int, rf::gr::Mode)> hud_render_ammo_gr_bitmap_hook{
         0x0043AEC3u,
         0x0043AF0Au,
     },
-    [](int bm_handle, int x, int y, rf::gr::Mode mode) {
-        hud_scaled_bitmap(bm_handle, x, y, g_hud_ammo_scale, mode);
-    },
+    [](int bm_handle, int x, int y, rf::gr::Mode mode) { hud_scaled_bitmap(bm_handle, x, y, g_hud_ammo_scale, mode); },
 };
 
 CallHook<void(int, int, int, rf::gr::Mode)> render_reticle_gr_bitmap_hook{
@@ -53,7 +51,7 @@ CallHook<void(int, int, int, rf::gr::Mode)> render_reticle_gr_bitmap_hook{
 
 FunHook<void(rf::Entity*, int, int, bool)> hud_render_ammo_hook{
     0x0043A510,
-    [](rf::Entity *entity, int weapon_type, int offset_y, bool is_inactive) {
+    [](rf::Entity* entity, int weapon_type, int offset_y, bool is_inactive) {
         offset_y = static_cast<int>(offset_y * g_hud_ammo_scale);
         hud_render_ammo_hook.call_target(entity, weapon_type, offset_y, is_inactive);
     },

@@ -72,7 +72,10 @@ struct EventSetLiquidDepthHook : rf::Event
 
 void __fastcall EventSetLiquidDepth_turn_on_new(EventSetLiquidDepthHook* this_)
 {
-    xlog::info("Processing Set_Liquid_Depth event: uid {} depth {:.2f} duration {:.2f}", this_->uid, this_->depth, this_->duration);
+    xlog::info(
+        "Processing Set_Liquid_Depth event: uid {} depth {:.2f} duration {:.2f}", this_->uid, this_->depth,
+        this_->duration
+    );
     if (this_->links.size() == 0) {
         xlog::trace("no links");
         rf::add_liquid_depth_update(this_->room, this_->depth, this_->duration);
@@ -88,9 +91,10 @@ void __fastcall EventSetLiquidDepth_turn_on_new(EventSetLiquidDepthHook* this_)
     }
 }
 
-extern CallHook<void __fastcall (rf::GRoom*, int, rf::GSolid*)> liquid_depth_update_apply_all_GRoom_reset_liquid_hook;
+extern CallHook<void __fastcall(rf::GRoom*, int, rf::GSolid*)> liquid_depth_update_apply_all_GRoom_reset_liquid_hook;
 
-void __fastcall liquid_depth_update_apply_all_GRoom_reset_liquid(rf::GRoom* room, int edx, rf::GSolid* solid) {
+void __fastcall liquid_depth_update_apply_all_GRoom_reset_liquid(rf::GRoom* room, int edx, rf::GSolid* solid)
+{
     liquid_depth_update_apply_all_GRoom_reset_liquid_hook.call_target(room, edx, solid);
 
     // check objects in room if they are in water
@@ -115,10 +119,11 @@ void __fastcall liquid_depth_update_apply_all_GRoom_reset_liquid(rf::GRoom* room
     }
 }
 
-CallHook<void __fastcall (rf::GRoom* room, int edx, rf::GSolid* geo)> liquid_depth_update_apply_all_GRoom_reset_liquid_hook{
-    0x0045E4AC,
-    liquid_depth_update_apply_all_GRoom_reset_liquid,
-};
+CallHook<void __fastcall(rf::GRoom* room, int edx, rf::GSolid* geo)>
+    liquid_depth_update_apply_all_GRoom_reset_liquid_hook{
+        0x0045E4AC,
+        liquid_depth_update_apply_all_GRoom_reset_liquid,
+    };
 
 CallHook<int(rf::AiPathInfo*)> ai_path_release_on_load_level_event_crash_fix{
     0x004BBD99,
@@ -158,12 +163,13 @@ FunHook<void()> event_level_init_post_hook{
     },
 };
 
-extern FunHook<void __fastcall(rf::Event *)> EventMessage__turn_on_hook;
-void __fastcall EventMessage__turn_on_new(rf::Event *this_)
+extern FunHook<void __fastcall(rf::Event*)> EventMessage__turn_on_hook;
+void __fastcall EventMessage__turn_on_new(rf::Event* this_)
 {
-    if (!rf::is_dedicated_server) EventMessage__turn_on_hook.call_target(this_);
+    if (!rf::is_dedicated_server)
+        EventMessage__turn_on_hook.call_target(this_);
 }
-FunHook<void __fastcall(rf::Event *this_)> EventMessage__turn_on_hook{
+FunHook<void __fastcall(rf::Event* this_)> EventMessage__turn_on_hook{
     0x004BB210,
     EventMessage__turn_on_new,
 };
@@ -174,8 +180,7 @@ CodeInjection event_activate_injection{
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
             bool on = addr_as_ref<bool>(regs.esp + 0xC + 0xC);
-            rf::console::print("Processing {} message in event {} ({})",
-            on ? "ON" : "OFF", event->name, event->uid);
+            rf::console::print("Processing {} message in event {} ({})", on ? "ON" : "OFF", event->name, event->uid);
         }
     },
 };
@@ -186,8 +191,7 @@ CodeInjection event_activate_injection2{
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
             bool on = regs.cl;
-            rf::console::print("Delaying {} message in event {} ({})",
-                on ? "ON" : "OFF", event->name, event->uid);
+            rf::console::print("Delaying {} message in event {} ({})", on ? "ON" : "OFF", event->name, event->uid);
         }
     },
 };
@@ -197,28 +201,24 @@ CodeInjection event_process_injection{
     [](auto& regs) {
         if (event_debug_enabled) {
             rf::Event* event = regs.esi;
-            rf::console::print("Processing {} message in event {} ({}) (delayed)",
-                event->delayed_msg ? "ON" : "OFF", event->name, event->uid);
+            rf::console::print(
+                "Processing {} message in event {} ({}) (delayed)", event->delayed_msg ? "ON" : "OFF", event->name,
+                event->uid
+            );
         }
     },
 };
 
-CodeInjection event_load_level_turn_on_injection{
-    0x004BB9C9,
-    [](auto& regs) {
-        if (rf::local_player->flags & (rf::PF_KILL_AFTER_BLACKOUT|rf::PF_END_LEVEL_AFTER_BLACKOUT)) {
-            // Ignore level transition if the player was going to die or game was going to end after a blackout effect
-            regs.eip = 0x004BBA71;
-        }
-    }
-};
+CodeInjection event_load_level_turn_on_injection{0x004BB9C9, [](auto& regs) {
+                                                     if (rf::local_player->flags & (rf::PF_KILL_AFTER_BLACKOUT |
+                                                                                    rf::PF_END_LEVEL_AFTER_BLACKOUT)) {
+                                                         // Ignore level transition if the player was going to die or
+                                                         // game was going to end after a blackout effect
+                                                         regs.eip = 0x004BBA71;
+                                                     }
+                                                 }};
 
-ConsoleCommand2 debug_event_msg_cmd{
-    "debug_event_msg",
-    []() {
-        event_debug_enabled = !event_debug_enabled;
-    }
-};
+ConsoleCommand2 debug_event_msg_cmd{"debug_event_msg", []() { event_debug_enabled = !event_debug_enabled; }};
 
 void apply_event_patches()
 {
@@ -230,8 +230,8 @@ void apply_event_patches()
     AsmWriter(0x004BCBE0).jmp(&EventSetLiquidDepth_turn_on_new);
     liquid_depth_update_apply_all_GRoom_reset_liquid_hook.install();
 
-    // Fix crash after level change (Load_Level event) caused by GNavNode pointers in AiPathInfo not being cleared for entities
-    // being taken from the previous level
+    // Fix crash after level change (Load_Level event) caused by GNavNode pointers in AiPathInfo not being cleared for
+    // entities being taken from the previous level
     ai_path_release_on_load_level_event_crash_fix.install();
 
     // Fix Message event crash on dedicated server

@@ -6,10 +6,10 @@
 class AboutDlg : public CDialog
 {
 public:
-	AboutDlg();
+    AboutDlg();
 
 protected:
     BOOL OnInitDialog() override;
-    LRESULT OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam) override;
+    LRESULT OnNotify([[maybe_unused]] WPARAM wparam, LPARAM lparam) override;
     void OpenLicensingInfo();
 };

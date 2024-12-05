@@ -49,18 +49,19 @@ std::string get_real_os_version()
         THROW_WIN32_ERROR("VerQueryValueA returned unknown block");
     auto* file_info = static_cast<VS_FIXEDFILEINFO*>(block);
 
-    return std::format("{}.{}.{}",
-                        HIWORD(file_info->dwProductVersionMS),
-                        LOWORD(file_info->dwProductVersionMS),
-                        HIWORD(file_info->dwProductVersionLS));
+    return std::format(
+        "{}.{}.{}", HIWORD(file_info->dwProductVersionMS), LOWORD(file_info->dwProductVersionMS),
+        HIWORD(file_info->dwProductVersionLS)
+    );
 }
 
 std::optional<std::string> get_wine_version()
 {
     HMODULE ntdll_handle = GetModuleHandleA("ntdll.dll");
     // Note: double cast is needed to fix cast-function-type GCC warning
-    auto* wine_get_version = reinterpret_cast<const char*(*)()>(reinterpret_cast<void(*)()>(
-        GetProcAddress(ntdll_handle, "wine_get_version")));
+    auto* wine_get_version = reinterpret_cast<const char* (*)()>(
+        reinterpret_cast<void (*)()>(GetProcAddress(ntdll_handle, "wine_get_version"))
+    );
     if (!wine_get_version)
         return {};
     const char* ver = wine_get_version();
@@ -71,8 +72,9 @@ bool is_current_user_admin()
 {
     SID_IDENTIFIER_AUTHORITY nt_authority = SECURITY_NT_AUTHORITY;
     PSID administrators_group;
-    BOOL ret = AllocateAndInitializeSid(&nt_authority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0,
-                                        0, 0, 0, &administrators_group);
+    BOOL ret = AllocateAndInitializeSid(
+        &nt_authority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &administrators_group
+    );
     if (!ret) {
         xlog::error("AllocateAndInitializeSid failed");
         return false;
@@ -104,14 +106,14 @@ const char* get_process_elevation_type()
     CloseHandle(token_handle);
 
     switch (elevation_type) {
-    case TokenElevationTypeDefault:
-        return "default";
-    case TokenElevationTypeFull:
-        return "full";
-    case TokenElevationTypeLimited:
-        return "limited";
-    default:
-        return "unknown";
+        case TokenElevationTypeDefault:
+            return "default";
+        case TokenElevationTypeFull:
+            return "full";
+        case TokenElevationTypeLimited:
+            return "limited";
+        default:
+            return "unknown";
     }
 }
 
@@ -123,11 +125,10 @@ std::string get_cpu_id()
 #else
     __cpuid(1, cpu_info[0], cpu_info[1], cpu_info[2], cpu_info[3]);
 #endif
-    return std::format("{:08X} {:08X} {:08X} {:08X}",
-        static_cast<unsigned>(cpu_info[0]),
-        static_cast<unsigned>(cpu_info[1]),
-        static_cast<unsigned>(cpu_info[2]),
-        static_cast<unsigned>(cpu_info[3]));
+    return std::format(
+        "{:08X} {:08X} {:08X} {:08X}", static_cast<unsigned>(cpu_info[0]), static_cast<unsigned>(cpu_info[1]),
+        static_cast<unsigned>(cpu_info[2]), static_cast<unsigned>(cpu_info[3])
+    );
 }
 
 std::string get_cpu_brand()

@@ -47,9 +47,7 @@ private:
 class DebugNameValueBox
 {
 public:
-    DebugNameValueBox(int x, int y) :
-        x_(x), y_(y)
-    {}
+    DebugNameValueBox(int x, int y) : x_(x), y_(y) {}
 
     void section(const char* name)
     {

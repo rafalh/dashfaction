@@ -16,10 +16,10 @@ namespace rf
         int packfile_offset;
         int name_checksum;
         int field_208_ds_load_buffer_param;
-        IDirectSoundBuffer *ds_buffer;
-        IDirectSound3DBuffer *ds_3d_buffer;
-        WAVEFORMATEX *wave_format_orig;
-        WAVEFORMATEX *wave_format_fixed;
+        IDirectSoundBuffer* ds_buffer;
+        IDirectSound3DBuffer* ds_3d_buffer;
+        WAVEFORMATEX* wave_format_orig;
+        WAVEFORMATEX* wave_format_fixed;
         int field_21c;
         HMMIO hmmio;
         MMCKINFO data_chunk_info;
@@ -66,7 +66,10 @@ namespace rf
     static auto snd_ds_channel_is_paused = addr_as_ref<bool(int channel)>(0x00522500);
     static auto snd_ds_get_channel = addr_as_ref<int(int sig)>(0x00522F30);
     static auto snd_ds_estimate_duration = addr_as_ref<float(int sid)>(0x00523170);
-    static auto snd_ds_play_3d = addr_as_ref<int(int sid, const Vector3& pos, const Vector3& vel, float min_dist, float max_dist, float volume, bool is_looping, float unused)>(0x005222B0);
+    static auto snd_ds_play_3d = addr_as_ref<
+        int(int sid, const Vector3& pos, const Vector3& vel, float min_dist, float max_dist, float volume,
+            bool is_looping, float unused)>(0x005222B0);
 
-    static auto snd_ds3d_update_buffer = addr_as_ref<int(int chnl, float min_dist, float max_dist, const Vector3& pos, const Vector3& vel)>(0x00562DB0);
+    static auto snd_ds3d_update_buffer =
+        addr_as_ref<int(int chnl, float min_dist, float max_dist, const Vector3& pos, const Vector3& vel)>(0x00562DB0);
 }

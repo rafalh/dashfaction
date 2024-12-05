@@ -85,7 +85,9 @@ public:
                 num_votes_no++;
             remaining_players.erase(source);
             players_who_voted.insert({source, is_yes_vote});
-            auto msg = std::format("\xA6 Vote status:  Yes: {}  No: {}  Waiting: {}", num_votes_yes, num_votes_no, remaining_players.size());
+            auto msg = std::format(
+                "\xA6 Vote status:  Yes: {}  No: {}  Waiting: {}", num_votes_yes, num_votes_no, remaining_players.size()
+            );
             send_chat_line_packet(msg.c_str(), nullptr);
             return check_for_early_vote_finish();
         }
@@ -121,8 +123,6 @@ public:
         return true;
     }
 
-
-
 protected:
     [[nodiscard]] virtual std::string get_title() const = 0;
     [[nodiscard]] virtual const VoteConfig& get_config() const = 0;
@@ -149,7 +149,8 @@ protected:
             "\n=============== VOTE STARTING ===============\n"
             "{} vote started by {}.\n"
             "Send message \"/vote yes\" or \"/vote no\" to participate.",
-            title.c_str(), source->name.c_str());
+            title.c_str(), source->name.c_str()
+        );
         send_chat_line_packet(msg.c_str(), nullptr);
     }
 
@@ -181,7 +182,7 @@ struct VoteKick : public Vote
 {
     rf::Player* m_target_player;
 
-    bool process_vote_arg(std::string_view arg, [[ maybe_unused ]] rf::Player* source) override
+    bool process_vote_arg(std::string_view arg, [[maybe_unused]] rf::Player* source) override
     {
         std::string player_name{arg};
         m_target_player = find_best_matching_player(player_name.c_str());
