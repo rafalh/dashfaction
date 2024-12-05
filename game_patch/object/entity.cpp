@@ -203,31 +203,27 @@ CodeInjection entity_process_pre_hide_riot_shield_injection{
     },
 };
 
-// initialize new AiInfo field used in `entity_damage` to store if on death, the last damage dealt was explosive
-CodeInjection ai_init_ai_info_injection{
-    0x00403022,
+// avoids gibbing if gore level is too low or if this specific corpse shouldn't gib
+CodeInjection corpse_damage_patch{
+    0x00417C6A,
     [](auto& regs) {
-        rf::AiInfo* aip = regs.esi;
-        if (aip) {
-            aip->explosive_last_damage = false;
+        rf::Corpse* cp = regs.esi;
+
+        if (rf::game_get_gore_level() < 2 ||
+            cp->corpse_flags & 0x400 ||         // drools_slime (used by snakes)
+            cp->corpse_flags & 0x4)             // custom_state_anim (used by sea creature)
+        {
+            regs.eip = 0x00417C97;
         }
     }
 };
 
-bool consider_gibs() {
-    return g_game_config.gibs && !rf::is_multi;
-}
-
 FunHook<void(int)> entity_blood_throw_gibs_hook{
     0x0042E3C0, [](int handle) {
-        if (!consider_gibs()) {
-            return;
-        }
-
         rf::Object* objp = rf::obj_from_handle(handle);
 
         if (!objp) {
-            return; // invalid object
+            return;
         }
 
         int explode_vclip_index = rf::vclip_lookup("bloodsplat");
@@ -264,41 +260,26 @@ FunHook<void(int)> entity_blood_throw_gibs_hook{
     }
 };
 
-CodeInjection entity_damage_explosive_death_injection{
-    0x0041A413,
-    [](auto& regs) {        
-        rf::Entity* ep = regs.esi;
-        int damage_type = regs.ebp;
-        ep->ai.explosive_last_damage = (damage_type == 3); // explosive damage
-        if (consider_gibs() && ep) {
-            // using body temp > 90 (from entity.tbl class) as the determining factor for if an entity should gib
-            // in stock game, this includes only humanoid enemies and reeper/baby reeper
-            // in mods, this lets the mod author control which of their mod's entities gib
-            if (ep->ai.explosive_last_damage && ep->info->body_temp >= 90.0f) {
-                ep->death_anim_index = -1; // no death anim needed if entity is gibbing
+ConsoleCommand2 gore_level_cmd{
+    "gore_level",
+    [](std::optional<int> gore_setting) {
+        if (gore_setting) {
+            if (*gore_setting >= 0 && *gore_setting <= 2) {
+                rf::game_set_gore_level(*gore_setting);
+                rf::console::print("Set gore level to {}", rf::game_get_gore_level());
+            }
+            else {
+                rf::console::print("Invalid gore level specified. Allowed range is 0 (minimal) to 2 (maximum).");
             }
         }
-    }
-};
-
-CodeInjection entity_dying_frame_explode_injection{
-    0x0041EE4C,
-    [](auto& regs) {
-        rf::Entity* ep = regs.esi;
-        if (consider_gibs() && ep && ep->ai.explosive_last_damage && ep->info->body_temp >= 90.0f) {
-            regs.eip = 0x0041EE55;
+        else {
+            rf::console::print("Gore level is {}", rf::game_get_gore_level());
         }
-    },
-};
 
-ConsoleCommand2 gibs_cmd{
-    "gibs",
-    []() {
-        g_game_config.gibs = !g_game_config.gibs;
-        g_game_config.save();
-        rf::console::print("Gibs are {}.", g_game_config.gibs ? "enabled" : "disabled");
+        
     },
-    "Make enemies and corpses explode into chunks from explosives (single player only)",
+    "Set gore level.",
+    "gore_level [level]"
 };
 
 void entity_do_patch()
@@ -354,11 +335,9 @@ void entity_do_patch()
     entity_process_pre_hide_riot_shield_injection.install();
 
 	// Restore cut stock game feature for entities and corpses exploding into chunks
-    ai_init_ai_info_injection.install();
+    corpse_damage_patch.install();
 	entity_blood_throw_gibs_hook.install();
-    entity_damage_explosive_death_injection.install();
-    entity_dying_frame_explode_injection.install();
 
     // Commands
-    gibs_cmd.register_cmd();
+    gore_level_cmd.register_cmd();
 }

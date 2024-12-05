@@ -45,7 +45,8 @@ Version 1.9.0 (not released yet)
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 - Fix crash when `verify_level` command is run without a level being loaded
 - Fix cockpit not rendering for any jeeps after the first one entered each level load
-- Add gibbing when enemies die from explosives (enable with `gibs` command)
+- Add `gore_level` command
+- Add gibbing when enemies die from explosives (gore level 2)
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------

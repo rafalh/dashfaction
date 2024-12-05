@@ -173,4 +173,6 @@ namespace rf
     static auto& player_do_frame = addr_as_ref<void(Player*)>(0x004A2700);
     static auto& player_make_weapon_current_selection = addr_as_ref<void(Player *player, int weapon_type)>(0x004A4980);
     static auto& player_start_death_fade = addr_as_ref<void(Player *pp, float time_sec, void (*callback)(Player *))>(0x004A73E0);
+    static auto& game_get_gore_level = addr_as_ref<int()>(0x00436A20);
+    static auto& game_set_gore_level = addr_as_ref<int(int gore_setting)>(0x00436A10);
 }

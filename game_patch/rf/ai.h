@@ -212,9 +212,6 @@ namespace rf
         float movement_radius;
         float movement_height;
         bool use_custom_attack_range;
-#ifdef DASH_FACTION
-        bool explosive_last_damage;
-#endif
         float custom_attack_range;
         int ai_flags;
     };
