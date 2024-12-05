@@ -6,9 +6,6 @@
 #include <cstdint>
 #include <common/config/CfgVar.h>
 
-template<typename T>
-struct EnumTrait;
-
 struct GameConfig
 {
     // Path

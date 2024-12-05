@@ -45,10 +45,11 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 if(MSVC)
-    add_compile_options(/Zc:threadSafeInit-)
-    add_compile_options(/arch:IA32)
+    add_compile_options(/arch:SSE2)
     # Statically link Microsoft's CRT.
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+else()
+    add_compile_options(-msse2)
 endif()
 
 # FIXME
@@ -61,6 +62,8 @@ endif()
 macro(enable_warnings target)
     if(NOT MSVC)
         target_compile_options(${target} PRIVATE -Wall -Wextra -Wundef)
+    else()
+        target_compile_options(${target} PRIVATE /W3)
     endif()
 endmacro()
 
