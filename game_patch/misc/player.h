@@ -1,10 +1,12 @@
 #include <functional>
 #include <map>
+#include <optional>
 #include <string>
 #include <common/utils/string-utils.h>
 #include "../rf/math/vector.h"
 #include "../rf/math/matrix.h"
 #include "../rf/os/timestamp.h"
+#include "../purefaction/pf_packets.h"
 
 // Forward declarations
 namespace rf
@@ -20,6 +22,7 @@ struct PlayerNetGameSaveData
 
 struct PlayerAdditionalData
 {
+    std::optional<pf_pure_status> received_ac_status{};
     bool is_browser = false;
     bool is_muted = false;
     int last_hitsound_sent_ms = 0;
