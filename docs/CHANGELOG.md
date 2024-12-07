@@ -47,6 +47,7 @@ Version 1.9.0 (not released yet)
 - Add `server_password` command
 - Add `$DF CTF Flag Return Time` option in dedicated server config
 - Add mod name to main menu
+- Make value of `spectate_mode_minimal_ui` persist between game launches
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` in TrueType fonts
