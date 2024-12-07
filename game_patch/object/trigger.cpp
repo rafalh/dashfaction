@@ -21,7 +21,7 @@ void send_trigger_activate_packet(rf::Player* player, int trigger_uid, int32_t e
     packet.header.size = sizeof(packet) - sizeof(packet.header);
     packet.uid = trigger_uid;
     packet.entity_handle = entity_handle;
-    rf::multi_io_send_reliable(player, reinterpret_cast<uint8_t*>(&packet), sizeof(packet), 0);
+    rf::multi_io_send_reliable(player, &packet, sizeof(packet), 0);
 }
 
 FunHook<void(int, int)> send_trigger_activate_packet_to_all_players_hook{

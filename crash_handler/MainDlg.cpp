@@ -74,8 +74,9 @@ LRESULT MainDlg::OnNotify([[ maybe_unused ]] WPARAM wparam, LPARAM lparam)
 void MainDlg::OpenArchivedReport()
 {
     auto archived_report_path = GetCrashReportApp()->GetArchivedReportFilePath();
-    auto* ret = ShellExecuteA(GetHwnd(), nullptr, archived_report_path.c_str(), nullptr, nullptr, SW_SHOW);
-    if (reinterpret_cast<int>(ret) <= 32) {
+    auto result = ShellExecuteA(GetHwnd(), nullptr, archived_report_path.c_str(), nullptr, nullptr, SW_SHOW);
+    auto result_int = reinterpret_cast<INT_PTR>(result);
+    if (result_int <= 32) {
         // ShellExecuteA failed - fallback to opening the directory
         CString args;
         args = "/select,";

@@ -209,6 +209,7 @@ namespace xlog
 #define ERR_ONCE(...) LOG_ONCE(xlog::error, __VA_ARGS__)
 #define WARN_ONCE(...) LOG_ONCE(xlog::warn, __VA_ARGS__)
 #define INFO_ONCE(...) LOG_ONCE(xlog::info, __VA_ARGS__)
-#define TRACE_ONCE(...) LOG_ONCE(xlog::tracef, __VA_ARGS__)
+#define TRACE_ONCE(...) LOG_ONCE(xlog::trace, __VA_ARGS__)
+#define DEBUG_ONCE(...) LOG_ONCE(xlog::debug, __VA_ARGS__)
 
 #endif // XLOG_NO_MACROS
