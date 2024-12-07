@@ -14,6 +14,7 @@
 #include <xlog/FileAppender.h>
 #include <xlog/Win32Appender.h>
 #include <xlog/xlog.h>
+#include <tlhelp32.h>
 #include "main.h"
 #include "../os/console.h"
 #include "../os/os.h"
@@ -330,6 +331,35 @@ extern "C" void subhook_unk_opcode_handler(uint8_t* opcode)
     xlog::error("SubHook unknown opcode 0x{:x} at {}", *opcode, static_cast<void*>(opcode));
 }
 
+std::optional<DWORD> find_pid(const std::string_view filename) {
+    const HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snapshot == INVALID_HANDLE_VALUE) {
+        return std::nullopt;
+    }
+
+    PROCESSENTRY32 process{.dwSize = sizeof(process)};
+    if (!Process32First(snapshot, &process)) {
+        return std::nullopt;
+    }
+    
+    do {
+        if (process.szExeFile == filename) {
+            CloseHandle(snapshot);
+            return std::optional{process.th32ProcessID};
+        }
+    } while (Process32Next(snapshot, &process));
+
+    CloseHandle(snapshot);
+    return std::nullopt;
+}
+
+void suspend_flux() {
+    if (const std::optional<DWORD> pid = find_pid("flux.exe"); pid.has_value()) {
+        DebugActiveProcess(pid.value());
+        DebugSetProcessKillOnExit(FALSE);
+    }
+}
+
 extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
 {
     DWORD start_ticks = GetTickCount();
@@ -377,6 +407,11 @@ extern "C" DWORD __declspec(dllexport) Init([[maybe_unused]] void* unused)
     debug_apply_patches();
 
     xlog::info("Installing hooks took {} ms", GetTickCount() - start_ticks);
+
+    // Suspend f.lux, so we are in control of gamma instead of f.lux.
+    if (!rf::is_dedicated_server) {
+        suspend_flux();
+    }
 
     return 1; // success
 }
