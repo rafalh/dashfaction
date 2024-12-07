@@ -4,6 +4,7 @@
 #include "../rf/gr/gr.h"
 
 void gr_apply_patch();
+void evaluate_lightmaps_only();
 int gr_font_get_default();
 void gr_font_set_default(int font_id);
 bool gr_set_render_target(int bm_handle);

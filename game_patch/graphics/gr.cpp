@@ -9,10 +9,13 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/ShortTypes.h>
 #include <patch_common/AsmWriter.h>
+#include <xlog/xlog.h>
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../multi/multi.h"
 #include "../rf/gr/gr.h"
+#include "../rf/level.h"
+#include "../rf/geometry.h"
 #include "../rf/player/player.h"
 #include "../rf/multi.h"
 #include "../rf/os/os.h"
@@ -142,6 +145,40 @@ ConsoleCommand2 gamma_cmd{
     },
     "Sets gamma.",
     "gamma [value]",
+};
+
+void evaluate_lightmaps_only()
+{
+    bool server_side_restrict_lightmaps_only =
+        rf::is_multi && !rf::is_server && get_df_server_info() && !get_df_server_info()->allow_lmap;
+
+    if (server_side_restrict_lightmaps_only) {
+        if (g_game_config.try_lightmaps_only) {
+            rf::console::print("This server does not allow you to use lightmap only mode!");
+            rf::gr::show_lightmaps = false;
+            rf::g_cache_clear();
+        }
+    }
+    else {
+        if (rf::gr::show_lightmaps != g_game_config.try_lightmaps_only) {
+            rf::gr::show_lightmaps = g_game_config.try_lightmaps_only;
+            rf::g_cache_clear();
+        }
+    }
+}
+
+ConsoleCommand2 lightmaps_only_cmd{
+    "lightmaps_only",
+    []() {
+        g_game_config.try_lightmaps_only = !g_game_config.try_lightmaps_only;
+        g_game_config.save();
+
+        evaluate_lightmaps_only();
+
+        rf::console::print("Lightmap only mode is {}", g_game_config.try_lightmaps_only ?
+            "enabled. In multiplayer, this will only apply if the server allows it." : "disabled.");
+    },
+    "Render only lightmaps for level geometry (no textures). In multiplayer, this is only available if the server allows it.",
 };
 
 FunHook<float(const rf::Vector3&)> gr_get_apparent_distance_from_camera_hook{
@@ -326,6 +363,7 @@ void gr_apply_patch()
     // Commands
     fov_cmd.register_cmd();
     gamma_cmd.register_cmd();
+    lightmaps_only_cmd.register_cmd();
     fullscreen_cmd.register_cmd();
     windowed_cmd.register_cmd();
     nearest_texture_filtering_cmd.register_cmd();

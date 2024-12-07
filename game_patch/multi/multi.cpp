@@ -16,6 +16,8 @@
 #include "../rf/entity.h"
 #include "../rf/ai.h"
 #include "../rf/item.h"
+#include "../main/main.h"
+#include "../graphics/gr.h"
 
 // Note: this must be called from DLL init function
 // Note: we can't use global variable because that would lead to crash when launcher loads this DLL to check dependencies
@@ -76,6 +78,9 @@ CodeInjection multi_start_injection{
     []() {
         void debug_multi_init();
         debug_multi_init();
+        if (g_game_config.try_lightmaps_only) {
+            evaluate_lightmaps_only();
+        }        
     },
 };
 

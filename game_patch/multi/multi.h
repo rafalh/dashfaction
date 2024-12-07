@@ -76,6 +76,9 @@ struct DashFactionServerInfo
     uint8_t version_minor = 0;
     bool saving_enabled = false;
     std::optional<float> max_fov;
+    bool allow_fb_mesh = false;
+    bool allow_lmap = false;
+    bool allow_no_ss = false;
 };
 
 void multi_level_download_update();
