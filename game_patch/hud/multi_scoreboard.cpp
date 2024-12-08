@@ -72,7 +72,7 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
             num_spawned_players,
             rf::multi_num_players()
         );
-        rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x_center, cur_y, game_type_name.c_str());
+        rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x_center, cur_y, game_info.c_str());
     }
     int font_h = rf::gr::get_font_height(-1);
     cur_y += font_h + 8;
