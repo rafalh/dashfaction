@@ -24,6 +24,7 @@ enum class pf_pure_status : uint8_t
     fail = 3,
     old_pure = 4,
     rfsb = 5,
+    _last_variant = rfsb,
 };
 
 struct rf_packet_header

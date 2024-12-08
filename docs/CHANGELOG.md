@@ -40,6 +40,7 @@ Version 1.9.0 (not released yet)
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
+- Add `version` command
 
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded
@@ -48,11 +49,13 @@ Version 1.9.0 (not released yet)
 - Add `server_password` command
 - Add `$DF CTF Flag Return Time` option in dedicated server config
 - Add mod name to main menu
+- Make value of `spectate_mode_minimal_ui` persist between game launches
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` and `•` in TrueType fonts
-- Improve frag messages
-- Search in command descriptions in `.` command
+- Improve frag message format
+- Search command descriptions in `.` command
+- Improve PF network protocol compatibility
 - Add spawned players to the scoreboard
 
 [@Mystyle-48](https://github.com/Mystyle-48)
