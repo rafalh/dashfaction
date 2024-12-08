@@ -56,7 +56,7 @@ Version 1.9.0 (not released yet)
 - Improve frag message format
 - Search command descriptions in `.` command
 - Improve PF network protocol compatibility
-- Add spawned players to the scoreboard
+- Add a spawned player count to the scoreboard
 
 [@Mystyle-48](https://github.com/Mystyle-48)
 - Simplify installation detection in setup and launcher
