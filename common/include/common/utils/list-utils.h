@@ -5,13 +5,13 @@
 template<typename T, T* T::*NEXT_PTR = &T::next>
 class SinglyLinkedList
 {
-    T* m_list;
+    std::reference_wrapper<T*> m_list;
 
 public:
     class Iterator
     {
         T* current;
-        T* first;
+        const T* first;
 
     public:
         using self_type = Iterator;
@@ -25,8 +25,9 @@ public:
             Iterator{nullptr}
         {}
 
-        Iterator(pointer first) :
-            current(first), first(first)
+        Iterator(const pointer first) :
+            current{first},
+            first{first}
         {}
 
         self_type& operator++()
@@ -38,7 +39,7 @@ public:
             return *this;
         }
 
-        self_type operator++([[maybe_unused]] int junk)
+        self_type operator++([[maybe_unused]] const int junk)
         {
             const self_type copy = *this;
             ++*this;
@@ -61,24 +62,25 @@ public:
         }
     };
 
-    SinglyLinkedList(T* list) : m_list(list)
+    SinglyLinkedList(T*& list) :
+        m_list{list}
     {}
 
     Iterator begin()
     {
-        return Iterator(m_list);
+        return Iterator{m_list};
     }
 
     Iterator end()
     {
-        return Iterator(nullptr);
+        return Iterator{nullptr};
     }
 };
 
 template<typename T, T* T::*NEXT_PTR = &T::next, T* T::*PREV_PTR = &T::prev>
 class DoublyLinkedList
 {
-    T* m_list;
+    std::reference_wrapper<T> m_list;
 
 public:
     class Iterator
@@ -97,8 +99,8 @@ public:
             Iterator{nullptr}
         {}
 
-        Iterator(pointer current) :
-            current(current)
+        Iterator(const pointer current) :
+            current{current}
         {}
 
         self_type& operator++()
@@ -113,13 +115,13 @@ public:
             return *this;
         }
 
-        self_type operator--([[maybe_unused]] int junk) {
+        self_type operator--([[maybe_unused]] const int junk) {
             const self_type copy = *this;
             --*this;
             return copy;
         }
 
-        self_type operator++([[maybe_unused]] int junk)
+        self_type operator++([[maybe_unused]] const int junk)
         {
             const self_type copy = *this;
             ++*this;
@@ -139,17 +141,22 @@ public:
         }
     };
 
-    DoublyLinkedList(T& list) : m_list(&list)
+    DoublyLinkedList(T& list) :
+        m_list{list}
     {}
 
     Iterator begin()
     {
-        auto next = m_list->next ? m_list->next : m_list;
-        return Iterator(next);
+        T* const next = m_list.get().next;
+        if (next) {
+            return Iterator{next};
+        } else {
+            return end();
+        }
     }
 
     Iterator end()
     {
-        return Iterator(m_list);
+        return Iterator{&m_list.get()};
     }
 };
