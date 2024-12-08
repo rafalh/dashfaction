@@ -50,9 +50,10 @@ Version 1.9.0 (not released yet)
 - Add mod name to main menu
 
 [@is-this-c](https://github.com/is-this-c)
-- Support `©` in TrueType fonts
+- Support `©` and `•` in TrueType fonts
 - Improve frag messages
 - Search in command descriptions in `.` command
+- Add spawned players to the scoreboard
 
 [@Mystyle-48](https://github.com/Mystyle-48)
 - Simplify installation detection in setup and launcher
