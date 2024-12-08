@@ -2,7 +2,7 @@
 
 #include <iterator>
 
-template<typename T, T* T::*NEXT_PTR = &T::next>
+template<typename T, T* const T::*NEXT_PTR = &T::next>
 class SinglyLinkedList
 {
     std::reference_wrapper<T*> m_list;
@@ -77,7 +77,7 @@ public:
     }
 };
 
-template<typename T, T* T::*NEXT_PTR = &T::next, T* T::*PREV_PTR = &T::prev>
+template<typename T, T* const T::*NEXT_PTR = &T::next, T* const T::*PREV_PTR = &T::prev>
 class DoublyLinkedList
 {
     std::reference_wrapper<T> m_list;
