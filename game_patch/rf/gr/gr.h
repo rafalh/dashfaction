@@ -348,6 +348,8 @@ namespace rf::gr
     static auto& start_instance = addr_as_ref<void(const Vector3& pos, const Matrix3& orient)>(0x00517F00);
     static auto& stop_instance = addr_as_ref<void()>(0x00517F20);
     static auto& project_vertex = addr_as_ref<ubyte (Vertex *p)>(0x00518440);
+    static auto& show_lightmaps = *reinterpret_cast<bool*>(0x009BB5A4);
+    static auto& light_set_ambient = addr_as_ref<void(float r, float g, float b)>(0x004D8CE0);
 
     inline void set_color(ubyte r, ubyte g, ubyte b, ubyte a = screen.current_color.alpha)
     {

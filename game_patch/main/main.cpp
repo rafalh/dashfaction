@@ -157,6 +157,13 @@ FunHook<void(bool)> level_init_post_hook{
     [](bool transition) {
         level_init_post_hook.call_target(transition);
         xlog::info("Level loaded: {}{}", rf::level.filename, transition ? " (transition)" : "");
+        evaluate_fullbright_meshes();
+        if (g_game_config.try_lightmaps_only) {
+            evaluate_lightmaps_only();
+        }
+        if (g_game_config.try_disable_screenshake) {
+            evaluate_restrict_disable_ss();
+        }  
     },
 };
 

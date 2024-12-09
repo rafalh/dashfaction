@@ -4,12 +4,14 @@
 #include <common/utils/list-utils.h>
 #include "../rf/object.h"
 #include "../rf/item.h"
+#include "../rf/level.h"
 #include "../rf/clutter.h"
 #include "../rf/gr/gr.h"
 #include "../rf/multi.h"
 #include "../rf/crt.h"
 #include "../os/console.h"
 #include "../main/main.h"
+#include "../multi/multi.h"
 
 void gr_light_use_static(bool use_static);
 
@@ -55,6 +57,36 @@ void obj_mesh_lighting_maybe_update(rf::Object *objp)
         obj_mesh_lighting_alloc_one(objp);
         obj_mesh_lighting_update_one(objp);
     }
+}
+
+void recalc_mesh_static_lighting()
+{
+    rf::obj_light_free();
+    rf::obj_light_alloc();
+    rf::obj_light_calculate();
+}
+
+void evaluate_fullbright_meshes()
+{
+    if (!rf::LEVEL_LOADED)
+        return;
+
+    bool server_side_restrict_fb_mesh =
+        rf::is_multi && !rf::is_server && get_df_server_info() && !get_df_server_info()->allow_fb_mesh;
+
+    if (server_side_restrict_fb_mesh && g_game_config.try_mesh_fullbright) {
+        rf::console::print("This server does not allow you to force fullbright meshes!");
+        return;
+    }
+
+    auto [r, g, b] = g_game_config.try_mesh_fullbright
+                         ? std::make_tuple(1.0f, 1.0f, 1.0f)
+                         : std::make_tuple(static_cast<float>(rf::level.ambient_light.red) / 255.0f,
+                                           static_cast<float>(rf::level.ambient_light.green) / 255.0f,
+                                           static_cast<float>(rf::level.ambient_light.blue) / 255.0f);
+
+    rf::gr::light_set_ambient(r, g, b);
+    recalc_mesh_static_lighting();
 }
 
 FunHook<void()> obj_light_calculate_hook{
@@ -115,13 +147,6 @@ FunHook<void()> obj_light_free_hook{
     },
 };
 
-void recalc_mesh_static_lighting()
-{
-    rf::obj_light_free();
-    rf::obj_light_alloc();
-    rf::obj_light_calculate();
-}
-
 ConsoleCommand2 mesh_static_lighting_cmd{
     "mesh_static_lighting",
     []() {
@@ -131,6 +156,20 @@ ConsoleCommand2 mesh_static_lighting_cmd{
         rf::console::print("Mesh static lighting is {}", g_game_config.mesh_static_lighting ? "enabled" : "disabled");
     },
     "Toggle mesh static lighting calculation",
+};
+
+ConsoleCommand2 fullbright_models_cmd{
+    "mesh_fullbright",
+    []() {
+        g_game_config.try_mesh_fullbright = !g_game_config.try_mesh_fullbright;
+        g_game_config.save();
+
+        evaluate_fullbright_meshes();    
+                
+        rf::console::print("Fullbright meshes are {}", g_game_config.try_mesh_fullbright ?
+			"enabled. In multiplayer, this will only apply if the server allows it." : "disabled.");
+    },
+    "Set all meshes to render fullbright. In multiplayer, this is only available if the server allows it.",
 };
 
 void obj_light_apply_patch()
@@ -145,4 +184,5 @@ void obj_light_apply_patch()
 
     // Commands
     mesh_static_lighting_cmd.register_cmd();
+    fullbright_models_cmd.register_cmd();
 }
