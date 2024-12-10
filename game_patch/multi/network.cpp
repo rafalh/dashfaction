@@ -892,8 +892,7 @@ FunHook<void()> multi_stop_hook{
         g_df_server_info.reset();
         multi_stop_hook.call_target();
         if (rf::local_player) {
-            extern std::unordered_map<rf::Player*, PlayerAdditionalData> g_player_additional_data_map;
-            g_player_additional_data_map.erase(rf::local_player);
+            reset_player_additional_data(rf::local_player);
         }
     },
 };
