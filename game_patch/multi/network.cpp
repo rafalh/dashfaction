@@ -891,6 +891,9 @@ FunHook<void()> multi_stop_hook{
         // Clear server info when leaving
         g_df_server_info.reset();
         multi_stop_hook.call_target();
+        if (rf::local_player) {
+            reset_player_additional_data(rf::local_player);
+        }
     },
 };
 
