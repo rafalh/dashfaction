@@ -584,6 +584,10 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     write_mem_ptr(0x004A72A2+3, found_faces_b);
     write_mem_ptr(0x004A72F9+1, found_faces_b);
 
+    // Disable adding faces to fix PS2 tiling
+    AsmWriter{0x0043A081}.jmp(0x0043A0E9);
+    AsmWriter{0x0043A0EF}.nop(3);
+
     return 1; // success
 }
 
