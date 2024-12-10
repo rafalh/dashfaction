@@ -32,4 +32,5 @@ struct PlayerAdditionalData
 };
 
 void find_player(const StringMatcher& query, std::function<void(rf::Player*)> consumer);
+void reset_player_additional_data(const rf::Player* player);
 PlayerAdditionalData& get_player_additional_data(rf::Player* player);
