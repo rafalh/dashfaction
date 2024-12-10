@@ -41,6 +41,7 @@ Version 1.9.0 (not released yet)
 - Add level filename to "Level Initializing" console message
 - Add support for bluebeard.bty (sound config file) in mods
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
+- Add `$DF Weapon Stay Exemptions` option in dedicated server config
 
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded
