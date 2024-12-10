@@ -588,6 +588,14 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     AsmWriter{0x0043A081}.jmp(0x0043A0E9);
     AsmWriter{0x0043A0EF}.nop(3);
 
+    // Display geometry limits according to pools sizes
+    write_mem<std::uint32_t>(0x0043A49D + 1, 30000);
+    write_mem<std::uint32_t>(0x0043A4C1 + 1, 150000);
+    write_mem<std::uint32_t>(0x0043A4E5 + 1, 50000);
+
+    // Disable red bacground if limits are crossed - dynamic allocation is used then
+    AsmWriter{0x0043A528, 0x0043A546}.nop();
+
     return 1; // success
 }
 
