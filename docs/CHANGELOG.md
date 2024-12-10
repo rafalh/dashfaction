@@ -39,6 +39,7 @@ Version 1.9.0 (not released yet)
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
+- Add support for bluebeard.bty (sound config file) in mods
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 
 [@GooberRF](https://github.com/GooberRF)
