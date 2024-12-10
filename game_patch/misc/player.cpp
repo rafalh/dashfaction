@@ -19,7 +19,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 
-std::unordered_map<rf::Player*, PlayerAdditionalData> g_player_additional_data_map;
+std::unordered_map<const rf::Player*, PlayerAdditionalData> g_player_additional_data_map;
 
 void find_player(const StringMatcher& query, std::function<void(rf::Player*)> consumer)
 {
