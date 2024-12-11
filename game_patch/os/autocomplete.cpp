@@ -92,7 +92,7 @@ void console_auto_complete_level(int offset)
 {
     std::string level_name;
     console_auto_complete_get_component(offset, level_name);
-    if (level_name.size() < 1)
+    if (level_name.empty())
         return;
 
     bool first = true;
