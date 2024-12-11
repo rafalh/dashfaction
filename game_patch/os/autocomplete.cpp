@@ -144,7 +144,7 @@ void console_auto_complete_command(int offset)
 {
     std::string cmd_name;
     int next_offset = console_auto_complete_get_component(offset, cmd_name);
-    if (cmd_name.size() < 1)
+    if (cmd_name.empty())
         return;
 
     bool first = true;
