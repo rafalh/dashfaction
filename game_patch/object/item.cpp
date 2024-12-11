@@ -1,3 +1,4 @@
+#include <patch_common/AsmWriter.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include "../rf/item.h"
@@ -62,6 +63,10 @@ CodeInjection item_create_sort_injection{
 
 void item_do_patch()
 {
+    // Allow player to pick up super health and super armor in single player
+    AsmWriter{0x0048012B}.jmp(0x00480135);
+    AsmWriter{0x0045AAFD}.jmp(0x0045AB11);
+
     // Allow overriding weapon items count value
     item_touch_weapon_hook.install();
 
