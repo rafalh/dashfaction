@@ -1,10 +1,14 @@
 #pragma once
 
+#include <algorithm>
 #include <patch_common/MemUtils.h>
+#include "localize.h"
+#include "player/player.h"
 #include "os/vtypes.h"
 #include "os/timestamp.h"
 #include "os/string.h"
 #include "os/array.h"
+#include <common/utils/list-utils.h>
 
 namespace rf
 {
@@ -88,6 +92,16 @@ namespace rf
         NG_TYPE_TEAMDM = 2,
     };
 
+    inline std::string_view multi_game_type_name(const NetGameType game_type) {
+        if (game_type == NG_TYPE_DM) {
+            return std::string_view{strings::deathmatch};
+        } else if (game_type == NG_TYPE_CTF) {
+            return std::string_view{strings::capture_the_flag};
+        } else {
+            return std::string_view{strings::team_deathmatch};
+        }
+    };
+
     enum NetGameFlags
     {
         NG_FLAG_DEBUG_SCOREBOARD = 0x1,
@@ -151,6 +165,10 @@ namespace rf
     static auto& multi_tdm_get_red_team_score = addr_as_ref<int()>(0x004828F0); // returns ubyte in vanilla game
     static auto& multi_tdm_get_blue_team_score = addr_as_ref<int()>(0x00482900); // returns ubyte in vanilla game
     static auto& multi_num_players = addr_as_ref<int()>(0x00484830);
+    [[nodiscard]] static inline int32_t multi_num_spawned_players() {
+        const auto f = [] (auto& p) { return !player_is_dead(&p) && !player_is_dying(&p); };
+        return std::ranges::count_if(SinglyLinkedList{player_list}, f);
+    }
     static auto& multi_kick_player = addr_as_ref<void(Player *player)>(0x0047BF00);
     static auto& multi_ban_ip = addr_as_ref<void(const NetAddr& addr)>(0x0046D0F0);
     static auto& multi_set_next_weapon = addr_as_ref<void(int weapon_type)>(0x0047FCA0);
