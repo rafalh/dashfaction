@@ -53,23 +53,10 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
 
     // Draw Game Type name
     if (!dry_run) {
-        const auto get_game_type_name = [] (const rf::NetGameType game_type) {
-            if (game_type == rf::NG_TYPE_DM) {
-                return std::string_view{rf::strings::deathmatch};
-            } else if (game_type == rf::NG_TYPE_CTF) {
-                return std::string_view{rf::strings::capture_the_flag};
-            } else {
-                return std::string_view{rf::strings::team_deathmatch};
-            }
-        };
-        const int32_t num_spawned_players = std::ranges::count_if(
-            SinglyLinkedList{rf::player_list},
-            [] (auto& p) { return !rf::player_is_dead(&p)&& !rf::player_is_dying(&p); }
-        );
         const std::string game_info = std::format(
             "{} \x95 {}/{} PLAYING",
-            get_game_type_name(game_type),
-            num_spawned_players,
+            rf::multi_game_type_name(game_type),
+            rf::multi_num_spawned_players(),
             rf::multi_num_players()
         );
         rf::gr::string_aligned(rf::gr::ALIGN_CENTER, x_center, cur_y, game_info.c_str());
