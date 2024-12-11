@@ -165,7 +165,7 @@ namespace rf
     static auto& multi_tdm_get_red_team_score = addr_as_ref<int()>(0x004828F0); // returns ubyte in vanilla game
     static auto& multi_tdm_get_blue_team_score = addr_as_ref<int()>(0x00482900); // returns ubyte in vanilla game
     static auto& multi_num_players = addr_as_ref<int()>(0x00484830);
-    [[nodiscard]] static inline int32_t multi_num_spawned_players() {
+    [[nodiscard]] inline int32_t multi_num_spawned_players() {
         const auto f = [] (auto& p) { return !player_is_dead(&p) && !player_is_dying(&p); };
         return std::ranges::count_if(SinglyLinkedList{player_list}, f);
     }
