@@ -134,6 +134,9 @@ namespace rf
     static auto& obj_light_calculate = addr_as_ref<void()>(0x0048B0E0);
 
     static auto& object_list = addr_as_ref<Object>(0x0073D880);
+
+    static auto& debris_spawn_from_object = addr_as_ref<void(Object* objp, const char* debris_v3d_filename,
+        int explode_index, int max_lifetime_ms, float velocity, rf::String* cust_snd_set)>(0x004133C0);
 }
 
 template<>

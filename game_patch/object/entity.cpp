@@ -3,8 +3,10 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
+#include "../os/console.h"
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
+#include "../rf/multi.h"
 #include "../rf/weapon.h"
 #include "../rf/player/player.h"
 #include "../rf/particle_emitter.h"
@@ -201,6 +203,85 @@ CodeInjection entity_process_pre_hide_riot_shield_injection{
     },
 };
 
+// avoids gibbing if gore level is too low or if this specific corpse shouldn't gib
+CodeInjection corpse_damage_patch{
+    0x00417C6A,
+    [](auto& regs) {
+        rf::Corpse* cp = regs.esi;
+
+        if (rf::game_get_gore_level() < 2 ||
+            cp->corpse_flags & 0x400 ||         // drools_slime (used by snakes)
+            cp->corpse_flags & 0x4)             // custom_state_anim (used by sea creature)
+        {
+            regs.eip = 0x00417C97;
+        }
+    }
+};
+
+FunHook<void(int)> entity_blood_throw_gibs_hook{
+    0x0042E3C0, [](int handle) {
+        rf::Object* objp = rf::obj_from_handle(handle);
+
+        if (!objp) {
+            return;
+        }
+
+        int explode_vclip_index = rf::vclip_lookup("bloodsplat");
+        int chunk_explode_vclip_index = rf::vclip_lookup("bloodsplat");
+        float explode_vclip_radius = 1.0f;
+        const char* debris_filename = "df_meatchunks0.V3D";
+
+        static const int debris_max_lifetime = 7000; // ms
+        static const float debris_velocity = 8.5f;
+        static const float damage_scale = 1.0f;
+        static rf::String cust_snd_set = "gib bounce";
+
+        if (objp->type == rf::OT_ENTITY) { // use overrides from associated entity.tbl class if present
+            rf::Entity* ep = static_cast<rf::Entity*>(objp);
+
+            explode_vclip_index = (ep->info->explode_vclip_index > 0)
+				? ep->info->explode_vclip_index : explode_vclip_index;
+
+            explode_vclip_radius = (ep->info->explode_vclip_radius > 0.0f)
+				? ep->info->explode_vclip_radius : explode_vclip_radius;
+
+            debris_filename = (!ep->info->debris_filename.empty())
+                ? ep->info->debris_filename.c_str() : debris_filename;
+        }
+        else if (objp->type != rf::OT_CORPSE) { // do not gib anything except entities and corpses
+            return;
+        }
+
+        rf::game_do_explosion(
+            explode_vclip_index, objp->room, 0, &objp->pos, explode_vclip_radius, damage_scale, 0);
+
+        rf::debris_spawn_from_object(
+            objp, debris_filename, chunk_explode_vclip_index, debris_max_lifetime, debris_velocity, &cust_snd_set);
+    }
+};
+
+ConsoleCommand2 gore_level_cmd{
+    "gore_level",
+    [](std::optional<int> gore_setting) {
+        if (gore_setting) {
+            if (*gore_setting >= 0 && *gore_setting <= 2) {
+                rf::game_set_gore_level(*gore_setting);
+                rf::console::print("Set gore level to {}", rf::game_get_gore_level());
+            }
+            else {
+                rf::console::print("Invalid gore level specified. Allowed range is 0 (minimal) to 2 (maximum).");
+            }
+        }
+        else {
+            rf::console::print("Gore level is {}", rf::game_get_gore_level());
+        }
+
+        
+    },
+    "Set gore level.",
+    "gore_level [level]"
+};
+
 void entity_do_patch()
 {
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
@@ -252,4 +333,11 @@ void entity_do_patch()
 
     // Hide riot shield third person model if entity is hidden (e.g. in cutscenes)
     entity_process_pre_hide_riot_shield_injection.install();
+
+	// Restore cut stock game feature for entities and corpses exploding into chunks
+    corpse_damage_patch.install();
+	entity_blood_throw_gibs_hook.install();
+
+    // Commands
+    gore_level_cmd.register_cmd();
 }
