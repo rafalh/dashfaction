@@ -891,6 +891,9 @@ FunHook<void()> multi_stop_hook{
         // Clear server info when leaving
         g_df_server_info.reset();
         multi_stop_hook.call_target();
+        if (rf::local_player) {
+            reset_player_additional_data(rf::local_player);
+        }
     },
 };
 
@@ -1029,7 +1032,7 @@ CodeInjection multi_io_process_packets_injection{
     0x0047918D,
     [](auto& regs) {
         int packet_type = regs.esi;
-        if (packet_type > 0x37) {
+        if (packet_type > 0x37 || packet_type == static_cast<int>(pf_packet_type::player_stats)) {
             auto stack_frame = regs.esp + 0x1C;
             std::byte* data = regs.ecx;
             int offset = regs.ebp;

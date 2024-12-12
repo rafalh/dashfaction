@@ -39,7 +39,11 @@ Version 1.9.0 (not released yet)
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
+- Add support for bluebeard.bty (sound config file) in mods
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
+- Disable adding faces to fix PS2 tiling in editor
+- Disable red background in log window if geometry limits are crossed in editor
+- Update geometry limits in editor so they show static pools size (crossing it can have tiny performance impact)
 
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded
@@ -47,13 +51,16 @@ Version 1.9.0 (not released yet)
 - Add `server_password` command
 - Add `$DF CTF Flag Return Time` option in dedicated server config
 - Add mod name to main menu
+- Make value of `spectate_mode_minimal_ui` persist between game launches
+- Add `version` command
 - Add `gore_level` command
-- Add gibbing when enemies die from explosives (gore level 2)
+- Add gibbing at gore level 2 when enemies die from explosives
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` in TrueType fonts
-- Improve frag messages
-- Search in command descriptions in `.` command
+- Improve frag message format
+- Search command descriptions in `.` command
+- Improve PF network protocol compatibility
 
 [@Mystyle-48](https://github.com/Mystyle-48)
 - Simplify installation detection in setup and launcher

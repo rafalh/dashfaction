@@ -13,6 +13,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     float num_shots_fired;
     float damage_received;
     float damage_given;
+    std::optional<uint8_t> received_accuracy{};
 
     void inc_kills()
     {
@@ -67,6 +68,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
         max_streak = 0;
         damage_received = 0;
         damage_given = 0;
+        received_accuracy.reset();
     }
 };
 
