@@ -596,6 +596,16 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Disable red bacground if limits are crossed - dynamic allocation is used then
     AsmWriter{0x0043A528, 0x0043A546}.nop();
 
+    // Remove "You must rebuild geometry before leaving group mode" popups
+    AsmWriter(0x0042645E).jmp(0x00426486);
+    AsmWriter(0x004263D1).jmp(0x004263F9);
+    AsmWriter(0x0042637A).jmp(0x004263A2);
+    AsmWriter(0x0042631C).jmp(0x00426344);
+    AsmWriter(0x004262E2).jmp(0x0042630A);
+
+    // Remove "You must rebuild geometry before texturing brushes" popup
+    AsmWriter(0x0042642E).jmp(0x00426456);
+
     return 1; // success
 }
 

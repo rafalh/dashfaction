@@ -53,6 +53,7 @@ Version 1.9.0 (not released yet)
 - Add mod name to main menu
 - Make value of `spectate_mode_minimal_ui` persist between game launches
 - Add `version` command
+- Remove level editor popups that stop user from navigating between modes until rebuilding
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` in TrueType fonts
