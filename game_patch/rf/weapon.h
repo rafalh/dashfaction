@@ -3,11 +3,10 @@
 #include <patch_common/MemUtils.h>
 #include "object.h"
 #include "os/timestamp.h"
+#include "sound/sound.h"
 
 namespace rf
 {
-    struct ImpactSoundSet;
-
     struct WeaponStateAction
     {
         String name;

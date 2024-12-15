@@ -6,6 +6,7 @@
 #include "os/array.h"
 #include "os/linklist.h"
 #include "gr/gr.h"
+#include "sound/sound.h"
 
 namespace rf
 {
@@ -455,6 +456,8 @@ namespace rf
 
     static auto& g_cache_clear = addr_as_ref<void()>(0x004F0B90);
     static auto& g_get_room_render_list = addr_as_ref<void(GRoom ***rooms, int *num_rooms)>(0x004D3330);
+
+    static auto& material_find_impact_sound_set = addr_as_ref<ImpactSoundSet*(const char* name)>(0x004689A0);
 
     static auto& bbox_intersect = addr_as_ref<bool(const Vector3& bbox1_min, const Vector3& bbox1_max, const Vector3& bbox2_min, const Vector3& bbox2_max)>(0x0046C340);
 }

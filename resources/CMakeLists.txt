@@ -44,7 +44,7 @@ add_packfile(dashfaction.vpp
     images/bullet_icon_powercell_1.tga
     images/bullet_icon_rocket_1.tga
     images/bullet_icon_shotgun_1.tga
-    images/df_gore1.tga
+    images/gore1.tga
     images/enviro0_1.tga
     images/enviro10_1.tga
     images/enviro20_1.tga
@@ -88,7 +88,11 @@ add_packfile(dashfaction.vpp
     meshes/Vat1.v3m
     meshes/coffeesmokedtbl2.v3m
     meshes/coffeesmokedtblAlt.v3m
-    meshes/df_meatchunks0.v3m
+    meshes/meatchunk1.v3m
+    meshes/meatchunk2.v3m
+    meshes/meatchunk3.v3m
+    meshes/meatchunk4.v3m
+    meshes/meatchunk5.v3m
 
     standard_vs:${CMAKE_BINARY_DIR}/shaders/standard_vs.bin
     character_vs:${CMAKE_BINARY_DIR}/shaders/character_vs.bin

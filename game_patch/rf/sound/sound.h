@@ -4,6 +4,7 @@
 #include "../math/vector.h"
 #include "../math/matrix.h"
 #include "../os/timestamp.h"
+#include "../os/string.h"
 
 namespace rf
 {
@@ -53,6 +54,15 @@ namespace rf
         float volume;
     };
     static_assert(sizeof(AmbientSound) == 0x18);
+
+    struct ImpactSoundSet
+    {
+        int sounds[40];
+        int num_material_sounds[10];
+        int is_all_sounds;
+        String name;
+    };
+    static_assert(sizeof(ImpactSoundSet) == 0xD4);
 
     constexpr int SOUND_GROUP_EFFECTS = 0;
     constexpr int SOUND_GROUP_MUSIC = 1;

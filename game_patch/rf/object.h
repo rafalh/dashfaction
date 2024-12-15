@@ -6,6 +6,7 @@
 #include "math/matrix.h"
 #include "os/array.h"
 #include "os/string.h"
+#include "sound/sound.h"
 #include "physics.h"
 #include "vmesh.h"
 
@@ -36,9 +37,10 @@ namespace rf
         OT_GLARE = 0xA,
     };
 
-    enum ObjectFlags
+    enum ObjectFlags : int
     {
         OF_DELAYED_DELETE = 0x2,
+        OF_INVULNERABLE = 0x4,
         OF_WAS_RENDERED = 0x10,
         OF_IN_LIQUID = 0x80000,
         OF_HAS_ALPHA = 0x100000,
@@ -121,6 +123,37 @@ namespace rf
     };
     static_assert(sizeof(ObjectCreateInfo) == 0x98);
 
+    struct Debris : Object
+    {
+        Debris* next;
+        Debris* prev;
+        void* solid;
+        int vmesh_submesh;
+        int debris_flags;
+        int explosion_index;
+        Timestamp lifetime;
+        int frame_num;
+        int sound;
+        String* custom_sound_set;
+    };
+    static_assert(sizeof(Debris) == 0x2B4);
+
+    struct DebrisCreateStruct
+    {
+        Vector3 pos;
+        Matrix3 orient;
+        Vector3 vel;
+        Vector3 spin;
+        int lifetime_ms;
+        int material;
+        int explosion_index;
+        int debris_flags;
+        int obj_flags;
+        void* room;
+        ImpactSoundSet* iss;
+    };
+    static_assert(sizeof(DebrisCreateStruct) == 0x64);
+
     static auto& obj_lookup_from_uid = addr_as_ref<Object*(int uid)>(0x0048A4A0);
     static auto& obj_from_handle = addr_as_ref<Object*(int handle)>(0x0040A0E0);
     static auto& obj_flag_dead = addr_as_ref<void(Object* obj)>(0x0048AB40);
@@ -135,8 +168,8 @@ namespace rf
 
     static auto& object_list = addr_as_ref<Object>(0x0073D880);
 
-    static auto& debris_spawn_from_object = addr_as_ref<void(Object* objp, const char* debris_v3d_filename,
-        int explode_index, int max_lifetime_ms, float velocity, rf::String* cust_snd_set)>(0x004133C0);
+    static auto& debris_create = addr_as_ref<Debris*(int parent_handle, const char* vmesh_filename,
+        float mass, DebrisCreateStruct* dcs, int mesh_num, float collision_radius)>(0x00412E70);
 }
 
 template<>

@@ -54,7 +54,7 @@ Version 1.9.0 (not released yet)
 - Make value of `spectate_mode_minimal_ui` persist between game launches
 - Add `version` command
 - Add `gore_level` command
-- Add gibbing at gore level 2 when enemies die from explosives
+- Add gibbing for enemies and corpses at gore level 2
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` in TrueType fonts
