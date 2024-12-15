@@ -450,3 +450,4 @@ data\maps\textures\damage\OilDrum_Debris.tga
 data\maps\textures\damage\genericdebris01.tga
 data\maps\textures\damage\offtablenew01_debris.tga
 data\maps\textures\trim\damage.tga
+data\maps\textures\gore\gore1.tga

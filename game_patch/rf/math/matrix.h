@@ -24,6 +24,20 @@ namespace rf
             AddrCaller{0x004FC8A0}.this_call(this, &result);
             return result;
         }
+
+        void make_quick(const Vector3& forward_vector)
+        {
+            AddrCaller{0x004FCFA0}.this_call(this, &forward_vector);
+        }
+
+        void rand_quick()
+        {
+            Vector3 fvec;
+
+            fvec.rand_quick();
+
+            make_quick(fvec);
+        }
     };
     static_assert(sizeof(Matrix3) == 0x24);
 

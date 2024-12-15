@@ -3,8 +3,10 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
+#include "../os/console.h"
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
+#include "../rf/multi.h"
 #include "../rf/weapon.h"
 #include "../rf/player/player.h"
 #include "../rf/particle_emitter.h"
@@ -201,6 +203,114 @@ CodeInjection entity_process_pre_hide_riot_shield_injection{
     },
 };
 
+FunHook<void(int)> entity_blood_throw_gibs_hook{
+    0x0042E3C0, [](int handle) {
+        rf::Object* objp = rf::obj_from_handle(handle);
+
+        // should only gib on gore level 2 or higher
+        if (rf::game_get_gore_level() < 2) {
+            return;
+        }
+
+        // only gib flesh entities and corpses
+        if (!objp || (objp->type != rf::OT_ENTITY && objp->type != rf::OT_CORPSE) || objp->material != 3) {
+            return;
+        }
+
+        // skip entities with ambient flag (is in original but maybe not necessary?)
+        rf::Entity* entity = (objp->type == rf::OT_ENTITY) ? static_cast<rf::Entity*>(objp) : nullptr;
+        if (entity && (entity->info->flags & 0x800000)) {
+            return;
+        }
+
+        // skip corpses that shouldn't explode (drools_slime or custom_state_anim)
+        rf::Corpse* corpse = (objp->type == rf::OT_CORPSE) ? static_cast<rf::Corpse*>(objp) : nullptr;
+        if (corpse && (corpse->corpse_flags & 0x400 || corpse->corpse_flags & 0x4)) {
+            return;
+        }
+
+        static constexpr int gib_count = 14; // 7 in original
+        static constexpr float velocity_scale = 15.0f;
+        static constexpr float spin_scale_min = 10.0f;
+        static constexpr float spin_scale_max = 25.0f;
+        static constexpr int lifetime_ms = 7000;
+        static constexpr float velocity_factor = 0.5f;
+        static const char* snd_set = "gib bounce";
+        static const std::vector<const char*> gib_filenames = {
+            "meatchunk1.v3m",
+            "meatchunk2.v3m",
+            "meatchunk3.v3m",
+            "meatchunk4.v3m",
+            "meatchunk5.v3m"};
+
+        for (int i = 0; i < gib_count; ++i) {
+            rf::DebrisCreateStruct debris_info;
+
+            // random velocity
+            rf::Vector3 vel;
+            vel.rand_quick();
+            debris_info.vel = vel;
+            debris_info.vel *= velocity_scale;
+            debris_info.vel += objp->p_data.vel * velocity_factor;
+
+            // random spin
+            rf::Vector3 spin;
+            spin.rand_quick();
+            debris_info.spin = spin;
+            std::uniform_real_distribution<float> range_dist(spin_scale_min, spin_scale_max);
+            debris_info.spin *= range_dist(g_rng);
+
+            // random orient
+            rf::Matrix3 orient;
+            orient.rand_quick();
+            debris_info.orient = orient;
+
+            // sound set
+            rf::ImpactSoundSet* iss = rf::material_find_impact_sound_set(snd_set);
+            debris_info.iss = iss;
+
+            // other properties
+            debris_info.pos = objp->pos;
+            debris_info.lifetime_ms = lifetime_ms;
+            debris_info.debris_flags = 0x4;
+            debris_info.obj_flags = 0x8000; // start_hidden
+            debris_info.material = objp->material;
+            debris_info.room = objp->room;
+
+            // pick a random gib filename
+            std::uniform_int_distribution<size_t> dist(0, gib_filenames.size() - 1);
+            const char* gib_filename = gib_filenames[dist(g_rng)];
+
+            rf::Debris* gib = rf::debris_create(objp->handle, gib_filename, 0.3f, &debris_info, 0, -1.0f);
+            if (gib) {
+                gib->obj_flags |= rf::OF_INVULNERABLE;
+            }
+        }
+    }
+};
+
+ConsoleCommand2 gore_level_cmd{
+    "gore_level",
+    [](std::optional<int> gore_setting) {
+        if (gore_setting) {
+            if (*gore_setting >= 0 && *gore_setting <= 2) {
+                rf::game_set_gore_level(*gore_setting);
+                rf::console::print("Set gore level to {}", rf::game_get_gore_level());
+            }
+            else {
+                rf::console::print("Invalid gore level specified. Allowed range is 0 (minimal) to 2 (maximum).");
+            }
+        }
+        else {
+            rf::console::print("Gore level is {}", rf::game_get_gore_level());
+        }
+
+        
+    },
+    "Set gore level.",
+    "gore_level [level]"
+};
+
 void entity_do_patch()
 {
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
@@ -252,4 +362,10 @@ void entity_do_patch()
 
     // Hide riot shield third person model if entity is hidden (e.g. in cutscenes)
     entity_process_pre_hide_riot_shield_injection.install();
+
+	// Restore cut stock game feature for entities and corpses exploding into chunks
+	entity_blood_throw_gibs_hook.install();
+
+    // Commands
+    gore_level_cmd.register_cmd();
 }

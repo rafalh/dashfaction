@@ -1,7 +1,10 @@
 #pragma once
 
 #include <cmath>
+#include <numbers>
 #include <patch_common/MemUtils.h>
+#include "../os/os.h"
+#include "../../main/main.h"
 
 namespace rf
 {
@@ -156,6 +159,22 @@ namespace rf
         void normalize()
         {
             *this /= len();
+        }
+
+        void rand_quick()
+        {
+            constexpr float TWO_PI = 6.2831855f;
+
+            std::uniform_real_distribution<float> z_dist(-1.0f, 1.0f);
+            z = z_dist(g_rng);
+
+            std::uniform_real_distribution<float> angle_dist(0.0f, TWO_PI);
+            float angle = angle_dist(g_rng);
+
+            float scale = std::sqrt(1.0f - z * z);
+
+            x = std::cos(angle) * scale;
+            y = std::sin(angle) * scale;
         }
     };
     static_assert(sizeof(Vector3) == 0xC);
