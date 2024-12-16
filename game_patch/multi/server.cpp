@@ -650,7 +650,7 @@ void server_reliable_socket_ready(rf::Player* player)
 {
     if (!g_additional_server_config.welcome_message.empty()) {
         auto msg = string_replace(g_additional_server_config.welcome_message, "$PLAYER", player->name.c_str());
-        send_chat_line_packet(msg.c_str(), player);
+        send_chat_line_packet(std::format("\xA6 {}", msg).c_str(), player);
     }
 }
 
