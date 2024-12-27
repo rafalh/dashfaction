@@ -44,6 +44,7 @@ Version 1.9.0 (not released yet)
 - Disable adding faces to fix PS2 tiling in editor
 - Disable red background in log window if geometry limits are crossed in editor
 - Update geometry limits in editor so they show static pools size (crossing it can have tiny performance impact)
+- Fix items being too dim in multi-player (RF bug)
 
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded
