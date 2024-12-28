@@ -46,6 +46,7 @@ Version 1.9.0 (not released yet)
 - Update geometry limits in editor so they show static pools size (crossing it can have tiny performance impact)
 - Fix items being too dim in multi-player (RF bug)
 - Fix clutters and items being too bright when static mesh lighting was enabled
+- Add level property which enables full lightmaps depth (enabled by default in new maps)
 
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded
