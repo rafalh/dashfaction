@@ -9,7 +9,10 @@
 #include <cassert>
 #include <common/utils/list-utils.h>
 #include <patch_common/FunHook.h>
+#include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
+
+float obj_light_scale = 1.0;
 
 void gr_light_use_static(bool use_static);
 
@@ -48,6 +51,16 @@ void obj_light_update_one(rf::Object* objp)
     if (objp->type == rf::OT_ITEM && rf::is_multi) {
         // In multi-player items spin so having baked lighting makes less sense
         use_static_lights = false;
+    }
+
+    // Do not strengthen lighting when static lights are used
+    // In other cases behave like the base game (00504275)
+    if (use_static_lights) {
+        obj_light_scale = 1.0;
+    } else if (rf::is_multi) {
+        obj_light_scale = 3.2;
+    } else {
+        obj_light_scale = 2.0;
     }
 
     if (use_static_lights) {
@@ -137,6 +150,9 @@ void obj_light_apply_patch()
 
     // Fix invalid vertex offset in mesh lighting calculation
     write_mem<int8_t>(0x005042F0 + 2, sizeof(rf::Vector3));
+
+    // Allow changing light scale
+    AsmWriter{0x0050426F, 0x0050428D}.mov(asm_regs::ecx, AsmRegMem{&obj_light_scale});
 
     // Commands
     mesh_static_lighting_cmd.register_cmd();
