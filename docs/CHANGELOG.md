@@ -50,6 +50,7 @@ Version 1.9.0 (not released yet)
 - Add option to disguise as Alpine Faction to avoids AF advertisements and allow playing in servers that reject non-AF players
 - Enable loading RFL version 300
 - Log a warning when RFL uses unsupported event class
+- Add support for high resolution GeoMod textures
 
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded

@@ -7,6 +7,7 @@
 #include "../os/console.h"
 #include "../rf/multi.h"
 #include "../rf/level.h"
+#include "../rf/geometry.h"
 #include "../rf/file/file.h"
 #include "level.h"
 
@@ -92,6 +93,18 @@ CodeInjection level_load_chunk_inj{
     },
 };
 
+CodeInjection level_blast_ppm_injection{
+    0x00466C00,
+    [](auto& regs) {
+        rf::GSolid* solid = regs.ecx;
+        int bmh = regs.edi;
+        int w = 256, h = 256;
+        rf::bm::get_dimensions(bmh, &w, &h);
+        float ppm = std::min(w, h) / 256.0 * 32.0;
+        solid->set_autotexture_pixels_per_meter(ppm);
+    },
+};
+
 void level_apply_patch()
 {
     // Enable loading RFLs with version 300 (produced by AF editor)
@@ -112,4 +125,7 @@ void level_apply_patch()
     // Load custom rfl chunks
     level_load_init_inj.install();
     level_load_chunk_inj.install();
+
+    // Increase PPM (Pixels per Meter) for GeoMod textures if they have higher dimensions than 256x256
+    level_blast_ppm_injection.install();
 }
