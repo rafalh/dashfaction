@@ -6,6 +6,7 @@ set(SRCS
     vtypes.h
     resources.rc
     resources.h
+    level.cpp
 )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 

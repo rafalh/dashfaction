@@ -190,7 +190,7 @@ FunHook<rf::VMesh*(rf::Object*, const char*, rf::VMeshType)> obj_create_mesh_hoo
     [](rf::Object* objp, const char* name, rf::VMeshType type) {
         rf::VMesh* mesh = obj_create_mesh_hook.call_target(objp, name, type);
         if (mesh && (rf::level.flags & rf::LEVEL_LOADED) != 0) {
-            obj_mesh_lighting_maybe_update(objp);
+            obj_light_init_object(objp);
         }
         return mesh;
     },
@@ -200,7 +200,7 @@ FunHook<void(rf::Object*)> obj_delete_mesh_hook{
     0x00489FC0,
     [](rf::Object* objp) {
         obj_delete_mesh_hook.call_target(objp);
-        obj_mesh_lighting_free_one(objp);
+        obj_light_free_one(objp);
     },
 };
 
