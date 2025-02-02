@@ -39,7 +39,6 @@ Version 1.9.0 (not released yet)
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
-- Add support for bluebeard.bty (sound config file) in mods
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 - Disable adding faces to fix PS2 tiling in editor
 - Disable red background in log window if geometry limits are crossed in editor
@@ -61,7 +60,7 @@ Version 1.9.0 (not released yet)
 - Make value of `spectate_mode_minimal_ui` persist between game launches
 - Add `version` command
 - Support autocompleting of level filenames and console commands from only 1 character
-- Add `Set_Liquid_Depth` event to event menu in level editor object mode panel
+- Add support for `bluebeard.bty` (sound config file) in mods
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` in TrueType fonts
