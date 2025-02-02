@@ -15,6 +15,7 @@ CodeInjection level_load_header_version_check_patch{
     [](auto& regs) {
         int version = regs.eax;
         if (version == 300) {
+            xlog::warn("Loading level in partially supported version {}", version);
             regs.eip = 0x004615DF;
         }
     },
