@@ -15,12 +15,12 @@
 static inline void debug_ui_layout([[ maybe_unused ]] rf::ui::Gadget& gadget)
 {
 #if DEBUG_UI_LAYOUT
-    int x = gadget.GetAbsoluteX() * ui_scale_x;
-    int y = gadget.GetAbsoluteY() * ui_scale_y;
-    int w = gadget.w * ui_scale_x;
-    int h = gadget.h * ui_scale_y;
-    gr_set_color((x ^ y) & 255, 0, 0, 64);
-    gr_rect(x, y, w, h);
+    int x = gadget.get_absolute_x() * rf::ui::scale_x;
+    int y = gadget.get_absolute_y() * rf::ui::scale_y;
+    int w = gadget.w * rf::ui::scale_x;
+    int h = gadget.h * rf::ui::scale_y;
+    rf::gr::set_color((x ^ y) & 255, 0, 0, 64);
+    rf::gr::rect(x, y, w, h);
 #endif
 }
 

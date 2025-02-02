@@ -121,7 +121,9 @@ CodeInjection CDialog_DoModal_injection{
         auto lpszTemplateName = addr_as_ref<LPCSTR>(regs.esp);
         // Customize:
         // - 148: trigger properties dialog
-        if (lpszTemplateName == MAKEINTRESOURCE(IDD_TRIGGER_PROPERTIES)) {
+        if (lpszTemplateName == MAKEINTRESOURCE(IDD_TRIGGER_PROPERTIES) ||
+            lpszTemplateName == MAKEINTRESOURCE(IDD_LEVEL_PROPERTIES)
+        ) {
             hCurrentResourceHandle = reinterpret_cast<int>(g_module);
         }
     },
@@ -359,6 +361,7 @@ void InitCrashHandler()
 
 void ApplyGraphicsPatches();
 void ApplyTriggerPatches();
+void ApplyLevelPatches();
 
 void LoadDashEditorPackfile()
 {
@@ -489,6 +492,7 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Apply patches defined in other files
     ApplyGraphicsPatches();
     ApplyTriggerPatches();
+    ApplyLevelPatches();
 
     // Browse for .v3m files instead of .v3d
     static char mesh_ext_filter[] = "Mesh (*.v3m)|*.v3m|All Files (*.*)|*.*||";
@@ -595,6 +599,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
 
     // Disable red bacground if limits are crossed - dynamic allocation is used then
     AsmWriter{0x0043A528, 0x0043A546}.nop();
+
+    // Make Set_Liquid_Depth show in option panel events list
+    AsmWriter{0x004440B4}.push("");
 
     return 1; // success
 }

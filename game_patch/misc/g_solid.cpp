@@ -11,6 +11,7 @@
 #include "../os/console.h"
 #include "../bmpman/bmpman.h"
 #include "../bmpman/fmt_conv_templates.h"
+#include "level.h"
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_frametime = 1.0f / reference_fps;
@@ -231,10 +232,12 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         if (!rf::gr::lock(lightmap->bm_handle, 0, &lock, rf::gr::LOCK_WRITE_ONLY))
             return;
 
-    #if 1 // cap minimal color channel value as RF does
-        for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i)
-            lightmap->buf[i] = std::max(lightmap->buf[i], (uint8_t)(4 << 3)); // 32
-    #endif
+        // cap minimal color channel value as RF does
+        if (!DashLevelProps::instance().lightmaps_full_depth) {
+            for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i) {
+                lightmap->buf[i] = std::max(lightmap->buf[i], static_cast<std::uint8_t>(4 << 3)); // 32
+            }
+        }
 
         bool success = bm_convert_format(lock.data, lock.format, lightmap->buf,
             rf::bm::FORMAT_888_BGR, lightmap->w, lightmap->h, lock.stride_in_bytes, 3 * lightmap->w, nullptr);

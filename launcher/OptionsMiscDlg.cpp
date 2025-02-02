@@ -17,6 +17,7 @@ BOOL OptionsMiscDlg::OnInitDialog()
     CheckDlgButton(IDC_REDUCED_SPEED_IN_BG_CHECK, m_conf.reduced_speed_in_background ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_PLAYER_JOIN_BEEP_CHECK, m_conf.player_join_beep ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_AUTOSAVE_CHECK, m_conf.autosave ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_DISGUISE_AS_AF_CHECK, m_conf.disguise_as_af ? BST_CHECKED : BST_UNCHECKED);
 
     return TRUE;
 }
@@ -36,4 +37,5 @@ void OptionsMiscDlg::OnSave()
     m_conf.reduced_speed_in_background = (IsDlgButtonChecked(IDC_REDUCED_SPEED_IN_BG_CHECK) == BST_CHECKED);
     m_conf.player_join_beep = (IsDlgButtonChecked(IDC_PLAYER_JOIN_BEEP_CHECK) == BST_CHECKED);
     m_conf.autosave = (IsDlgButtonChecked(IDC_AUTOSAVE_CHECK) == BST_CHECKED);
+    m_conf.disguise_as_af = (IsDlgButtonChecked(IDC_DISGUISE_AS_AF_CHECK) == BST_CHECKED);
 }
