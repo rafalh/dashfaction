@@ -48,6 +48,7 @@ Version 1.9.0 (not released yet)
 - Fix clutters and items being too bright when static mesh lighting was enabled
 - Add level property which enables full lightmaps depth (enabled by default in new maps)
 - Add option to disguise as Alpine Faction to avoids AF advertisements and allow playing in servers that reject non-AF players
+- Enable loading RFL version 300
 
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded

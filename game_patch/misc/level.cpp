@@ -10,6 +10,16 @@
 #include "../rf/file/file.h"
 #include "level.h"
 
+CodeInjection level_load_header_version_check_patch{
+    0x004615BF,
+    [](auto& regs) {
+        int version = regs.eax;
+        if (version == 300) {
+            regs.eip = 0x004615DF;
+        }
+    },
+};
+
 CodeInjection level_read_data_check_restore_status_patch{
     0x00461195,
     [](auto& regs) {
@@ -83,6 +93,9 @@ CodeInjection level_load_chunk_inj{
 
 void level_apply_patch()
 {
+    // Enable loading RFLs with version 300 (produced by AF editor)
+    level_load_header_version_check_patch.install();
+
     // Add checking if restoring game state from save file failed during level loading
     level_read_data_check_restore_status_patch.install();
 
