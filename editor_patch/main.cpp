@@ -600,6 +600,9 @@ extern "C" DWORD DF_DLL_EXPORT Init([[maybe_unused]] void* unused)
     // Disable red bacground if limits are crossed - dynamic allocation is used then
     AsmWriter{0x0043A528, 0x0043A546}.nop();
 
+    // Make Set_Liquid_Depth show in option panel events list
+    AsmWriter{0x004440B4}.push("");
+
     return 1; // success
 }
 

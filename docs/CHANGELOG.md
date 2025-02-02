@@ -57,6 +57,7 @@ Version 1.9.0 (not released yet)
 - Make value of `spectate_mode_minimal_ui` persist between game launches
 - Add `version` command
 - Support autocompleting of level filenames and console commands from only 1 character
+- Add `Set_Liquid_Depth` event to event menu in level editor object mode panel
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` in TrueType fonts
