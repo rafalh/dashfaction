@@ -157,6 +157,7 @@ set(SRCS
     misc/camera.cpp
     misc/ui.cpp
     misc/game.cpp
+    misc/level.cpp
     sound/sound.cpp
     sound/sound.h
     sound/sound_ds.cpp

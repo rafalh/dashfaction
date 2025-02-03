@@ -213,6 +213,14 @@ CodeInjection event_load_level_turn_on_injection{
     }
 };
 
+CodeInjection level_read_events_unknown_class_injection{
+    0x0046290A,
+    [](auto& regs) {
+        auto& class_name = addr_as_ref<rf::String>(regs.esp + 0x98 - 0x44);
+        xlog::warn("Unsupported event: {}", class_name.c_str());
+    },
+};
+
 ConsoleCommand2 debug_event_msg_cmd{
     "debug_event_msg",
     []() {
@@ -247,6 +255,9 @@ void apply_event_patches()
 
     // Do not load next level if blackout is in progress
     event_load_level_turn_on_injection.install();
+
+    // Log a warning when trying to create event with unknown class
+    level_read_events_unknown_class_injection.install();
 
     // Register commands
     debug_event_msg_cmd.register_cmd();

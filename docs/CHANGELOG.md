@@ -39,11 +39,17 @@ Version 1.9.0 (not released yet)
 - Add Kill Reward settings for dedicated servers
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
-- Add support for bluebeard.bty (sound config file) in mods
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 - Disable adding faces to fix PS2 tiling in editor
 - Disable red background in log window if geometry limits are crossed in editor
 - Update geometry limits in editor so they show static pools size (crossing it can have tiny performance impact)
+- Fix items being too dim in multi-player (RF bug)
+- Fix clutters and items being too bright when static mesh lighting was enabled
+- Add level property which enables full lightmaps depth (enabled by default in new maps)
+- Add option to disguise as Alpine Faction to avoids AF advertisements and allow playing in servers that reject non-AF players
+- Enable loading RFL version 300
+- Log a warning when RFL uses unsupported event class
+- Add support for high resolution GeoMod textures
 
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded
@@ -53,6 +59,8 @@ Version 1.9.0 (not released yet)
 - Add mod name to main menu
 - Make value of `spectate_mode_minimal_ui` persist between game launches
 - Add `version` command
+- Support autocompleting of level filenames and console commands from only 1 character
+- Add support for `bluebeard.bty` (sound config file) in mods
 - Remove level editor popups that stop user from navigating between modes until rebuilding
 
 [@is-this-c](https://github.com/is-this-c)
