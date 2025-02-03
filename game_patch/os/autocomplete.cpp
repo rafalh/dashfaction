@@ -92,7 +92,7 @@ void console_auto_complete_level(int offset)
 {
     std::string level_name;
     console_auto_complete_get_component(offset, level_name);
-    if (level_name.size() < 3)
+    if (level_name.empty())
         return;
 
     bool first = true;
@@ -144,7 +144,7 @@ void console_auto_complete_command(int offset)
 {
     std::string cmd_name;
     int next_offset = console_auto_complete_get_component(offset, cmd_name);
-    if (cmd_name.size() < 2)
+    if (cmd_name.empty())
         return;
 
     bool first = true;

@@ -69,7 +69,7 @@ void print_kill_message(rf::Player* killed_player, rf::Player* killer_player)
             if (killer_weapon_cls_id >= 0 && killer_weapon_cls_id < 64) {
                 auto& weapon_cls = rf::weapon_types[killer_weapon_cls_id];
                 auto& weapon_name = weapon_cls.display_name;
-                msg = rf::String::format("{}{} ({})!", mui_msg, killer_name, weapon_name);
+                msg = rf::String::format("{}{}'s {}!", mui_msg, killer_name, string_to_lower(weapon_name));
             }
             else {
                 msg = rf::String::format("{}{}!", mui_msg, killer_name);

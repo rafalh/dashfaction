@@ -328,6 +328,9 @@ data\maps\textures\signs\areas\admin\portrait2.tga
 data\maps\textures\trim\poshdesk.tga
 data\maps\textures\trim\POT.tga
 data\maps\textures\tech\RemoteAMMObar1.tga
+data\maps\textures\tech\Jeep01_P03.tga
+data\maps\textures\tech\Jeep01_P04.tga
+data\maps\textures\tech\LightFix02_Parts02.tga
 data\maps\textures\tech\RiotStick_P02.tga
 data\maps\textures\tech\RiotStick_P03.tga
 data\maps\textures\tech\RiotStick_P04.tga

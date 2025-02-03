@@ -1,4 +1,5 @@
 #include <common/config/BuildConfig.h>
+#include <common/version/version.h>
 #include "console.h"
 #include "../main/main.h"
 #include "../rf/multi.h"
@@ -9,15 +10,21 @@
 #include <common/utils/list-utils.h>
 #include <algorithm>
 #include <patch_common/CallHook.h>
+#include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
 
 ConsoleCommand2 dot_cmd{
     ".",
-    [](std::string pattern) {
+    [] (const std::string pattern) {
         for (i32 i = 0; i < rf::console::num_commands; ++i) {
-            rf::console::Command* cmd = g_commands_buffer[i];
-            if (string_contains_ignore_case(cmd->name, pattern)) {
-                rf::console::print("{}", cmd->name);
+            const rf::console::Command* cmd = g_commands_buffer[i];
+            if (string_contains_ignore_case(cmd->name, pattern)
+                || (cmd->help && string_contains_ignore_case(cmd->help, pattern))) {    
+                if (cmd->help) {   
+                    rf::console::print("{} - {}", cmd->name, cmd->help);        
+                } else { 
+                    rf::console::print("{}", cmd->name);
+                }
             }
         }
     },
@@ -79,6 +86,8 @@ ConsoleCommand2 level_info_cmd{
             rf::console::print("Name: {}", rf::level.name);
             rf::console::print("Author: {}", rf::level.author);
             rf::console::print("Date: {}", rf::level.level_date);
+            std::string version_text = (rf::level.version < 200) ? "Official" : "Non-Official";
+            rf::console::print("RFL Version: {} ({})", version_text, rf::level.version);
         } else {
             rf::console::print("No level loaded!");
         }
@@ -89,6 +98,52 @@ ConsoleCommand2 level_info_cmd{
 DcCommandAlias map_info_cmd{
     "map_info",
     level_info_cmd,
+};
+
+ConsoleCommand2 version_cmd{
+    "version",
+    []() {
+        rf::console::print("Dash Faction {} (build date: {} {})", VERSION_STR, __DATE__, __TIME__);
+    },
+    "Display version info",
+};
+
+DcCommandAlias ver_cmd{
+    "ver",
+    version_cmd,
+};
+
+ConsoleCommand2 server_password_cmd{
+    "server_password",
+    [](std::optional<std::string> new_password) {
+        if (!rf::is_multi || !rf::is_server) {
+            rf::console::print("This command can only be run as a server!");
+            return;
+        }            
+
+        if (new_password) {
+            rf::netgame.password = new_password.value().c_str();
+            rf::console::print("Server password set to: {}", rf::netgame.password);
+        }
+        else {
+            rf::netgame.password = "";
+            rf::console::print("Server password removed.");
+        }
+    },
+    "Set or remove the server password.",
+    "server_password <password>",
+};
+
+// only allow verify_level if a level is loaded (avoid a crash if command is run in menu)
+FunHook<void()> verify_level_cmd_hook{
+    0x0045E1F0,
+    []() {
+        if (rf::level.flags & rf::LEVEL_LOADED) {
+            verify_level_cmd_hook.call_target();
+        } else {
+            rf::console::print("No level loaded!");
+        }
+    }
 };
 
 static void register_builtin_command(const char* name, const char* description, uintptr_t addr)
@@ -192,4 +247,8 @@ void console_commands_init()
     map_cmd.register_cmd();
     level_info_cmd.register_cmd();
     map_info_cmd.register_cmd();
+    version_cmd.register_cmd();
+    ver_cmd.register_cmd();
+    server_password_cmd.register_cmd();
+    verify_level_cmd_hook.install();
 }
