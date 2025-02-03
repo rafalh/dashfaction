@@ -24,7 +24,6 @@ static rf::Player* g_spectate_mode_target;
 static rf::Camera* g_old_target_camera = nullptr;
 static bool g_spectate_mode_enabled = false;
 static bool g_spawned_in_current_level = false;
-static bool g_spectate_mode_minimal_ui = false;
 static bool g_spectate_mode_follow_killer = false;
 
 void player_fpgun_set_player(rf::Player* pp);
