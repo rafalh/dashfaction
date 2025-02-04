@@ -342,11 +342,17 @@ std::string_view multi_game_type_name(const rf::NetGameType game_type) {
     } else if (game_type == rf::NG_TYPE_CTF) {
         return std::string_view{rf::strings::capture_the_flag};
     } else {
+        if (game_type != rf::NG_TYPE_TEAMDM) {
+            xlog::warn(
+                "`multi_game_type_name`: {} is an invalid `NetGameType`",
+                static_cast<int>(game_type)
+            );
+        }
         return std::string_view{rf::strings::team_deathmatch};
     }
 };
 
-int32_t multi_num_alive_players() {
+int multi_num_alive_players() {
     return std::ranges::count_if(SinglyLinkedList{rf::player_list}, [] (const auto& p) {
         return !rf::player_is_dead(&p) && !rf::player_is_dying(&p);
     });

@@ -92,4 +92,4 @@ void multi_level_download_abort();
 void multi_ban_apply_patch();
 std::optional<std::string> multi_ban_unban_last();
 std::string_view multi_game_type_name(rf::NetGameType game_type);
-[[nodiscard]] int32_t multi_num_alive_players();
+[[nodiscard]] int multi_num_alive_players();
