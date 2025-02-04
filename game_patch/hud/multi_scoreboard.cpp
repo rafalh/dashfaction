@@ -55,7 +55,7 @@ int draw_scoreboard_header(int x, int y, int w, rf::NetGameType game_type, bool 
     if (!dry_run) {
         const std::string game_info = std::format(
             "{} \x95 {}/{} PLAYING",
-            rf::multi_game_type_name(game_type),
+            rf::multi_net_game_type_name(game_type),
             rf::multi_num_alive_players(),
             rf::multi_num_players()
         );

@@ -336,7 +336,7 @@ void multi_init_player(rf::Player* player)
     multi_kill_init_player(player);
 }
 
-std::string_view multi_game_type_name(const rf::NetGameType game_type) {
+std::string_view multi_net_game_type_name(const rf::NetGameType game_type) {
     if (game_type == NG_TYPE_DM) {
         return std::string_view{rf::strings::deathmatch};
     } else if (game_type == NG_TYPE_CTF) {
@@ -347,10 +347,9 @@ std::string_view multi_game_type_name(const rf::NetGameType game_type) {
 };
 
 int32_t multi_num_alive_players() {
-    const auto is_alive = [] (auto& player) {
-        return !rf::player_is_dead(&player) && !rf::player_is_dying(&player);
-    };
-    return std::ranges::count_if(SinglyLinkedList{rf::player_list}, is_alive);
+    return std::ranges::count_if(SinglyLinkedList{rf::player_list}, [] (const auto& p) {
+        return !rf::player_is_dead(&p) && !rf::player_is_dying(&p);
+    });
 }
 
 void multi_do_patch()
