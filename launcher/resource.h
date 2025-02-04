@@ -72,6 +72,7 @@
 #define IDC_INPUT_OPTIONS_BOX           1056
 #define IDC_INTERFACE_OPTIONS_BOX       1057
 #define IDC_RENDERER_COMBO              1058
+#define IDC_DISGUISE_AS_AF_CHECK        1059
 
 // Next default values for new objects
 //

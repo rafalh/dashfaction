@@ -19,7 +19,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 
-std::unordered_map<rf::Player*, PlayerAdditionalData> g_player_additional_data_map;
+std::unordered_map<const rf::Player*, PlayerAdditionalData> g_player_additional_data_map;
 
 void find_player(const StringMatcher& query, std::function<void(rf::Player*)> consumer)
 {
@@ -28,6 +28,10 @@ void find_player(const StringMatcher& query, std::function<void(rf::Player*)> co
         if (query(player.name))
             consumer(&player);
     }
+}
+
+void reset_player_additional_data(const rf::Player* const player) {
+    g_player_additional_data_map.erase(player);
 }
 
 PlayerAdditionalData& get_player_additional_data(rf::Player* player)
@@ -48,8 +52,8 @@ FunHook<void(rf::Player*)> player_destroy_hook{
     0x004A35C0,
     [](rf::Player* player) {
         multi_spectate_on_destroy_player(player);
+        reset_player_additional_data(player);
         player_destroy_hook.call_target(player);
-        g_player_additional_data_map.erase(player);
     },
 };
 
