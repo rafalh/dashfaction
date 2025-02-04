@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <regex>
 #include <xlog/xlog.h>
 #include <winsock2.h>
+#include <common/utils/list-utils.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
@@ -14,6 +16,8 @@
 #include "../rf/os/console.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
+#include "../rf/player/player.h"
+#include "../rf/localize.h"
 #include "../rf/ai.h"
 #include "../rf/item.h"
 
@@ -330,6 +334,23 @@ FunHook<void(rf::Entity*, int, rf::Vector3&, rf::Matrix3&, bool)> multi_process_
 void multi_init_player(rf::Player* player)
 {
     multi_kill_init_player(player);
+}
+
+std::string_view multi_game_type_name(const NetGameType game_type) {
+    if (game_type == NG_TYPE_DM) {
+        return std::string_view{rf::strings::deathmatch};
+    } else if (game_type == NG_TYPE_CTF) {
+        return std::string_view{rf::strings::capture_the_flag};
+    } else {
+        return std::string_view{rf::strings::team_deathmatch};
+    }
+};
+
+int32_t multi_num_alive_players() {
+    const auto is_alive = [] (auto& player) {
+        return !rf::player_is_dead(&player) && !rf::player_is_dying(&player);
+    };
+    return std::ranges::count_if(SinglyLinkedList{rf::player_list}, is_alive);
 }
 
 void multi_do_patch()
