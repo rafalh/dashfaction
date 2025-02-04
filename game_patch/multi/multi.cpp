@@ -336,7 +336,7 @@ void multi_init_player(rf::Player* player)
     multi_kill_init_player(player);
 }
 
-std::string_view multi_game_type_name(const NetGameType game_type) {
+std::string_view multi_game_type_name(const rf::NetGameType game_type) {
     if (game_type == NG_TYPE_DM) {
         return std::string_view{rf::strings::deathmatch};
     } else if (game_type == NG_TYPE_CTF) {
