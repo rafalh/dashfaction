@@ -337,9 +337,9 @@ void multi_init_player(rf::Player* player)
 }
 
 std::string_view multi_net_game_type_name(const rf::NetGameType game_type) {
-    if (game_type == NG_TYPE_DM) {
+    if (game_type == rf::NG_TYPE_DM) {
         return std::string_view{rf::strings::deathmatch};
-    } else if (game_type == NG_TYPE_CTF) {
+    } else if (game_type == rf::NG_TYPE_CTF) {
         return std::string_view{rf::strings::capture_the_flag};
     } else {
         return std::string_view{rf::strings::team_deathmatch};
