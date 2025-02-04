@@ -2,6 +2,7 @@
 
 #include <optional>
 #include "../rf/player/player.h"
+#include "../rf/multi.h"
 
 struct PlayerStatsNew : rf::PlayerLevelStats
 {
