@@ -41,7 +41,7 @@ Version 1.9.0 (not released yet)
 - Add level filename to "Level Initializing" console message
 - Add `map_rand` command to change to a random level on the rotation
 - Add `vote rand` vote type to initiate a level change to a random level on the rotation
-- Add `$DF Dynamic Rotation` option in dedicated server config
+- Add `$DF Random Rotation` option in dedicated server config
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
 - Disable adding faces to fix PS2 tiling in editor
 - Disable red background in log window if geometry limits are crossed in editor
@@ -71,6 +71,7 @@ Version 1.9.0 (not released yet)
 - Add `spectate_mode_follow_killer` command (when player you are spectating dies, spectate their killer)
 - Remove level editor popups that stop user from navigating between modes until rebuilding
 - Add `muzzle_flash` command
+- Add random level rotation option for dedicated server
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` and `•` in TrueType fonts

@@ -171,8 +171,8 @@ void load_additional_server_config(rf::Parser& parser)
         }
     }
 
-    if (parser.parse_optional("$DF Dynamic Rotation:")) {
-        g_additional_server_config.dynamic_rotation = parser.parse_bool();
+    if (parser.parse_optional("$DF Random Rotation:")) {
+        g_additional_server_config.random_rotation = parser.parse_bool();
     }
 
     if (parser.parse_optional("$DF Send Player Stats Message:")) {
@@ -214,8 +214,8 @@ CodeInjection dedicated_server_load_config_patch{
         auto& parser = *reinterpret_cast<rf::Parser*>(regs.esp - 4 + 0x4C0 - 0x470);
         load_additional_server_config(parser);
 
-        // if dynamic rotation is on, shuffle rotation on server launch
-        if (g_additional_server_config.dynamic_rotation) {
+        // if random rotation is on, shuffle rotation on server launch
+        if (g_additional_server_config.random_rotation) {
             shuffle_level_array();
         }
 
@@ -324,7 +324,7 @@ static void send_private_message_with_stats(rf::Player* player)
 void shuffle_level_array()
 {
     std::ranges::shuffle(rf::netgame.levels, g_rng);
-    xlog::warn("Shuffled level rotation");
+    xlog::info("Shuffled level rotation");
 }
 
 const char* get_rand_level_filename()
@@ -704,7 +704,7 @@ CodeInjection multi_limbo_init_injection{
 CodeInjection multi_level_init_injection{
     0x0046E450,
     []() {
-        if (g_additional_server_config.dynamic_rotation && rf::netgame.current_level_index ==
+        if (g_additional_server_config.random_rotation && rf::netgame.current_level_index ==
                     rf::netgame.levels.size() - 1 && rf::netgame.levels.size() > 1) {
                 // if this is the last level in the list and dynamic rotation is on, shuffle
                 xlog::info("Reached end of level rotation, shuffling");

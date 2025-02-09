@@ -200,7 +200,7 @@ Configuration example:
     // Maximal horizontal FOV that clients can use for level rendering (unlimited by default)
     //$DF Max FOV: 125
     // Shuffle the list of levels when the server starts and at the end of each full rotation
-    $DF Dynamic Rotation: false
+    $DF Random Rotation: false
     // If enabled a private message with player statistics is sent after each round.
     //$DF Send Player Stats Message: true
     // Send a chat message to players when they join the server ($PLAYER is replaced by player name)
