@@ -250,6 +250,7 @@ GrNewFont::GrNewFont(std::string_view name) :
     static std::pair<int, int> win_1252_char_ranges[]{
         {0x20, 0x7E},
         {0x8C, 0x8C},
+        {0x95, 0x95},
         {0x99, 0x99},
         {0x9C, 0x9C},
         {0x9F, 0x9F},

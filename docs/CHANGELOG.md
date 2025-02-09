@@ -54,6 +54,7 @@ Version 1.9.0 (not released yet)
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded
 - Fix cockpit not rendering for any jeeps after the first one entered each level load
+- Add current server player count to scoreboard
 - Add `server_password` command
 - Add `$DF CTF Flag Return Time` option in dedicated server config
 - Add mod name to main menu
@@ -65,10 +66,11 @@ Version 1.9.0 (not released yet)
 - Remove level editor popups that stop user from navigating between modes until rebuilding
 
 [@is-this-c](https://github.com/is-this-c)
-- Support `©` in TrueType fonts
+- Support `©` and `•` in TrueType fonts
 - Improve frag message format
 - Search command descriptions in `.` command
 - Improve PF network protocol compatibility
+- Add a spawned player count to the scoreboard
 
 [@Mystyle-48](https://github.com/Mystyle-48)
 - Simplify installation detection in setup and launcher
