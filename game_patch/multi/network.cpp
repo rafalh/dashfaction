@@ -610,6 +610,7 @@ CallHook<int(void*, int, int, rf::NetAddr&, int)> net_get_tracker_hook{
 };
 
 constexpr uint32_t DASH_FACTION_SIGNATURE = 0xDA58FAC7;
+constexpr uint32_t ALPINE_FACTION_SIGNATURE = 0x4E4C5246;
 
 // Appended to game_info and join_req packets
 struct df_sign_packet_ext
@@ -648,6 +649,24 @@ std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_df_signature(
     return extend_packet(data, len, ext);
 }
 
+std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_af_signature(std::byte* data, size_t len)
+{
+    df_sign_packet_ext ext;
+    ext.df_signature = ALPINE_FACTION_SIGNATURE;
+    ext.version_major = 1;
+    ext.version_minor = 0;
+    return extend_packet(data, len, ext);
+}
+
+std::pair<std::unique_ptr<std::byte[]>, size_t> extend_with_client_signature(std::byte* data, size_t len)
+{
+    if (g_game_config.disguise_as_af) {
+        return extend_packet_with_af_signature(data, len);
+    } else {
+        return extend_packet_with_df_signature(data, len);
+    }
+}
+
 CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_game_info_packet_hook{
     0x0047B287,
     [](const rf::NetAddr* addr, std::byte* data, size_t len) {
@@ -678,8 +697,8 @@ struct EnableEnumBitwiseOperators<DashFactionJoinAcceptPacketExt::Flags> : std::
 CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_req_packet_hook{
     0x0047ABFB,
     [](const rf::NetAddr* addr, std::byte* data, size_t len) {
-        // Add Dash Faction signature to join_req packet
-        auto [new_data, new_len] = extend_packet_with_df_signature(data, len);
+        // Add client signature to join_req packet
+        auto [new_data, new_len] = extend_with_client_signature(data, len);
         return send_join_req_packet_hook.call_target(addr, new_data.get(), new_len);
     },
 };
@@ -891,6 +910,9 @@ FunHook<void()> multi_stop_hook{
         // Clear server info when leaving
         g_df_server_info.reset();
         multi_stop_hook.call_target();
+        if (rf::local_player) {
+            reset_player_additional_data(rf::local_player);
+        }
     },
 };
 
@@ -1029,7 +1051,7 @@ CodeInjection multi_io_process_packets_injection{
     0x0047918D,
     [](auto& regs) {
         int packet_type = regs.esi;
-        if (packet_type > 0x37) {
+        if (packet_type > 0x37 || packet_type == static_cast<int>(pf_packet_type::player_stats)) {
             auto stack_frame = regs.esp + 0x1C;
             std::byte* data = regs.ecx;
             int offset = regs.ebp;

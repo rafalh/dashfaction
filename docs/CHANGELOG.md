@@ -3,14 +3,11 @@ Dash Faction Changelog
 
 Version 1.9.0 (not released yet)
 --------------------------------
+[@rafalh](https://github.com/rafalh)
 - Added experimental D3D11 renderer
 - Added option to switch between D3D8, D3D9 and D3D11 renderer
 - Fix possible crash when alt-tabbing in fullscreen mode before game is fully initialized
-- Simplify installation detection in setup and launcher
 - Fix writing corrupted save files when autosaving some levels
-- Add German and French RF 1.10 detection to setup
-- Text improvements to setup
-- Don't copy over the changelog during setup
 - Add `gamma` command
 - Fix holes in driller cockpit on a widescreen display
 - Change default 'Use' key to E
@@ -43,33 +40,55 @@ Version 1.9.0 (not released yet)
 - Do not load unnecessary VPPs in dedicated server mode
 - Add level filename to "Level Initializing" console message
 - Properly handle WM_PAINT in dedicated server, may improve performance (DF bug)
+- Disable adding faces to fix PS2 tiling in editor
+- Disable red background in log window if geometry limits are crossed in editor
+- Update geometry limits in editor so they show static pools size (crossing it can have tiny performance impact)
+- Fix items being too dim in multi-player (RF bug)
+- Fix clutters and items being too bright when static mesh lighting was enabled
+- Add level property which enables full lightmaps depth (enabled by default in new maps)
+- Add option to disguise as Alpine Faction to avoids AF advertisements and allow playing in servers that reject non-AF players
+- Enable loading RFL version 300
+- Log a warning when RFL uses unsupported event class
+- Add support for high resolution GeoMod textures
+- Add gibs support based on RF PS2 demo (use `gibs` command to enable)
+
+[@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded
+- Fix cockpit not rendering for any jeeps after the first one entered each level load
+- Add current server player count to scoreboard
+- Add `server_password` command
 - Add `server_rcon_password` command
+- Add `$DF CTF Flag Return Time` option in dedicated server config
+- Add mod name to main menu
+- Make value of `spectate_mode_minimal_ui` persist between game launches
+- Add `version` command
+- Support autocompleting of level filenames and console commands from only 1 character
+- Add support for `bluebeard.bty` (sound config file) in mods
+- Add `spectate_mode_follow_killer` command (when player you are spectating dies, spectate their killer)
+- Remove level editor popups that stop user from navigating between modes until rebuilding
+
+[@is-this-c](https://github.com/is-this-c)
+- Support `©` and `•` in TrueType fonts
+- Improve frag message format
+- Search command descriptions in `.` command
+- Improve PF network protocol compatibility
+- Add a spawned player count to the scoreboard
+
+[@Mystyle-48](https://github.com/Mystyle-48)
+- Simplify installation detection in setup and launcher
+- Add German and French RF 1.10 detection to setup
+- Text improvements to setup
+- Don't copy over the changelog during setup
 
 Version 1.8.0 (released 2022-09-17)
 -----------------------------------
+[@rafalh](https://github.com/rafalh)
 - Add autosave after a level transition
 - Disable big HUD for resolutions lower than 1024x768 to prevent crashes
 - Fix "Wrong player ID" warnings when multiplayer quick save/load is used (client-side fix)
 - Restructure Options window
 - Add option to disable beep sound when new player joins multiplayer game and window is not focused
-- Ignore browsers when calculating player count for info requests
-- Fix Message event crash on dedicated server
-- Prevent browsers from voting
-- Add `swap_grenade_controls` command
-- Don't overwrite existing levels in `download_level` command
-- Add `download_level_force` command that overwrites existing levels
-- Allow the person who started a vote to cancel it
-- Allow setting max players server setting to 1
-- Change launcher window title
-- Allow autocomplete for `map` command
-- Add version and date to `/info` server chat command
-- Enable `map` command in RCON
 - Change update checker URL
-- Fix particle damage on dedicated servers
-- Add `.` command to make finding commands easier
-- Fix blurry fonts in the launcher on HiDPI monitors
-- Add `fps_counter` command
 - Make editor window resizeable
 - Add `debug_event_msg` command that allows to track event messages in console
 - Do not panic when character animation cannot be loaded, instead fall back to the first animation - fixes
@@ -83,12 +102,6 @@ Version 1.8.0 (released 2022-09-17)
 - Change transparency sorting algorithm to fix flamethrower particles rendering in rooms with liquid and/or
   semi-transparent details
 - Optimize finding a new room for moving objects
-- Allow start menu shortcut to be skipped in setup program
-- Simplify installation name in Windows control panel (no longer includes "version [version]")
-- Add icon for control panel entry
-- Restore original Red Faction Launcher on uninstall if replaced with Dash Faction Launcher link
-- Add game installation path autofill for German GOG RF to setup program
-- Remove unnecessary "Unknown tables.vpp version" error from setup program (the launcher already displays an error for mismatched tables.vpp files)
 - Fix possible OOB write in waypoint list read code
 - Add server verification in update checker using Ed25519 signature
 - Fix opacity of Display_Fullscreen_Image being affected by previous drawing operations
@@ -100,11 +113,42 @@ Version 1.8.0 (released 2022-09-17)
 - Fix loading a save game when player entity is out of level bounds
 - Fix possible freeze when burning entity is destroyed
 
+[@GooberRF](https://github.com/GooberRF)
+- Add `fps_counter` command
+
+[@is-this-c](https://github.com/is-this-c)
+- Add version and date to `/info` server chat command
+- Fix particle damage on dedicated servers
+- Add `.` command to make finding commands easier
+- Fix blurry fonts in the launcher on HiDPI monitors
+
+[@Mystyle-48](https://github.com/Mystyle-48)
+- Allow start menu shortcut to be skipped in setup program
+- Simplify installation name in Windows control panel (no longer includes "version [version]")
+- Add icon for control panel entry
+- Restore original Red Faction Launcher on uninstall if replaced with Dash Faction Launcher link
+- Add game installation path autofill for German GOG RF to setup program
+- Remove unnecessary "Unknown tables.vpp version" error from setup program (the launcher already displays an error for mismatched tables.vpp files)
+
+[@natarii](https://github.com/natarii)
+- Ignore browsers when calculating player count for info requests
+- Fix Message event crash on dedicated server
+- Prevent browsers from voting
+- Add browser detection for RfServerBrowser 5.1.4
+- Add `swap_grenade_controls` command
+- Don't overwrite existing levels in `download_level` command
+- Add `download_level_force` command that overwrites existing levels
+- Allow the person who started a vote to cancel it
+- Allow setting max players server setting to 1
+- Change launcher window title
+- Allow autocomplete for `map` command
+- Enable `map` command in RCON
+
 Version 1.7.0 (released 2021-06-05)
 -----------------------------------
+[@rafalh](https://github.com/rafalh)
 - Change maximal value of Max Kills dedicated server config to 999
 - Support Team DM scores above 255
-- Added additional textures from base game to level editor texture browser (contribution from Goober)
 - Display proper server name in the scoreboard when joining by link
 - Level auto-downloader has new UI and does its job without leaving the server
 - Use SSL for communication with FactionFiles in level auto-downloader
@@ -144,13 +188,16 @@ Version 1.7.0 (released 2021-06-05)
 - Optimize skeleton unlinking when character is destroyed
 - Fix rendering menu background if its height is lower than 480 (for example AQuest Speedrun Edition mod)
 
+[@GooberRF](https://github.com/GooberRF)
+- Added additional textures from base game to level editor texture browser
+
 Version 1.6.1 (released 2021-02-20)
 -----------------------------------
+[@rafalh](https://github.com/rafalh)
 - Improve tbl parsing error message
 - Bring back team icons in team scores HUD (left-bottom screen corner) in Team DM multiplayer game (1.5.0 regression)
 - Fixed rarely occuring client-side crash in multiplayer (regression from 1.6.1-beta)
 - Fix possible game freeze when scrolling the message log on a wide screen
-- Change launcher header image to one provided by Goober
 - Add `$DF UPnP Enabled` option in dedicated server config that allows to disable UPnP
 - Fix hit sound packet sometimes being sent from the client
 - Do not play hit sounds if player damages themselves
@@ -159,10 +206,14 @@ Version 1.6.1 (released 2021-02-20)
 - Fix drawing main menu background on some graphics cards/drivers (1.6.1-rc1 regression)
 - Change the key that crashes a frozen game process to Alt and change the minimal hold time to 1 second
 - Add `$DF Max FOV` option in dedicated server config that allows to limit FOV used by clients for level rendering
-- Add more textures from base game to the level editor texture browser (contribution from Goober)
+
+[@GooberRF](https://github.com/GooberRF)
+- Change launcher header image
+- Add more textures from base game to the level editor texture browser
 
 Version 1.6.1-rc1 (released 2021-02-13)
 ---------------------------------------
+[@rafalh](https://github.com/rafalh)
 - Fix background image being scrolled too fast in multiplayer menu
 - Make sure CTF flag does not spin after level change if it was in dropped state in the previous level
 - Make main menu background image scroll animation smooth on high resolution displays
@@ -177,6 +228,7 @@ Version 1.6.1-rc1 (released 2021-02-13)
 
 Version 1.6.1-beta (released 2021-01-29)
 ----------------------------------------
+[@rafalh](https://github.com/rafalh)
 - Fix items not respawning in DF-hosted server (1.6.0 regression)
 - Fix ambient sound volume not being affected by `levelsounds` command if EAX sounds are disabled (1.6.0 regression)
 - Add `screenshot` command
@@ -205,6 +257,7 @@ Version 1.6.1-beta (released 2021-01-29)
 
 Version 1.6.0 (released 2021-01-07)
 -----------------------------------
+[@rafalh](https://github.com/rafalh)
 - Fix sounds being often skipped if volume in game options is set very low (1.6.0-rc1 regression)
 - Fix rockets not making damage after hitting a detail brush (fix included in 1.6.0-beta did not always work)
 - Add `frametime_graph` command
@@ -212,6 +265,7 @@ Version 1.6.0 (released 2021-01-07)
 
 Version 1.6.0-rc1 (released 2020-12-31)
 ---------------------------------------
+[@rafalh](https://github.com/rafalh)
 - Fix rocket launcher IR scanner in spectate mode (regression)
 - Fix 3D sounds having wrong volume for a very short time (regression)
 - Disable unsupported color depths in launcher options
@@ -236,6 +290,7 @@ Version 1.6.0-rc1 (released 2020-12-31)
 
 Version 1.6.0-beta (released 2020-12-12)
 ----------------------------------------
+[@rafalh](https://github.com/rafalh)
 - fix alpha draw order issues in envirosuit1.vcm, Vet1.v3m, coffeesmokedtbl2.v3m, coffeesmokedtblAlt.v3m meshes
 - add support for bitmaps with alpha channel in Display_Fullscreen_Image event
 - fix level editor not using all space for rendering when used with a big monitor
@@ -255,7 +310,6 @@ Version 1.6.0-beta (released 2020-12-12)
 - allow opening a level in the level editor by using `-level` command line argument
 - add option to associate `rfl` file extension with Dash Faction level editor in the setup program
 - fix level editor crash randomly occuring when opening cutscene properties
-- add icon for EAX Effect objects in the level editor (icon provided by Goober)
 - add more textures from base game to the level editor texture browser
 - fix packing a level that contains a particle emitter with a default texture in the level editor
 - fix path node connections sometimes being rendered incorrectly in the level editor
@@ -295,8 +349,12 @@ Version 1.6.0-beta (released 2020-12-12)
 - optimize dynamic textures for Direct3D 9
 - send operating system version when checking for updates in the launcher
 
+[@GooberRF](https://github.com/GooberRF)
+- add icon for EAX Effect objects in the level editor
+
 Version 1.5.0 (released 2020-09-05)
 -----------------------------------
+[@rafalh](https://github.com/rafalh)
 - increase object limit from 1024 to 65536
 - remove additional limits on number of allocated bullet, item, debris and corpse objects
 - enable and fix items and clutters static lighting calculation
@@ -310,7 +368,6 @@ Version 1.5.0 (released 2020-09-05)
 - add '/save' and '/load' chat commands and quick save/load controls handling for saving and restoring player position
   in multiplayer (useful for runmap servers, can be enabled in dedicated_server.txt)
 - add 'Big HUD' option and 'bighud' command for making the HUD larger
-- add textures for big HUD contributed by Goober
 - add 'reticle_scale' command for changing reticle size
 - make texts in main menu and in HUD sharp by using TrueType fonts
 - log error when RFA cannot be loaded
@@ -401,8 +458,12 @@ Version 1.5.0 (released 2020-09-05)
 - fix heap corruption when loading a bitmap with corrupted header (RF bug)
 - fix stack corruption when loading a corrupted packfile (RF bug)
 
+[@GooberRF](https://github.com/GooberRF)
+- add textures for big HUD
+
 Version 1.4.1 (released 2019-12-07)
 -----------------------------------
+[@rafalh](https://github.com/rafalh)
 - add 'skip_cutscene_bind' command allowing to change the control used for skipping cutscenes (by default Multiplayer
   Stats - TAB)
 - fix crash after exiting administration with Gryphon (regression)
@@ -410,6 +471,7 @@ Version 1.4.1 (released 2019-12-07)
 
 Version 1.4.0 (released 2019-12-04)
 -----------------------------------
+[@rafalh](https://github.com/rafalh)
 - add free camera spectate mode support
 - add vote system (server-side)
 - rework fix for sticking to the ground when jumping - now it is based on PF code (by Trotskie) - should fix free-fall
@@ -462,6 +524,7 @@ Version 1.4.0 (released 2019-12-04)
 
 Version 1.3.0 (released 2019-05-07)
 -----------------------------------
+[@rafalh](https://github.com/rafalh)
 - enable mip-mapping for textures bigger than 256x256
 - change maximal FPS limit to 240
 - speed up server list refreshing
@@ -510,7 +573,7 @@ Version 1.3.0 (released 2019-05-07)
 
 Version 1.2.1 (released 2017-08-15)
 -----------------------------------
-
+[@rafalh](https://github.com/rafalh)
 - added high resolution scopes
 - fixed camera shake dependence on FPS (e.g. for Assault Rifle)
 - fixed Level Sounds option not working in most levels
@@ -528,7 +591,7 @@ Version 1.2.1 (released 2017-08-15)
 
 Version 1.2.0 (released 2017-05-10)
 -----------------------------------
-
+[@rafalh](https://github.com/rafalh)
 - added running and jumping animations in Spectate Mode
 - added Rocket Launcher scanner rendering in Spectate Mode
 - fixed Spectate Mode target entity being rendered (visible when player looks down)
@@ -548,7 +611,7 @@ Version 1.2.0 (released 2017-05-10)
 
 Version 1.1.0 (released 2017-02-27)
 -----------------------------------
-
+[@rafalh](https://github.com/rafalh)
 - improved loading of 32 bit textures (improves quality of lightmaps and shadows)
 - launch DashFaction from level editor (editor must be started from DF launcher)
 - improved Scanner resolution (Rail Gun, Rocket Launcher, Fusion Launcher)
@@ -565,7 +628,7 @@ Version 1.1.0 (released 2017-02-27)
 
 Version 1.0.1 (released 2017-02-07)
 -----------------------------------
-
+[@rafalh](https://github.com/rafalh)
 - fixed monitors/mirrors in MSAA mode
 - fixed aspect ratio in windowed mode if window aspect ratio is different than screen aspect ratio
 - fixed left/top screen edges not rendering properly in MSAA mode
@@ -579,7 +642,7 @@ Version 1.0.1 (released 2017-02-07)
 
 Version 1.0.0 (released 2017-01-24)
 -----------------------------------
-
+[@rafalh](https://github.com/rafalh)
 - Spectate Mode
 - launcher GUI
 - DirectInput support
@@ -595,7 +658,7 @@ Version 1.0.0 (released 2017-01-24)
 
 Version 0.61
 ------------
-
+[@rafalh](https://github.com/rafalh)
 - added widescreen fixes
 - enabled anisotropic filtering
 - enabled DEP to improve security
@@ -603,7 +666,7 @@ Version 0.61
 
 Version 0.60
 ------------
-
+[@rafalh](https://github.com/rafalh)
 - use exclusive full screen mode (it was using windowed-stretched mode before)
 - check RF.exe checksum before starting (detects if RF.exe has compatible version)
 - added experimental Multisample Anti-aliasing (to enable start launcher from console with '-msaa' argument)
@@ -612,10 +675,10 @@ Version 0.60
 
 Version 0.52
 ------------
-
+[@rafalh](https://github.com/rafalh)
 - use working directory as fallback for finding RF.exe
 
 Version 0.51
 ------------
-
+[@rafalh](https://github.com/rafalh)
 - first public release

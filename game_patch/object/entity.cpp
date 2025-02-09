@@ -3,6 +3,7 @@
 #include <patch_common/CallHook.h>
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
+#include "../os/console.h"
 #include "../rf/entity.h"
 #include "../rf/corpse.h"
 #include "../rf/weapon.h"
@@ -10,6 +11,8 @@
 #include "../rf/particle_emitter.h"
 #include "../rf/os/frametime.h"
 #include "../rf/sound/sound.h"
+#include "../rf/debris.h"
+#include "../rf/misc.h"
 #include "../main/main.h"
 
 rf::Timestamp g_player_jump_timestamp;
@@ -201,6 +204,86 @@ CodeInjection entity_process_pre_hide_riot_shield_injection{
     },
 };
 
+constexpr int gore_setting_gibs = 2;
+
+static FunHook entity_blood_throw_gibs_hook{
+    0x0042E3C0,
+    [](int handle) {
+        static const char *gib_chunk_filenames[] = {
+            "meatchunk1.v3d",
+            "meatchunk2.v3d",
+            "meatchunk3.v3d",
+            "meatchunk4.v3d",
+            "meatchunk5.v3d",
+        };
+        auto& gib_impact_sound_set = addr_as_ref<rf::ImpactSoundSet*>(0x0062F75C);
+
+        if (rf::player_gore_setting < gore_setting_gibs) {
+            return;
+        }
+
+        constexpr int eif_ambient = 0x800000;
+        rf::Entity* ep = rf::entity_from_handle(handle);
+        if (ep && ep->info->flags & eif_ambient) {
+            // bats and fish
+            return;
+        }
+
+        constexpr int flash_material = 3;
+        rf::Object* objp = rf::obj_from_handle(handle);
+
+        if (objp && (objp->type == rf::OT_ENTITY || objp->type == rf::OT_CORPSE) && objp->material == flash_material) {
+            rf::DebrisCreateStruct dcs{};
+            for (int i = 0; i < 10; ++i) {
+                dcs.pos = objp->pos;
+                dcs.vel.rand_quick();
+                dcs.vel *= 10.0; // PS2 demo uses 15
+                dcs.vel += objp->p_data.vel * 0.5;
+                dcs.orient.rand_quick();
+                dcs.spin.rand_quick();
+                float scale = rf::fl_rand_range(10.0, 25.0);
+                dcs.spin *= scale;
+                dcs.lifespan_ms = 5000; // 5 sec. PS2 demo uses 2.7 sec.
+                dcs.material = flash_material;
+                dcs.explosion_index = -1;
+                dcs.debris_flags = 4;
+                dcs.obj_flags = 0x8000; // OF_START_HIDDEN
+                dcs.iss = gib_impact_sound_set;
+                int file_index = rand() % std::size(gib_chunk_filenames);
+                auto dp = rf::debris_create(objp->handle, gib_chunk_filenames[file_index], 0.3, &dcs, 0, -1.0);
+                if (dp) {
+                    dp->obj_flags |= rf::OF_INVULNERABLE;
+                }
+            }
+        }
+    },
+};
+
+static FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
+    0x0041A350,
+    [](rf::Entity *damaged_ep, float damage, int killer_handle, int damage_type, int killer_uid) {
+        float result = entity_damage_hook.call_target(damaged_ep, damage, killer_handle, damage_type, killer_uid);
+        if (
+            rf::player_gore_setting >= gore_setting_gibs
+            && damaged_ep->life < -100.0 // high damage taken
+            && damaged_ep->material == 3 // flash material
+            && (damage_type == 3 || damage_type == 9) // armor piercing bullet or scalding
+            && damaged_ep->radius < 2.0 // make sure only small entities use gibs
+        ) {
+            damaged_ep->entity_flags = damaged_ep->entity_flags | 0x80; // throw gibs
+        }
+        return result;
+    },
+};
+
+ConsoleCommand2 gibs_cmd{
+    "gibs",
+    []() {
+        rf::player_gore_setting = rf::player_gore_setting == gore_setting_gibs ? 1 : gore_setting_gibs;
+        rf::console::print("Gibs are {}", rf::player_gore_setting == gore_setting_gibs ? "enabled" : "disabled");
+    },
+};
+
 void entity_do_patch()
 {
     // Fix player being stuck to ground when jumping, especially when FPS is greater than 200
@@ -252,4 +335,9 @@ void entity_do_patch()
 
     // Hide riot shield third person model if entity is hidden (e.g. in cutscenes)
     entity_process_pre_hide_riot_shield_injection.install();
+
+    // Add gibs support
+    entity_blood_throw_gibs_hook.install();
+    entity_damage_hook.install();
+    gibs_cmd.register_cmd();
 }

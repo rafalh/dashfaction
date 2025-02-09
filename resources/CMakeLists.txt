@@ -74,6 +74,7 @@ add_packfile(dashfaction.vpp
     images/mtl_archway04-mip1.tga
     images/pls_airlockmat01-mip2.tga
     images/consolebutton2A.tga
+    images/gore1.tga # https://www.filterforge.com/filters/7459.html
 
     fonts/biggerfont.vf
     fonts/regularfont.ttf
@@ -87,6 +88,11 @@ add_packfile(dashfaction.vpp
     meshes/Vat1.v3m
     meshes/coffeesmokedtbl2.v3m
     meshes/coffeesmokedtblAlt.v3m
+    meshes/meatchunk1.v3m
+    meshes/meatchunk2.v3m
+    meshes/meatchunk3.v3m
+    meshes/meatchunk4.v3m
+    meshes/meatchunk5.v3m
 
     standard_vs:${CMAKE_BINARY_DIR}/shaders/standard_vs.bin
     character_vs:${CMAKE_BINARY_DIR}/shaders/character_vs.bin

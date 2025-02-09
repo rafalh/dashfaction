@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <cstring>
 #include <cassert>
+#include <array>
 #include <common/config/BuildConfig.h>
 #include <common/utils/list-utils.h>
 #include <xlog/xlog.h>
@@ -9,6 +10,7 @@
 #include "pf.h"
 #include "pf_packets.h"
 #include "pf_ac.h"
+#include "../misc/player.h"
 
 void pf_send_reliable_packet(rf::Player* player, const void* data, int len)
 {
@@ -35,7 +37,9 @@ static void send_pf_announce_player_packet(rf::Player* player, pf_pure_status pu
     announce_packet.hdr.size = sizeof(announce_packet) - sizeof(announce_packet.hdr);
     announce_packet.version = pf_announce_player_packet_version;
     announce_packet.player_id = player->net_data->player_id;
-    announce_packet.is_pure = static_cast<uint8_t>(pure_status);
+    announce_packet.is_pure = static_cast<uint8_t>(
+        get_player_additional_data(player).is_browser ? pf_pure_status::rfsb : pure_status
+    );
 
     auto player_list = SinglyLinkedList(rf::player_list);
     for (auto& other_player : player_list) {
@@ -50,7 +54,7 @@ static void process_pf_player_announce_packet(const void* data, size_t len, [[ m
         return;
     }
 
-    pf_player_announce_packet announce_packet;
+    pf_player_announce_packet announce_packet{};
     if (len < sizeof(announce_packet)) {
         xlog::trace("Invalid length in PF player_announce packet");
         return;
@@ -64,23 +68,32 @@ static void process_pf_player_announce_packet(const void* data, size_t len, [[ m
     }
 
     xlog::trace("PF player_announce packet: player {} is_pure {}", announce_packet.player_id, announce_packet.is_pure);
+    
+    if (rf::Player* player = rf::multi_find_player_by_id(announce_packet.player_id); player
+        && announce_packet.is_pure <= static_cast<uint8_t>(pf_pure_status::_last_variant)) {
+        get_player_additional_data(player).received_ac_status
+            = std::optional{static_cast<pf_pure_status>(announce_packet.is_pure)};
+    }
 
     if (announce_packet.player_id == rf::local_player->net_data->player_id) {
-        static const char* pf_verification_status_names[] = { "none", "blue", "gold", "red" };
-        const auto* pf_verification_status =
-            announce_packet.is_pure < std::size(pf_verification_status_names)
-            ? pf_verification_status_names[announce_packet.is_pure] : "unknown";
+        static constinit const std::array<std::string_view, 6> pf_verification_status_names{
+            {"none", "blue", "gold", "fail", "old_blue", "rfsb"}
+        };
+        const std::string_view pf_verification_status
+            = announce_packet.is_pure < std::size(pf_verification_status_names)
+            ? pf_verification_status_names[announce_packet.is_pure]
+            : "unknown";
         xlog::info("PF Verification Status: {} ({})", pf_verification_status, announce_packet.is_pure);
     }
 }
 
-static void send_pf_player_stats_packet(rf::Player* player)
+void send_pf_player_stats_packet(rf::Player* player)
 {
     // Send: server -> client
     assert(rf::is_server);
 
     std::byte packet_buf[rf::max_packet_size];
-    pf_player_stats_packet stats_packet;
+    pf_player_stats_packet stats_packet{};
     stats_packet.hdr.type = static_cast<uint8_t>(pf_packet_type::player_stats);
     stats_packet.hdr.size = sizeof(stats_packet) - sizeof(stats_packet.hdr);
     stats_packet.version = pf_player_stats_packet_version;
@@ -90,12 +103,15 @@ static void send_pf_player_stats_packet(rf::Player* player)
     auto player_list = SinglyLinkedList{rf::player_list};
     for (auto& current_player : player_list) {
         auto& player_stats = *static_cast<PlayerStatsNew*>(current_player.stats);
-        pf_player_stats_packet::player_stats out_stats;
+        pf_player_stats_packet::player_stats out_stats{};
         out_stats.player_id = current_player.net_data->player_id;
-        out_stats.is_pure = static_cast<uint8_t>(pf_ac_get_pure_status(&current_player));
-        out_stats.accuracy = 0;
-        out_stats.streak_max = 0;
-        out_stats.streak_current = 0;
+        const pf_pure_status pure_status = pf_ac_get_pure_status(&current_player);
+        out_stats.is_pure = static_cast<uint8_t>(
+            get_player_additional_data(&current_player).is_browser ? pf_pure_status::rfsb : pure_status
+        );
+        out_stats.accuracy = static_cast<uint8_t>(player_stats.calc_accuracy() * 100.f);
+        out_stats.streak_max = player_stats.max_streak;
+        out_stats.streak_current = player_stats.current_streak;
         out_stats.kills = player_stats.num_kills;
         out_stats.deaths = player_stats.num_deaths;
         out_stats.team_kills = 0;
@@ -129,7 +145,7 @@ static void process_pf_player_stats_packet(const void* data, size_t len, [[ mayb
         return;
     }
 
-    pf_player_stats_packet stats_packet;
+    pf_player_stats_packet stats_packet{};
     if (len < sizeof(stats_packet)) {
         xlog::trace("Invalid length in PF player_stats packet");
         return;
@@ -151,12 +167,19 @@ static void process_pf_player_stats_packet(const void* data, size_t len, [[ mayb
 
     const std::byte* player_stats_ptr = static_cast<const std::byte*>(data) + sizeof(stats_packet);
     for (int i = 0; i < stats_packet.player_count; ++i) {
-        pf_player_stats_packet::player_stats in_stats;
+        pf_player_stats_packet::player_stats in_stats{};
         std::memcpy(&in_stats, player_stats_ptr, sizeof(in_stats));
         player_stats_ptr += sizeof(in_stats);
         auto* player = rf::multi_find_player_by_id(in_stats.player_id);
         if (player) {
             auto& stats = *static_cast<PlayerStatsNew*>(player->stats);
+            if (in_stats.is_pure <= static_cast<uint8_t>(pf_pure_status::_last_variant)) {
+                get_player_additional_data(player).received_ac_status
+                    = std::optional{static_cast<pf_pure_status>(in_stats.is_pure)};
+            }
+            stats.received_accuracy = std::optional{in_stats.accuracy};
+            stats.max_streak = in_stats.streak_max;
+            stats.current_streak = in_stats.streak_current;
             stats.num_kills = in_stats.kills;
             stats.num_deaths = in_stats.deaths;
         }
@@ -175,7 +198,7 @@ static void process_pf_players_request_packet([[ maybe_unused ]] const void* dat
         return;
     }
 
-    pf_players_packet players_packet;
+    pf_players_packet players_packet{};
     players_packet.hdr.type = static_cast<uint8_t>(pf_packet_type::players);
     players_packet.version = 1;
     players_packet.show_ip = 0;
@@ -204,7 +227,7 @@ bool pf_process_packet(const void* data, int len, const rf::NetAddr& addr, rf::P
         return true;
     }
 
-    rf_packet_header header;
+    rf_packet_header header{};
     if (len < static_cast<int>(sizeof(header))) {
         return false;
     }
@@ -231,7 +254,7 @@ bool pf_process_packet(const void* data, int len, const rf::NetAddr& addr, rf::P
 
 bool pf_process_raw_unreliable_packet(const void* data, int len, const rf::NetAddr& addr)
 {
-    rf_packet_header header;
+    rf_packet_header header{};
     if (len < static_cast<int>(sizeof(header))) {
         return false;
     }

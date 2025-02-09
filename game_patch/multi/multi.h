@@ -2,6 +2,7 @@
 
 #include <optional>
 #include "../rf/player/player.h"
+#include "../rf/multi.h"
 
 struct PlayerStatsNew : rf::PlayerLevelStats
 {
@@ -13,6 +14,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     float num_shots_fired;
     float damage_received;
     float damage_given;
+    std::optional<uint8_t> received_accuracy{};
 
     void inc_kills()
     {
@@ -67,6 +69,7 @@ struct PlayerStatsNew : rf::PlayerLevelStats
         max_streak = 0;
         damage_received = 0;
         damage_given = 0;
+        received_accuracy.reset();
     }
 };
 
@@ -88,3 +91,5 @@ void multi_level_download_do_frame();
 void multi_level_download_abort();
 void multi_ban_apply_patch();
 std::optional<std::string> multi_ban_unban_last();
+std::string_view multi_game_type_name(rf::NetGameType game_type);
+[[nodiscard]] int multi_num_alive_players();

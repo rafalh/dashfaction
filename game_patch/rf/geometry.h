@@ -115,6 +115,11 @@ namespace rf
         {
             AddrCaller{0x004DF1C0}.this_call(this, in, out, clear_fraction);
         }
+
+        void set_autotexture_pixels_per_meter(float ppm)
+        {
+            AddrCaller{0x004F8730}.this_call(this, ppm);
+        }
     };
     static_assert(sizeof(GSolid) == 0x378);
 
