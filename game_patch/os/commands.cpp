@@ -109,7 +109,7 @@ ConsoleCommand2 server_rcon_password_cmd{
         }
 
         if (new_rcon_password) {
-            if (new_rcon_password->size() > 16) {
+            if (new_rcon_password->size() + 1 > sizeof(rf::rcon_password)) {
                 // game limits client requests to 16 characters
                 rf::console::print("Server rcon password cannot exceed 16 characters.");
                 return;
@@ -120,7 +120,7 @@ ConsoleCommand2 server_rcon_password_cmd{
             rf::console::print("Server rcon password set to: {}", rf::rcon_password);
         }
         else {
-            *rf::rcon_password = '\0';
+            rf::rcon_password[0] = '\0';
             rf::console::print("Server rcon password removed.");
         }
     },
