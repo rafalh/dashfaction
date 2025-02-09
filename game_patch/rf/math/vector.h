@@ -157,6 +157,11 @@ namespace rf
         {
             *this /= len();
         }
+
+        void rand_quick()
+        {
+            AddrCaller{0x004FAD60}.this_call(this);
+        }
     };
     static_assert(sizeof(Vector3) == 0xC);
 

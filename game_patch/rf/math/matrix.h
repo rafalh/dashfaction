@@ -24,6 +24,11 @@ namespace rf
             AddrCaller{0x004FC8A0}.this_call(this, &result);
             return result;
         }
+
+        void rand_quick()
+        {
+            AddrCaller{0x004FCCC0}.this_call(this);
+        }
     };
     static_assert(sizeof(Matrix3) == 0x24);
 

@@ -19,7 +19,6 @@
 #include "../rf/os/os.h"
 #include "../rf/misc.h"
 #include "../rf/vmesh.h"
-#include "../rf/level.h"
 #include "../rf/file/file.h"
 #include "../object/object.h"
 
@@ -34,6 +33,7 @@ void camera_do_patch();
 void ui_apply_patch();
 void game_apply_patch();
 void character_apply_patch();
+void level_apply_patch();
 
 struct JoinMpGameData
 {
@@ -59,25 +59,6 @@ CodeInjection critical_error_log_injection{
     [](auto& regs) {
         const char* text = regs.ecx;
         xlog::error("Critical error:\n{}", text);
-    },
-};
-
-CodeInjection level_read_data_check_restore_status_patch{
-    0x00461195,
-    [](auto& regs) {
-        // check if sr_load_level_state is successful
-        if (regs.eax != 0)
-            return;
-        // check if this is auto-load when changing level
-        const char* save_filename = regs.edi;
-        if (!std::strcmp(save_filename, "auto.svl"))
-            return;
-        // manual load failed
-        xlog::error("Restoring game state failed");
-        char* error_info = *reinterpret_cast<char**>(regs.esp + 0x2B0 + 0xC);
-        std::strcpy(error_info, "Save file is corrupted");
-        // return to level_read_data failure path
-        regs.eip = 0x004608CC;
     },
 };
 
@@ -327,16 +308,6 @@ CallHook<int(char*, const char*)> skeleton_pagein_debug_print_patch{
     reinterpret_cast<int(*)(char*, const char*)>(debug_print_hook),
 };
 
-CodeInjection level_load_items_crash_fix{
-    0x0046519F,
-    [](auto& regs) {
-        void* item = regs.eax;
-        if (item == nullptr) {
-            regs.eip = 0x004651C6;
-        }
-    },
-};
-
 CodeInjection vmesh_col_fix{
     0x00499BCF,
     [](auto& regs) {
@@ -362,15 +333,6 @@ CodeInjection explosion_crash_fix{
     },
 };
 
-CallHook<void(rf::Vector3*, float, float, float, float, bool, int, int)> level_read_geometry_header_light_add_directional_hook{
-    0x004619E1,
-    [](rf::Vector3 *dir, float intensity, float r, float g, float b, bool is_dynamic, int casts_shadow, int dropoff_type) {
-        if (rf::gr::lighting_enabled()) {
-            level_read_geometry_header_light_add_directional_hook.call_target(dir, intensity, r, g, b, is_dynamic, casts_shadow, dropoff_type);
-        }
-    },
-};
-
 CodeInjection vfile_read_stack_corruption_fix{
     0x0052D0E0,
     [](auto& regs) {
@@ -384,15 +346,8 @@ CodeInjection game_set_file_paths_injection{
         if (rf::mod_param.found()) {
             std::string mod_dir = "mods\\";
             mod_dir += rf::mod_param.get_arg();
-            rf::file_add_path(mod_dir.c_str(), ".bik", false);
+            rf::file_add_path(mod_dir.c_str(), ".bik .bty", false);
         }
-    },
-};
-
-CallHook level_init_pre_console_output_hook{
-    0x00435ABB,
-    []() {
-        rf::console::print("-- Level Initializing: {} --", rf::level_filename_to_load);
     },
 };
 
@@ -426,9 +381,6 @@ void misc_init()
     // Disable Flamethower debug sphere drawing (optimization)
     // It is not visible in game because other things are drawn over it
     AsmWriter(0x0041AE47, 0x0041AE4C).nop();
-
-    // Add checking if restoring game state from save file failed during level loading
-    level_read_data_check_restore_status_patch.install();
 
     // Open server list menu instead of main menu when leaving multiplayer game
     rf_init_state_hook.install();
@@ -466,9 +418,6 @@ void misc_init()
     // Log error when RFA cannot be loaded
     skeleton_pagein_debug_print_patch.install();
 
-    // Fix item_create null result handling in RFL loading (affects multiplayer only)
-    level_load_items_crash_fix.install();
-
     // Fix col-spheres vs mesh collisions
     vmesh_col_fix.install();
 
@@ -479,9 +428,6 @@ void misc_init()
     if (!g_game_config.reduced_speed_in_background) {
         write_mem<u8>(0x004353CC, asm_opcodes::jmp_rel_short);
     }
-
-    // Fix dedicated server crash when loading level that uses directional light
-    level_read_geometry_header_light_add_directional_hook.install();
 
     // Fix stack corruption when packfile has lower size than expected
     vfile_read_stack_corruption_fix.install();
@@ -500,9 +446,6 @@ void misc_init()
     // Add support for Bink videos in mods
     game_set_file_paths_injection.install();
 
-    // Add level name to "-- Level Initializing --" message
-    level_init_pre_console_output_hook.install();
-
     // Apply patches from other files
     apply_main_menu_patches();
     apply_save_restore_patches();
@@ -515,4 +458,5 @@ void misc_init()
     ui_apply_patch();
     game_apply_patch();
     character_apply_patch();
+    level_apply_patch();
 }
