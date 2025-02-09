@@ -63,6 +63,7 @@ Name                          | Description
 `fps_counter`                 | toggle FPS counter
 `debug_event_msg`             | toggle tracking of event messages in console
 `gibs`                        | toggle gibs (characters exploding into parts)
+`muzzle_flash`                | toggle muzzle flash
 
 ### Server commands
 
