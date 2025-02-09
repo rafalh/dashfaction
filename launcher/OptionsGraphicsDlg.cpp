@@ -36,6 +36,7 @@ BOOL OptionsGraphicsDlg::OnInitDialog()
     CheckDlgButton(IDC_HIGH_MON_RES_CHECK, m_conf.high_monitor_res ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_TRUE_COLOR_TEXTURES_CHECK, m_conf.true_color_textures ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(IDC_MESH_STATIC_LIGHTING_CHECK, m_conf.mesh_static_lighting ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(IDC_MUZZLE_FLASH_CHECK, m_conf.muzzle_flash ? BST_CHECKED : BST_UNCHECKED);
 
     return TRUE;
 }
@@ -96,6 +97,7 @@ void OptionsGraphicsDlg::InitToolTip()
     m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_SCANNER_RES_CHECK), "Increase scanner resolution (used by Rail Gun, Rocket Launcher and Fusion Launcher)");
     m_tool_tip.AddTool(GetDlgItem(IDC_HIGH_MON_RES_CHECK), "Increase monitors and mirrors resolution");
     m_tool_tip.AddTool(GetDlgItem(IDC_TRUE_COLOR_TEXTURES_CHECK), "Increase texture color depth - especially visible for lightmaps and shadows");
+    m_tool_tip.AddTool(GetDlgItem(IDC_MUZZLE_FLASH_CHECK), "Render a light at a gun muzzle for a short time - disable if bright flashes make you ill");
 }
 
 void OptionsGraphicsDlg::OnSave()
@@ -108,6 +110,7 @@ void OptionsGraphicsDlg::OnSave()
     m_conf.high_monitor_res = (IsDlgButtonChecked(IDC_HIGH_MON_RES_CHECK) == BST_CHECKED);
     m_conf.true_color_textures = (IsDlgButtonChecked(IDC_TRUE_COLOR_TEXTURES_CHECK) == BST_CHECKED);
     m_conf.mesh_static_lighting = (IsDlgButtonChecked(IDC_MESH_STATIC_LIGHTING_CHECK) == BST_CHECKED);
+    m_conf.muzzle_flash = (IsDlgButtonChecked(IDC_MUZZLE_FLASH_CHECK) == BST_CHECKED);
 }
 
 void OptionsGraphicsDlg::OnRendererChange()
