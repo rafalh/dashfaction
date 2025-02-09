@@ -276,6 +276,25 @@ static FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
     },
 };
 
+CallHook<void(rf::Entity&)> entity_update_muzzle_flash_light_hook{
+    0x0041E814,
+    [](rf::Entity& ep) {
+        if (g_game_config.muzzle_flash) {
+            entity_update_muzzle_flash_light_hook.call_target(ep);
+        }
+    },
+};
+
+ConsoleCommand2 muzzle_flash_cmd{
+    "muzzle_flash",
+    []() {
+        g_game_config.muzzle_flash = !g_game_config.muzzle_flash;
+        g_game_config.save();
+        rf::console::print("Muzzle flash lights are {}", g_game_config.muzzle_flash ? "enabled" : "disabled");
+    },
+    "Toggle muzzle flash dynamic lights",
+};
+
 ConsoleCommand2 gibs_cmd{
     "gibs",
     []() {
@@ -339,5 +358,11 @@ void entity_do_patch()
     // Add gibs support
     entity_blood_throw_gibs_hook.install();
     entity_damage_hook.install();
+
+    // Don't create muzzle flash lights
+    entity_update_muzzle_flash_light_hook.install();
+
+    // Commands
     gibs_cmd.register_cmd();
+    muzzle_flash_cmd.register_cmd();
 }

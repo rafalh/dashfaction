@@ -51,6 +51,7 @@ Version 1.9.0 (not released yet)
 - Log a warning when RFL uses unsupported event class
 - Add support for high resolution GeoMod textures
 - Add gibs support based on RF PS2 demo (use `gibs` command to enable)
+- Add muzzle flash option in the launcher
 
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded
@@ -66,6 +67,7 @@ Version 1.9.0 (not released yet)
 - Add support for `bluebeard.bty` (sound config file) in mods
 - Add `spectate_mode_follow_killer` command (when player you are spectating dies, spectate their killer)
 - Remove level editor popups that stop user from navigating between modes until rebuilding
+- Add `muzzle_flash` command
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` and `•` in TrueType fonts

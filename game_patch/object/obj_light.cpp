@@ -1,16 +1,16 @@
-#include "../main/main.h"
-#include "../os/console.h"
-#include "../rf/clutter.h"
-#include "../rf/crt.h"
-#include "../rf/gr/gr.h"
-#include "../rf/item.h"
-#include "../rf/multi.h"
-#include "../rf/object.h"
 #include <cassert>
-#include <common/utils/list-utils.h>
+#include <xlog/xlog.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
-#include <xlog/xlog.h>
+#include <common/utils/list-utils.h>
+#include "../rf/object.h"
+#include "../rf/item.h"
+#include "../rf/clutter.h"
+#include "../rf/gr/gr.h"
+#include "../rf/multi.h"
+#include "../rf/crt.h"
+#include "../os/console.h"
+#include "../main/main.h"
 
 float obj_light_scale = 1.0;
 
