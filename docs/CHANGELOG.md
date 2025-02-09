@@ -62,6 +62,7 @@ Version 1.9.0 (not released yet)
 - Support autocompleting of level filenames and console commands from only 1 character
 - Add support for `bluebeard.bty` (sound config file) in mods
 - Add `spectate_mode_follow_killer` command (when player you are spectating dies, spectate their killer)
+- Remove level editor popups that stop user from navigating between modes until rebuilding
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` in TrueType fonts
