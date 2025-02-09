@@ -6,34 +6,51 @@ on:
 
 env:
   BUILD_TYPE: Release
+  WORKING_DIRECTORY: ${{ github.workspace }}/build
 
 jobs:
   build-mingw:
     runs-on: ubuntu-24.04
 
     steps:
-
     - name: Install packages
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
         sudo apt-get install --no-install-recommends g++-mingw-w64-i686-posix ninja-build wine32 wine
+      shell: bash
 
     - uses: actions/checkout@v4
 
+    - name: Set Current Git Commit Head SHA
+      run: echo "GIT_CURRENT_COMMIT_HEAD_SHA=$(git rev-parse --short=10 HEAD)" >> $GITHUB_ENV
+      shell: bash
+
     - name: Create Build Environment
-      run: cmake -E make_directory ${{github.workspace}}/build
+      run: cmake -E make_directory ${{ env.WORKING_DIRECTORY }}
+      shell: bash
 
     - name: Configure CMake
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{ env.WORKING_DIRECTORY }}
       run: cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake
+      shell: bash
 
     - name: Print nproc
       run: nproc
+      shell: bash
 
     - name: Build
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{ env.WORKING_DIRECTORY }}
       run: cmake --build . -j $(nproc)
+      shell: bash
+
+    - name: Upload Patch Files
+      uses: actions/upload-artifact@v4
+      with:
+        compression-level: 9
+        if-no-files-found: error
+        name: dashfaction-${{ env.GIT_CURRENT_COMMIT_HEAD_SHA }}-mingw
+        path: ${{ env.WORKING_DIRECTORY }}/bin
 
   build-msvc:
     runs-on: windows-latest
@@ -41,15 +58,28 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Set Current Git Commit Head SHA
+      run: echo "GIT_CURRENT_COMMIT_HEAD_SHA=$(git rev-parse --short=10 HEAD)" >> $GITHUB_ENV
+      shell: bash
+
     - name: Create Build Environment
-      run: cmake -E make_directory ${{github.workspace}}/build
+      run: cmake -E make_directory ${{ env.WORKING_DIRECTORY }}
+      shell: bash
 
     - name: Configure CMake
-      shell: cmd
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{ env.WORKING_DIRECTORY }}
       run: cmake .. -A Win32
+      shell: bash
 
     - name: Build
-      shell: cmd
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{ env.WORKING_DIRECTORY }}
       run: cmake --build . --config %BUILD_TYPE% -j 4
+      shell: bash
+
+    - name: Upload Patch Files
+      uses: actions/upload-artifact@v4
+      with:
+        compression-level: 9
+        if-no-files-found: error
+        name: dashfaction-${{ env.GIT_CURRENT_COMMIT_HEAD_SHA }}-msvc
+        path: ${{ env.WORKING_DIRECTORY }}/bin
