@@ -62,6 +62,7 @@ Name                          | Description
 `mute_player`                 | toggle processing of chat messages from a specific player
 `fps_counter`                 | toggle FPS counter
 `debug_event_msg`             | toggle tracking of event messages in console
+`gibs`                        | toggle gibs (characters exploding into parts)
 
 ### Server commands
 

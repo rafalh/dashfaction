@@ -161,6 +161,7 @@ namespace rf
 
     static auto& player_list = addr_as_ref<Player*>(0x007C75CC);
     static auto& local_player = addr_as_ref<Player*>(0x007C75D4);
+    static auto& player_gore_setting = addr_as_ref<int>(0x005A00F0);
 
     static auto& player_from_entity_handle = addr_as_ref<Player*(int entity_handle)>(0x004A3740);
     static auto& player_is_dead = addr_as_ref<bool(const Player *player)>(0x004A4920);

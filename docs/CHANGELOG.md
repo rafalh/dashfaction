@@ -50,6 +50,7 @@ Version 1.9.0 (not released yet)
 - Enable loading RFL version 300
 - Log a warning when RFL uses unsupported event class
 - Add support for high resolution GeoMod textures
+- Add gibs support based on RF PS2 demo (use `gibs` command to enable)
 
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded
