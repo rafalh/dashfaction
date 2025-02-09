@@ -6,9 +6,6 @@
 #include <cstdint>
 #include <common/config/CfgVar.h>
 
-template<typename T>
-struct EnumTrait;
-
 struct GameConfig
 {
     // Path
@@ -58,6 +55,7 @@ struct GameConfig
     CfgVar<bool> true_color_textures = true;
     CfgVar<bool> damage_screen_flash = true;
     CfgVar<bool> mesh_static_lighting = true;
+    CfgVar<bool> muzzle_flash = true;
     CfgVar<bool> glares = true;
     CfgVar<bool> show_enemy_bullets = true;
 
@@ -92,6 +90,7 @@ struct GameConfig
     CfgVar<float> reticle_scale = 1.0f;
     CfgVar<int> language = -1;
     CfgVar<bool> scoreboard_anim = false;
+    CfgVar<bool> spectate_mode_minimal_ui = false;
 
     // Misc
     CfgVar<bool> fast_start = true;
@@ -100,6 +99,7 @@ struct GameConfig
     CfgVar<bool> reduced_speed_in_background = false;
     CfgVar<bool> player_join_beep = false;
     CfgVar<bool> autosave = true;
+    CfgVar<bool> disguise_as_af = false;
 
     // Internal
     CfgVar<std::string> dash_faction_version{""};

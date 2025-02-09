@@ -33,6 +33,7 @@
 const char* g_rcon_cmd_whitelist[] = {
     "kick",
     "level",
+    "server_password",
     "map",
     "ban",
     "ban_ip",
@@ -86,6 +87,10 @@ void load_additional_server_config(rf::Parser& parser)
 
     if (parser.parse_optional("$DF Spawn Armor:")) {
         g_additional_server_config.spawn_armor = {parser.parse_float()};
+    }
+
+    if (parser.parse_optional("$DF CTF Flag Return Time:")) {
+        g_additional_server_config.ctf_flag_return_time_ms = parser.parse_int();
     }
 
     if (parser.parse_optional("$DF Hitsounds:")) {

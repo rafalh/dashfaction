@@ -24,7 +24,7 @@ static rf::Player* g_spectate_mode_target;
 static rf::Camera* g_old_target_camera = nullptr;
 static bool g_spectate_mode_enabled = false;
 static bool g_spawned_in_current_level = false;
-static bool g_spectate_mode_minimal_ui = false;
+static bool g_spectate_mode_follow_killer = false;
 
 void player_fpgun_set_player(rf::Player* pp);
 
@@ -204,6 +204,18 @@ bool multi_spectate_execute_action(rf::ControlConfigAction action, bool was_pres
     return false;
 }
 
+void multi_spectate_on_player_kill(rf::Player* victim, rf::Player* killer)
+{
+    if (!g_spectate_mode_enabled) {
+        return;
+    }
+    if (g_spectate_mode_follow_killer && g_spectate_mode_target == victim && killer != rf::local_player) {
+        // spectate killer if we were spectating victim
+        // avoid spectating ourselves if we somehow managed to kill the victim
+        multi_spectate_set_target_player(killer);
+    }
+}
+
 void multi_spectate_on_destroy_player(rf::Player* player)
 {
     if (player != rf::local_player) {
@@ -265,10 +277,21 @@ ConsoleCommand2 spectate_cmd{
 static ConsoleCommand2 spectate_mode_minimal_ui_cmd{
     "spectate_mode_minimal_ui",
     []() {
-        g_spectate_mode_minimal_ui = !g_spectate_mode_minimal_ui;
-        rf::console::print("Spectate mode minimal UI is {}", g_spectate_mode_minimal_ui ? "enabled" : "disabled");
+        g_game_config.spectate_mode_minimal_ui = !g_game_config.spectate_mode_minimal_ui;
+        g_game_config.save();
+        rf::console::print("Spectate mode minimal UI is {}",
+                           g_game_config.spectate_mode_minimal_ui ? "enabled" : "disabled");
     },
     "Toggles spectate mode minimal UI",
+};
+
+static ConsoleCommand2 spectate_mode_follow_killer_cmd{
+    "spectate_mode_follow_killer",
+    []() {
+        g_spectate_mode_follow_killer = !g_spectate_mode_follow_killer;
+        rf::console::printf("Follow killer mode is %s", g_spectate_mode_follow_killer ? "enabled" : "disabled");
+    },
+    "When a player you're spectating dies, automatically spectate their killer",
 };
 
 #if SPECTATE_MODE_SHOW_WEAPON
@@ -321,6 +344,7 @@ void multi_spectate_appy_patch()
 
     spectate_cmd.register_cmd();
     spectate_mode_minimal_ui_cmd.register_cmd();
+    spectate_mode_follow_killer_cmd.register_cmd();
 
     // Note: HUD rendering doesn't make sense because life and armor isn't synced
 
@@ -404,7 +428,7 @@ void multi_spectate_render()
     rf::Color white_clr{255, 255, 255, 255};
     rf::Color shadow_clr{0, 0, 0, 128};
 
-    if (!g_spectate_mode_minimal_ui) {
+    if (!g_game_config.spectate_mode_minimal_ui) {
         int title_x = scr_w / 2;
         int title_y = g_game_config.big_hud ? 250 : 150;
         draw_with_shadow(title_x, title_y, 2, 2, white_clr, shadow_clr, [=](int x, int y) {

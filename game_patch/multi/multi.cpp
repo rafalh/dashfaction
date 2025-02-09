@@ -1,10 +1,14 @@
+#include <algorithm>
 #include <regex>
 #include <xlog/xlog.h>
 #include <winsock2.h>
+#include <common/utils/list-utils.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/CodeInjection.h>
+#include <patch_common/AsmWriter.h>
 #include "multi.h"
 #include "multi_private.h"
+#include "server_internal.h"
 #include "../misc/misc.h"
 #include "../rf/os/os.h"
 #include "../rf/os/timer.h"
@@ -12,6 +16,8 @@
 #include "../rf/os/console.h"
 #include "../rf/weapon.h"
 #include "../rf/entity.h"
+#include "../rf/player/player.h"
+#include "../rf/localize.h"
 #include "../rf/ai.h"
 #include "../rf/item.h"
 
@@ -330,10 +336,36 @@ void multi_init_player(rf::Player* player)
     multi_kill_init_player(player);
 }
 
+std::string_view multi_game_type_name(const rf::NetGameType game_type) {
+    if (game_type == rf::NG_TYPE_DM) {
+        return std::string_view{rf::strings::deathmatch};
+    } else if (game_type == rf::NG_TYPE_CTF) {
+        return std::string_view{rf::strings::capture_the_flag};
+    } else {
+        if (game_type != rf::NG_TYPE_TEAMDM) {
+            xlog::warn(
+                "`multi_game_type_name`: {} is an invalid `NetGameType`",
+                static_cast<int>(game_type)
+            );
+        }
+        return std::string_view{rf::strings::team_deathmatch};
+    }
+};
+
+int multi_num_alive_players() {
+    return std::ranges::count_if(SinglyLinkedList{rf::player_list}, [] (const auto& p) {
+        return !rf::player_is_dead(&p) && !rf::player_is_dying(&p);
+    });
+}
+
 void multi_do_patch()
 {
     multi_limbo_init.install();
     multi_start_injection.install();
+
+    // Allow server to customize dropped flag return timer in ms
+    AsmWriter{0x00473B88}.push(g_additional_server_config.ctf_flag_return_time_ms); // blue flag
+    AsmWriter{0x00473B28}.push(g_additional_server_config.ctf_flag_return_time_ms); // red flag
 
     // Fix CTF flag not returning to the base if the other flag was returned when the first one was waiting
     ctf_flag_return_fix.install();

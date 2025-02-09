@@ -69,6 +69,26 @@ struct IUnknown;
 #endif
 #define D3DPRASTERCAPS_ZBIAS 0x00004000L
 
+// These aren't typically included in any of the MSVC headers
+#ifndef D3DDEVINFOID_TEXTUREMANAGER
+#define D3DDEVINFOID_TEXTUREMANAGER    1
+#endif
+#ifndef D3DDEVINFOID_D3DTEXTUREMANAGER
+#define D3DDEVINFOID_D3DTEXTUREMANAGER 2
+#endif
+#ifndef D3DDEVINFOID_TEXTURING
+#define D3DDEVINFOID_TEXTURING         3
+#endif
+#ifndef D3DDEVINFOID_VCACHE
+#define D3DDEVINFOID_VCACHE            4
+#endif
+#ifndef D3DDEVINFOID_RESOURCEMANAGER
+#define D3DDEVINFOID_RESOURCEMANAGER   5
+#endif
+#ifndef D3DDEVINFOID_VERTEXSTATS
+#define D3DDEVINFOID_VERTEXSTATS       6
+#endif
+
 typedef D3DLIGHT9 D3DLIGHT8;
 typedef D3DMATERIAL9 D3DMATERIAL8;
 typedef D3DVIEWPORT9 D3DVIEWPORT8;
@@ -172,6 +192,7 @@ struct D3DADAPTER_IDENTIFIER8
 };
 
 bool SupportsPalettes();
+bool IsDepthStencil(D3DFORMAT &format);
 
 void ConvertCaps(D3DCAPS9 &input, D3DCAPS8 &output);
 void ConvertVolumeDesc(D3DVOLUME_DESC &input, D3DVOLUME_DESC8 &output);

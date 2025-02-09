@@ -2,7 +2,7 @@
 #define SrcRootDir ".."
 #define BinDir "..\build\Release\bin"
 #define PatchesDir "patches\output"
-#define AppVer "1.8.1-dev"
+#define AppVer "1.9.0-dev"
 
 [Setup]
 AppId={{BDD60DE7-9374-463C-8E74-8227EB03E28F}
@@ -175,36 +175,36 @@ begin
         '4140f7619b6427c170542c66178b47bd48795a99':
             begin end;
         'ddbb3e4fa89301eca9f0f547c93a18c18b4bc2ff':
-            AddGameExeBSDiffPatch('1.20 GR --> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.20 GR to 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
         '911e3c2d767e56b7b2d5e07ffe07372c82b9dd9d':
-            AddGameExeBSDiffPatch('1.20 FR --> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.20 FR to 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
         'abc97f3599caf50f540865a80e34c3feb76767a0':
-            AddGameExeBSDiffPatch('1.21 Steam --> 1.20 NA (RF.exe patch)', 'RF-1.21-steam.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.21 Steam to 1.20 NA (RF.exe patch)', 'RF-1.21-steam.exe.mbsdiff');
         'd3e42d1d24ad730b28d3e562042bd2c8cf2ab64f':
-            AddGameExeBSDiffPatch('1.21 --> 1.20 NA (RF.exe patch)', 'RF-1.21.exe.mbsdiff');
+            AddGameExeBSDiffPatch('1.21 to 1.20 NA (RF.exe patch)', 'RF-1.21.exe.mbsdiff');
         '23b93a5e72c9f31b3d365ce5feffc9f35ae1ab96':
-            AddRTPatch('1.10 NA --> 1.20 NA (official patch)', 'rf120_na.rtp');
+            AddRTPatch('1.10 NA to 1.20 NA (official patch)', 'rf120_na.rtp');
         'a03f976e7f7dfa99178af32681ba4ca6b1e3d765':
         begin
-            AddRTPatch('1.10 GR --> 1.20 GR (official patch)', 'rf120_gr.rtp');
-            AddGameExeBSDiffPatch('1.20 GR --> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
+            AddRTPatch('1.10 GR to 1.20 GR (official patch)', 'rf120_gr.rtp');
+            AddGameExeBSDiffPatch('1.20 GR to 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
         end;
         '73d53d62ec6ded94d8989ca238e37a452b881929':
         begin
-            AddRTPatch('1.10 FR --> 1.20 FR (official patch)', 'rf120_fr.rtp');
-            AddGameExeBSDiffPatch('1.20 FR --> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
+            AddRTPatch('1.10 FR to 1.20 FR (official patch)', 'rf120_fr.rtp');
+            AddGameExeBSDiffPatch('1.20 FR to 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
         end;
         '640526799fed170ce110c71e1bcf0b23b063d1da':
-            AddRTPatch('1.00 NA --> 1.20 NA (official patch)', 'rf120_na.rtp');
+            AddRTPatch('1.00 NA to 1.20 NA (official patch)', 'rf120_na.rtp');
         '2c11d549787f6af655c37e8ef2c53293d02dbfbc':
         begin
-            AddRTPatch('1.00 GR --> 1.20 GR (official patch)', 'rf120_gr.rtp');
-            AddGameExeBSDiffPatch('1.20 GR --> 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
+            AddRTPatch('1.00 GR to 1.20 GR (official patch)', 'rf120_gr.rtp');
+            AddGameExeBSDiffPatch('1.20 GR to 1.20 NA (RF.exe patch)', 'RF-1.20-gr.exe.mbsdiff');
         end;
         'fc6d877d5b423c004886e1f73bfbe72ad4d55e2d':
         begin
-            AddRTPatch('1.00 FR --> 1.20 FR (official patch)', 'rf120_fr.rtp');
-            AddGameExeBSDiffPatch('1.20 FR --> 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
+            AddRTPatch('1.00 FR to 1.20 FR (official patch)', 'rf120_fr.rtp');
+            AddGameExeBSDiffPatch('1.20 FR to 1.20 NA (RF.exe patch)', 'RF-1.20-fr.exe.mbsdiff');
         end;
         else
         begin
@@ -220,7 +220,7 @@ begin
         TablesVppSHA1 := GetSHA1OfFile(TablesVppPath);
         case TablesVppSHA1 of
             '672ba832f7133b93d576f84d971331597d93fce6':
-                AddBSDiffPatch('1.21 GR GOG --> 1.20 NA (tables.vpp patch)', 'tables-gog-gr.vpp.mbsdiff', 'tables.vpp', 'tables.vpp');
+                AddBSDiffPatch('1.21 GR GOG to 1.20 NA (tables.vpp patch)', 'tables-gog-gr.vpp.mbsdiff', 'tables.vpp', 'tables.vpp');
         end;
     end
     else
@@ -353,7 +353,7 @@ begin
     begin
         // Create a backup (if it does not exist already)
         Log('Creating RedFaction.exe backup: ' + GetGameDir('RedFaction.exe.bak'));
-        FileCopy(GetGameDir('RedFaction.exe'), GetGameDir('RedFaction.exe.bak'), True);
+        CopyFile(GetGameDir('RedFaction.exe'), GetGameDir('RedFaction.exe.bak'), True);
         Log('Deleting RedFaction.exe');
         DeleteFile(GetGameDir('RedFaction.exe'));
         Log('Creating RedFaction.exe symlink: ' + GetGameDir('RedFaction.exe'));

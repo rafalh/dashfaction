@@ -53,7 +53,7 @@ class Direct3DDevice8 : public IDirect3DDevice8
 	Direct3DDevice8 &operator=(const Direct3DDevice8 &) = delete;
 
 public:
-	Direct3DDevice8(Direct3D8 *d3d, IDirect3DDevice9 *ProxyInterface, BOOL EnableZBufferDiscarding = FALSE);
+	Direct3DDevice8(Direct3D8 *d3d, IDirect3DDevice9 *ProxyInterface, DWORD BehaviorFlags, BOOL EnableZBufferDiscarding = FALSE);
 	~Direct3DDevice8();
 
 	IDirect3DDevice9 *GetProxyInterface() const { return ProxyInterface; }
@@ -161,7 +161,7 @@ public:
 
 private:
 	void ApplyClipPlanes();
-	void ReleaseShaders();
+	void ReleaseShadersAndStateBlocks();
 
 	Direct3D8 *const D3D;
 	IDirect3DDevice9 *const ProxyInterface;
@@ -170,13 +170,15 @@ private:
 	DWORD CurrentVertexShaderHandle = 0, CurrentPixelShaderHandle = 0;
 	IDirect3DSurface9 *pCurrentRenderTarget = nullptr;
 	bool PaletteFlag = false;
+	bool IsRecordingState = false;
+	bool IsMixedVPModeDevice = false;
 
 	static constexpr size_t MAX_CLIP_PLANES = 6;
 	float StoredClipPlanes[MAX_CLIP_PLANES][4] = {};
 	DWORD ClipPlaneRenderState = 0;
 
-	// Store Shader Handles so they can be destroyed later to mirror D3D8 behavior 
-	std::unordered_set<DWORD> PixelShaderHandles, VertexShaderHandles;
+	// Store Shader Handles and State Block Tokens so they can be destroyed later to mirror D3D8 behavior
+	std::unordered_set<DWORD> PixelShaderHandles, VertexShaderHandles, StateBlockTokens;
 	unsigned int VertexShaderAndDeclarationCount = 0;
 };
 

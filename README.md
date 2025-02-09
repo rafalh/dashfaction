@@ -62,6 +62,8 @@ Name                          | Description
 `mute_player`                 | toggle processing of chat messages from a specific player
 `fps_counter`                 | toggle FPS counter
 `debug_event_msg`             | toggle tracking of event messages in console
+`gibs`                        | toggle gibs (characters exploding into parts)
+`muzzle_flash`                | toggle muzzle flash
 
 ### Server commands
 
@@ -77,6 +79,8 @@ Name                     | Description
 `time_limit value`       | set time limit
 `geomod_limit value`     | set geomod limit
 `capture_limit value`    | set capture limit
+`server_password`        | set server password
+`server_rcon_password`   | set server RCON password
 
 Compatibility
 -------------
@@ -159,6 +163,8 @@ Configuration example:
     $DF Spawn Health: 100
     // Initial player armor after spawn
     $DF Spawn Armor: 0
+    // Time before a dropped CTF flag will return to base in ms (default is same as stock RF - 25000)
+    $DF CTF Flag Return Time: 25000
     // Enable hit-sounds
     $DF Hitsounds: true
         // Sound used for hit notification
