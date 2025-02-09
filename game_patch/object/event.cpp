@@ -216,8 +216,11 @@ CodeInjection event_load_level_turn_on_injection{
 CodeInjection level_read_events_unknown_class_injection{
     0x0046290A,
     [](auto& regs) {
+        int event_type = regs.ebp;
         auto& class_name = addr_as_ref<rf::String>(regs.esp + 0x98 - 0x44);
-        xlog::warn("Unsupported event: {}", class_name.c_str());
+        if (event_type == -1) {
+            xlog::warn("Unsupported event: {}", class_name.c_str());
+        }
     },
 };
 
