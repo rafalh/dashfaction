@@ -77,6 +77,8 @@ Name                     | Description
 `time_limit value`       | set time limit
 `geomod_limit value`     | set geomod limit
 `capture_limit value`    | set capture limit
+`server_password`        | set server password
+`server_rcon_password`   | set server RCON password
 
 Compatibility
 -------------

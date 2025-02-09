@@ -19,10 +19,10 @@ ConsoleCommand2 dot_cmd{
         for (i32 i = 0; i < rf::console::num_commands; ++i) {
             const rf::console::Command* cmd = g_commands_buffer[i];
             if (string_contains_ignore_case(cmd->name, pattern)
-                || (cmd->help && string_contains_ignore_case(cmd->help, pattern))) {    
-                if (cmd->help) {   
-                    rf::console::print("{} - {}", cmd->name, cmd->help);        
-                } else { 
+                || (cmd->help && string_contains_ignore_case(cmd->help, pattern))) {
+                if (cmd->help) {
+                    rf::console::print("{} - {}", cmd->name, cmd->help);
+                } else {
                     rf::console::print("{}", cmd->name);
                 }
             }
@@ -100,6 +100,34 @@ DcCommandAlias map_info_cmd{
     level_info_cmd,
 };
 
+ConsoleCommand2 server_rcon_password_cmd{
+    "server_rcon_password",
+    [](std::optional<std::string> new_rcon_password) {
+        if (!rf::is_multi || !rf::is_dedicated_server) {
+            rf::console::print("This command can only be run on a dedicated server!");
+            return;
+        }
+
+        if (new_rcon_password) {
+            if (new_rcon_password->size() + 1 > sizeof(rf::rcon_password)) {
+                // game limits client requests to 16 characters
+                rf::console::print("Server rcon password cannot exceed 16 characters.");
+                return;
+            }
+
+            std::strncpy(rf::rcon_password, new_rcon_password->c_str(), sizeof(rf::rcon_password) - 1);
+            rf::rcon_password[sizeof(rf::rcon_password) - 1] = '\0'; // null terminator
+            rf::console::print("Server rcon password set to: {}", rf::rcon_password);
+        }
+        else {
+            rf::rcon_password[0] = '\0';
+            rf::console::print("Server rcon password removed.");
+        }
+    },
+    "Set or remove the server rcon password.",
+    "server_rcon_password <password>",
+};
+
 ConsoleCommand2 version_cmd{
     "version",
     []() {
@@ -119,7 +147,7 @@ ConsoleCommand2 server_password_cmd{
         if (!rf::is_multi || !rf::is_server) {
             rf::console::print("This command can only be run as a server!");
             return;
-        }            
+        }
 
         if (new_password) {
             rf::netgame.password = new_password.value().c_str();
@@ -247,6 +275,7 @@ void console_commands_init()
     map_cmd.register_cmd();
     level_info_cmd.register_cmd();
     map_info_cmd.register_cmd();
+    server_rcon_password_cmd.register_cmd();
     version_cmd.register_cmd();
     ver_cmd.register_cmd();
     server_password_cmd.register_cmd();

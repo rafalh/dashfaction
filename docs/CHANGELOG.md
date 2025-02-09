@@ -57,6 +57,7 @@ Version 1.9.0 (not released yet)
 - Fix cockpit not rendering for any jeeps after the first one entered each level load
 - Add current server player count to scoreboard
 - Add `server_password` command
+- Add `server_rcon_password` command
 - Add `$DF CTF Flag Return Time` option in dedicated server config
 - Add mod name to main menu
 - Make value of `spectate_mode_minimal_ui` persist between game launches
