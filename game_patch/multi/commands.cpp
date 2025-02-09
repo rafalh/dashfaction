@@ -5,6 +5,7 @@
 #include "../rf/level.h"
 #include "../rf/player/player.h"
 #include "../rf/crt.h"
+#include "server.h"
 #include "multi.h"
 #include <patch_common/AsmWriter.h>
 #include <patch_common/CallHook.h>
@@ -41,6 +42,11 @@ void load_prev_level()
     else {
         rf::multi_change_level(g_prev_level.c_str());
     }
+}
+
+void load_rand_level()
+{
+    rf::multi_change_level(get_rand_level_filename());
 }
 
 bool validate_is_server()
@@ -95,6 +101,17 @@ ConsoleCommand2 map_next_cmd{
         }
     },
     "Load next level",
+};
+
+ConsoleCommand2 map_rand_cmd{
+    "map_rand",
+    []() {
+        if (validate_is_server() && validate_not_limbo()) {
+            rf::multi_chat_say("\xA6 Loading random level from rotation", false);
+            load_rand_level();
+        }
+    },
+    "Load random level from rotation",
 };
 
 ConsoleCommand2 map_prev_cmd{
@@ -194,6 +211,7 @@ void init_server_commands()
     map_ext_cmd.register_cmd();
     map_rest_cmd.register_cmd();
     map_next_cmd.register_cmd();
+    map_rand_cmd.register_cmd();
     map_prev_cmd.register_cmd();
 
     AsmWriter(0x0047B6F0).jmp(ban_cmd_handler_hook);

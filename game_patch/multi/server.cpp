@@ -40,6 +40,7 @@ const char* g_rcon_cmd_whitelist[] = {
     "map_ext",
     "map_rest",
     "map_next",
+    "map_rand",
     "map_prev",
 };
 
@@ -74,6 +75,7 @@ void load_additional_server_config(rf::Parser& parser)
     parse_vote_config("Vote Extend", g_additional_server_config.vote_extend, parser);
     parse_vote_config("Vote Restart", g_additional_server_config.vote_restart, parser);
     parse_vote_config("Vote Next", g_additional_server_config.vote_next, parser);
+    parse_vote_config("Vote Random", g_additional_server_config.vote_rand, parser);
     parse_vote_config("Vote Previous", g_additional_server_config.vote_previous, parser);
     if (parser.parse_optional("$DF Spawn Protection Duration:")) {
         g_additional_server_config.spawn_protection_duration_ms = parser.parse_uint();
@@ -169,6 +171,10 @@ void load_additional_server_config(rf::Parser& parser)
         }
     }
 
+    if (parser.parse_optional("$DF Random Rotation:")) {
+        g_additional_server_config.random_rotation = parser.parse_bool();
+    }
+
     if (parser.parse_optional("$DF Send Player Stats Message:")) {
         g_additional_server_config.stats_message_enabled = parser.parse_bool();
     }
@@ -207,6 +213,11 @@ CodeInjection dedicated_server_load_config_patch{
     [](auto& regs) {
         auto& parser = *reinterpret_cast<rf::Parser*>(regs.esp - 4 + 0x4C0 - 0x470);
         load_additional_server_config(parser);
+
+        // if random rotation is on, shuffle rotation on server launch
+        if (g_additional_server_config.random_rotation) {
+            shuffle_level_array();
+        }
 
         // Insert server name in window title when hosting dedicated server
         std::string wnd_name;
@@ -308,6 +319,32 @@ static void send_private_message_with_stats(rf::Player* player)
         accuracy, stats->num_shots_hit, stats->num_shots_fired,
         stats->damage_given, stats->damage_received);
     send_chat_line_packet(str.c_str(), player);
+}
+
+void shuffle_level_array()
+{
+    std::ranges::shuffle(rf::netgame.levels, g_rng);
+    xlog::info("Shuffled level rotation");
+}
+
+const char* get_rand_level_filename()
+{
+    const std::size_t num_levels = rf::netgame.levels.size();
+
+    if (num_levels <= 1) {
+        // nowhere else to go, we're staying here!
+        return rf::level_filename_to_load.c_str();
+    }
+
+    std::uniform_int_distribution<std::size_t> dist_levels(0, num_levels - 1);
+    std::size_t rand_level_index = dist_levels(g_rng);
+
+    // avoid selecting current level filename (unless it appears more than once on map list)
+    if (rf::netgame.levels[rand_level_index] == rf::level_filename_to_load) {
+        rand_level_index = (rand_level_index + 1) % num_levels;
+    }
+
+    return rf::netgame.levels[rand_level_index].c_str();
 }
 
 bool handle_server_chat_command(std::string_view server_command, rf::Player* sender)
@@ -664,6 +701,18 @@ CodeInjection multi_limbo_init_injection{
     },
 };
 
+CodeInjection multi_level_init_injection{
+    0x0046E450,
+    []() {
+        if (g_additional_server_config.random_rotation && rf::netgame.current_level_index ==
+                    rf::netgame.levels.size() - 1 && rf::netgame.levels.size() > 1) {
+                // if this is the last level in the list and dynamic rotation is on, shuffle
+                xlog::info("Reached end of level rotation, shuffling");
+                shuffle_level_array();
+            }
+    },
+};
+
 void server_init()
 {
     // Override rcon command whitelist
@@ -729,6 +778,9 @@ void server_init()
 
     // Reduce limbo duration if server is empty
     multi_limbo_init_injection.install();
+
+    // Shuffle rotation when the last map in the list is loaded
+    multi_level_init_injection.install();
 }
 
 void server_do_frame()

@@ -73,6 +73,7 @@ Name                     | Description
 `map_ext`                | extend round
 `map_rest`               | restart current level
 `map_next`               | load next level
+`map_rand`               | load random level from rotation
 `map_prev`               | load previous level
 `kill_limit value`       | set kill limit
 `time_limit value`       | set time limit
@@ -152,6 +153,8 @@ Configuration example:
     $DF Vote Restart: true
     // Enable vote next
     $DF Vote Next: true
+    // Enable vote random
+    $DF Vote Random: true
     // Enable vote previous
     $DF Vote Previous: true
     // Duration of player invulnerability after respawn in ms (default is the same as in stock RF - 1500)
@@ -196,6 +199,8 @@ Configuration example:
     $DF Force Player Character: "enviro_parker"
     // Maximal horizontal FOV that clients can use for level rendering (unlimited by default)
     //$DF Max FOV: 125
+    // Shuffle the list of levels when the server starts and at the end of each full rotation
+    $DF Random Rotation: false
     // If enabled a private message with player statistics is sent after each round.
     //$DF Send Player Stats Message: true
     // Send a chat message to players when they join the server ($PLAYER is replaced by player name)

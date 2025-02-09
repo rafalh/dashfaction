@@ -68,6 +68,9 @@ Version 1.9.0 (not released yet)
 - Add `spectate_mode_follow_killer` command (when player you are spectating dies, spectate their killer)
 - Remove level editor popups that stop user from navigating between modes until rebuilding
 - Add `muzzle_flash` command
+- Add `map_rand` command to change to a random level on the rotation
+- Add `vote rand` vote type to initiate a level change to a random level on the rotation
+- Add `$DF Random Rotation` option in dedicated server config
 
 [@is-this-c](https://github.com/is-this-c)
 - Support `©` and `•` in TrueType fonts
