@@ -703,13 +703,13 @@ CodeInjection multi_limbo_init_injection{
 
 CodeInjection multi_level_init_injection{
     0x0046E450,
-    [](auto& regs) {
+    []() {
         if (g_additional_server_config.dynamic_rotation && rf::netgame.current_level_index ==
                     rf::netgame.levels.size() - 1 && rf::netgame.levels.size() > 1) {
                 // if this is the last level in the list and dynamic rotation is on, shuffle
                 xlog::info("Reached end of level rotation, shuffling");
                 shuffle_level_array();
-            }    
+            }
     },
 };
 
