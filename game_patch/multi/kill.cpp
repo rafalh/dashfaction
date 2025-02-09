@@ -9,6 +9,7 @@
 #include "../rf/localize.h"
 #include "../rf/multi.h"
 #include "../rf/weapon.h"
+#include "../hud/multi_spectate.h"
 #include "server_internal.h"
 
 bool kill_messages = true;
@@ -148,6 +149,8 @@ void on_player_kill(rf::Player* killed_player, rf::Player* killer_player)
         }
 
         multi_apply_kill_reward(killer_player);
+
+        multi_spectate_on_player_kill(killed_player, killer_player);
     }
 }
 
