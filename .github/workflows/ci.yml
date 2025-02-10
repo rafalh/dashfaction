@@ -6,50 +6,70 @@ on:
 
 env:
   BUILD_TYPE: Release
-
+  SCCACHE_GHA_ENABLED: "true"
+  
 jobs:
   build-mingw:
     runs-on: ubuntu-24.04
 
     steps:
-
+    - uses: actions/checkout@v4
+    - uses: mozilla-actions/sccache-action@v0.0.7
+    
     - name: Install packages
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
         sudo apt-get install --no-install-recommends g++-mingw-w64-i686-posix ninja-build wine32 wine
-
-    - uses: actions/checkout@v4
-
-    - name: Create Build Environment
-      run: cmake -E make_directory ${{github.workspace}}/build
+          
+    - name: Create build environment
+      run: cmake -E make_directory ${{ github.workspace }}/build
 
     - name: Configure CMake
-      working-directory: ${{github.workspace}}/build
-      run: cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake
-
-    - name: Print nproc
-      run: nproc
+      working-directory: ${{ github.workspace }}/build
+      run: |
+        cmake \
+          .. \
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+          -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake \
 
     - name: Build
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{ github.workspace }}/build
       run: cmake --build . -j $(nproc)
-
+      
   build-msvc:
-    runs-on: windows-latest
-
+    runs-on: windows-2022
+    
     steps:
     - uses: actions/checkout@v4
+    - uses: mozilla-actions/sccache-action@v0.0.7
 
-    - name: Create Build Environment
-      run: cmake -E make_directory ${{github.workspace}}/build
+    - name: Install Ninja
+      run: choco install ninja
+
+    - name: Find Launch-VsDevShell.ps1
+      run: |
+        $vs = (Get-CimInstance MSFT_VSInstance -Namespace root/cimv2/vs).InstallLocation
+        Write-Output VS_DEV_SHELL=$vs\Common7\Tools\Launch-VsDevShell.ps1 >> $env:GITHUB_ENV
+         
+    - name: Create build environment
+      run: cmake -E make_directory ${{ github.workspace }}\build
 
     - name: Configure CMake
-      shell: cmd
-      working-directory: ${{github.workspace}}/build
-      run: cmake .. -A Win32
+      working-directory: ${{ github.workspace }}/build
+      run: |
+        &$env:VS_DEV_SHELL -HostArch amd64 -Arch x86 -SkipAutomaticLocation
+        cmake `
+          .. `
+          -GNinja `
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache `
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache `
+          -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE"
 
     - name: Build
-      shell: cmd
-      working-directory: ${{github.workspace}}/build
-      run: cmake --build . --config %BUILD_TYPE% -j 4
+      working-directory: ${{ github.workspace }}/build
+      run: |
+        &$env:VS_DEV_SHELL -HostArch amd64 -Arch x86  -SkipAutomaticLocation
+        cmake --build . -j $env:NUMBER_OF_PROCESSORS
