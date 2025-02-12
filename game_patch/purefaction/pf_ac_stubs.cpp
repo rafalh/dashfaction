@@ -12,8 +12,9 @@ void pf_ac_init_player(rf::Player*)
 {
 }
 
-void pf_ac_verify_player(rf::Player*)
+void pf_ac_verify_player(rf::Player* const player)
 {
+    pf_player_verified(player, pf_pure_status::none);
 }
 
 pf_pure_status pf_ac_get_pure_status(rf::Player*)
