@@ -49,18 +49,18 @@ jobs:
     - name: Install Ninja
       run: choco install ninja
 
-    - name: Find Launch-VsDevShell.ps1
+    - name: Add Launch-VsDevShell.ps1 to PATH
       run: |
         $vs = (Get-CimInstance MSFT_VSInstance -Namespace root/cimv2/vs).InstallLocation
-        Write-Output VS_DEV_SHELL=$vs\Common7\Tools\Launch-VsDevShell.ps1 >> $env:GITHUB_ENV
-
+        Write-Output $vs\Common7\Tools >> $env:GITHUB_PATH
+         
     - name: Create build environment
       run: cmake -E make_directory ${{ github.workspace }}\build
 
     - name: Configure CMake
       working-directory: ${{ github.workspace }}/build
       run: |
-        &$env:VS_DEV_SHELL -HostArch amd64 -Arch x86 -SkipAutomaticLocation
+        Launch-VsDevShell.ps1 -HostArch amd64 -Arch x86 -SkipAutomaticLocation
         cmake `
           .. `
           -GNinja `
@@ -71,5 +71,5 @@ jobs:
     - name: Build
       working-directory: ${{ github.workspace }}/build
       run: |
-        &$env:VS_DEV_SHELL -HostArch amd64 -Arch x86 -SkipAutomaticLocation
+        Launch-VsDevShell.ps1 -HostArch amd64 -Arch x86 -SkipAutomaticLocation
         cmake --build . -j $env:NUMBER_OF_PROCESSORS
