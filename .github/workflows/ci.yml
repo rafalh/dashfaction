@@ -23,20 +23,19 @@ jobs:
         sudo apt-get install --no-install-recommends g++-mingw-w64-i686-posix ninja-build wine32 wine
 
     - name: Create build environment
-      run: cmake -E make_directory ${{ github.workspace }}/build
+      run: cmake -E make_directory ./build
 
     - name: Configure CMake
-      working-directory: ${{ github.workspace }}/build
+      working-directory: ./build
       run: |
-        cmake \
-          .. \
-          -DCMAKE_C_COMPILER_LAUNCHER=sccache \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
-          -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake \
+        cmake .. \
+          -D CMAKE_C_COMPILER_LAUNCHER=sccache \
+          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
+          -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
+          -D CMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake \
 
     - name: Build
-      working-directory: ${{ github.workspace }}/build
+      working-directory: ./build
       run: cmake --build . -j $(nproc)
 
   build-msvc:
@@ -52,23 +51,23 @@ jobs:
     - name: Add Launch-VsDevShell.ps1 to PATH
       run: |
         $vs = (Get-CimInstance MSFT_VSInstance -Namespace root/cimv2/vs).InstallLocation
-        Write-Output $vs\Common7\Tools >> $env:GITHUB_PATH
+        Write-Output (Join-Path $vs Common7\Tools) >> $env:GITHUB_PATH
          
     - name: Create build environment
-      run: cmake -E make_directory ${{ github.workspace }}\build
+      run: cmake -E make_directory .\build
 
     - name: Configure CMake
-      working-directory: ${{ github.workspace }}/build
+      working-directory: ./build
       run: |
         Launch-VsDevShell.ps1 -HostArch amd64 -Arch x86 -SkipAutomaticLocation
-        cmake `
-          .. `
-          -GNinja `
-          -DCMAKE_C_COMPILER_LAUNCHER=sccache `
-          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache `
-          -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE"
+        cmake .. `
+          -G Ninja `
+          -D CMAKE_C_COMPILER_LAUNCHER=sccache `
+          -D CMAKE_CXX_COMPILER_LAUNCHER=sccache `
+          -D CMAKE_BUILD_TYPE="$env:BUILD_TYPE"
 
     - name: Build
-      working-directory: ${{ github.workspace }}/build
+      working-directory: ./build
       run: |
-        cmake --build . -j $env:NUMBER_OF_PROCESSORS
+        Launch-VsDevShell.ps1 -HostArch amd64 -Arch x86 -SkipAutomaticLocation
+        cmake --build ./build -j $env:NUMBER_OF_PROCESSORS
