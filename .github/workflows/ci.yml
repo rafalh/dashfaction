@@ -71,5 +71,4 @@ jobs:
     - name: Build
       working-directory: ${{ github.workspace }}/build
       run: |
-        Launch-VsDevShell.ps1 -HostArch amd64 -Arch x86 -SkipAutomaticLocation
         cmake --build . -j $env:NUMBER_OF_PROCESSORS
