@@ -43,7 +43,7 @@ Source: "{#BinDir}\DashEditor.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\DashFaction.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\d3d8to9.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BinDir}\dashfaction.vpp"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SrcRootDir}\resources\licensing-info.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#BinDir}\licensing-info.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SrcRootDir}\resources\RED.exe.manifest"; DestDir: "{code:GetGameDir}"; Flags: ignoreversion; Tasks: redvisualstyles
 ; RTPatch patches (extracted from official 1.20 patches)
