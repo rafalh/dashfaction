@@ -13,7 +13,7 @@ static CrashHandlerConfig g_config;
 
 void CrashHandlerStubProcessException(PEXCEPTION_POINTERS exception_ptrs, DWORD thread_id)
 {
-    xlog::error("Unhandled exception: ExceptionAddress=0x{} ExceptionCode=0x{:x}",
+    xlog::error("Unhandled exception: ExceptionAddress={} ExceptionCode=0x{:x}",
         exception_ptrs->ExceptionRecord->ExceptionAddress, exception_ptrs->ExceptionRecord->ExceptionCode);
     for (unsigned i = 0; i < exception_ptrs->ExceptionRecord->NumberParameters; ++i)
         xlog::error("ExceptionInformation[{}]=0x{:x}", i, exception_ptrs->ExceptionRecord->ExceptionInformation[i]);
