@@ -7,6 +7,7 @@
 #include "../rf/input.h"
 #include "../rf/crt.h"
 #include "../main/main.h"
+#include "../purefaction/pf_ac.h"
 #include "win32_console.h"
 #include <xlog/xlog.h>
 
@@ -38,6 +39,10 @@ LRESULT WINAPI wnd_proc(HWND wnd_handle, UINT msg, WPARAM w_param, LPARAM l_para
     if (rf::main_wnd && wnd_handle != rf::main_wnd) {
         xlog::warn("Got unknown window in the window procedure: hwnd {} msg {}",
             static_cast<void*>(wnd_handle), msg);
+    }
+
+    if (!pf_ac_check_wnd_msg(msg, w_param, l_param)) {
+        return DefWindowProcA(wnd_handle, msg, w_param, l_param);
     }
 
     for (int i = 0; i < rf::num_msg_handlers; ++i) {

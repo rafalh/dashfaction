@@ -78,6 +78,7 @@ Version 1.9.0 (not released yet)
 - Search command descriptions in `.` command
 - Improve PF network protocol compatibility
 - Add a spawned player count to the scoreboard
+- Improve client-side anti-cheat
 
 [@Mystyle-48](https://github.com/Mystyle-48)
 - Simplify installation detection in setup and launcher

@@ -36,6 +36,7 @@
 #include "../rf/os/os.h"
 #include "../rf/save_restore.h"
 #include "../rf/gameseq.h"
+#include "../purefaction/pf_ac.h"
 
 #ifdef HAS_EXPERIMENTAL
 #include "../experimental/experimental.h"
@@ -66,6 +67,7 @@ CodeInjection after_full_game_init_hook{
         console_init();
         multi_after_full_game_init();
         debug_init();
+        pf_ac_init();
 
         xlog::info("Game fully initialized");
         xlog::LoggerConfig::get().flush_appenders();
