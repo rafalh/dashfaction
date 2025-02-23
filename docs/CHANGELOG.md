@@ -52,6 +52,7 @@ Version 1.9.0 (not released yet)
 - Add support for high resolution GeoMod textures
 - Add gibs support based on RF PS2 demo (use `gibs` command to enable)
 - Add muzzle flash option in the launcher
+- Fix compatibility with misbehaving GPU drivers which report support for texture formats which they don't actually support (e.g. VirtualBox)
 
 [@GooberRF](https://github.com/GooberRF)
 - Fix crash when `verify_level` command is run without a level being loaded

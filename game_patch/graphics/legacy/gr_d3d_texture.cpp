@@ -33,10 +33,16 @@ class D3DTextureFormatSelector
     D3DFORMAT find_best_format(D3DFORMAT (&&allowed)[N])
     {
         for (auto d3d_fmt : allowed) {
-            auto hr = rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat, 0,
-                D3DRTYPE_TEXTURE, d3d_fmt);
+            // Note: CheckDeviceFormat sometimes returns success even if format is not supported
+            // (e.g. D3DFMT_A4R4G4B4 in VirtualBox...). To make sure format is supported create a 1x1 texture
+            IDirect3DTexture8* texture = nullptr;
+            auto hr = rf::gr::d3d::device->CreateTexture(1, 1, 1, 0, d3d_fmt, D3DPOOL_MANAGED, &texture);
             if (SUCCEEDED(hr)) {
+                texture->Release();
                 return d3d_fmt;
+            }
+            else {
+                xlog::info("Texture format not supported: {}", static_cast<int>(d3d_fmt));
             }
         }
         return D3DFMT_UNKNOWN;
@@ -63,12 +69,12 @@ public:
             argb_4444_format_ = find_best_format({D3DFMT_A4R4G4B4, D3DFMT_A1R5G5B5});
             a_8_format_ = find_best_format({D3DFMT_A8, D3DFMT_A4R4G4B4, D3DFMT_A1R5G5B5});
         }
-        xlog::debug("rgb_888_format {}", static_cast<int>(rgb_888_format_));
-        xlog::debug("rgba_8888_format {}", static_cast<int>(rgba_8888_format_));
-        xlog::debug("rgb_565_format {}", static_cast<int>(rgb_565_format_));
-        xlog::debug("argb_1555_format {}", static_cast<int>(argb_1555_format_));
-        xlog::debug("argb_4444_format {}", static_cast<int>(argb_4444_format_));
-        xlog::debug("a_8_format {}", static_cast<int>(a_8_format_));
+        xlog::info("rgb_888_format {}", static_cast<int>(rgb_888_format_));
+        xlog::info("rgba_8888_format {}", static_cast<int>(rgba_8888_format_));
+        xlog::info("rgb_565_format {}", static_cast<int>(rgb_565_format_));
+        xlog::info("argb_1555_format {}", static_cast<int>(argb_1555_format_));
+        xlog::info("argb_4444_format {}", static_cast<int>(argb_4444_format_));
+        xlog::info("a_8_format {}", static_cast<int>(a_8_format_));
     }
 
     D3DFORMAT select(rf::bm::Format bm_format)
@@ -365,6 +371,14 @@ static FunHook<void(int)> gr_d3d_mark_texture_dirty_hook{
     },
 };
 
+
+CodeInjection gr_d3d_texture_init_cache_injection{
+    0x0055B4C0,
+    []() {
+        g_texture_format_selector.init();
+    }
+};
+
 void gr_d3d_texture_apply_patch()
 {
     gr_d3d_set_texture_data_hook.install();
@@ -376,6 +390,7 @@ void gr_d3d_texture_apply_patch()
     //gr_d3d_set_state_and_texture_hook.install();
     gr_d3d_lock_hook.install();
     gr_d3d_mark_texture_dirty_hook.install();
+    gr_d3d_texture_init_cache_injection.install();
 
     // True Color textures (is it used?)
     if (g_game_config.res_bpp == 32 && g_game_config.true_color_textures) {
@@ -394,9 +409,4 @@ void gr_d3d_texture_device_lost()
         gr_d3d_free_texture_hook.call_target(*tslot);
     }
     g_default_pool_tslots.clear();
-}
-
-void gr_d3d_texture_init()
-{
-    g_texture_format_selector.init();
 }

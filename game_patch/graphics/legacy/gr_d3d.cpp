@@ -215,8 +215,6 @@ CodeInjection update_pp_hook{
 
         // Override depth format to avoid card specific hackfixes that makes it different on Nvidia and AMD
         rf::gr::d3d::pp.AutoDepthStencilFormat = determine_depth_buffer_format(rf::gr::d3d::pp.BackBufferFormat);
-
-        gr_d3d_texture_init();
     },
 };
 
