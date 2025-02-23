@@ -29,7 +29,7 @@ IDirect3DSurface8* get_cached_depth_stencil_surface()
             rf::gr::d3d::pp.BackBufferWidth, rf::gr::d3d::pp.BackBufferHeight, rf::gr::d3d::pp.AutoDepthStencilFormat,
             D3DMULTISAMPLE_NONE, &g_depth_stencil_surface);
         if (FAILED(hr)) {
-            ERR_ONCE("IDirect3DDevice8::CreateDepthStencilSurface failed 0x{:X}", hr);
+            ERR_ONCE("IDirect3DDevice8::CreateDepthStencilSurface failed: {}", get_d3d_error_str(hr));
             return nullptr;
         }
     }
@@ -48,7 +48,7 @@ bool gr_d3d_set_render_target(int bmh)
         }
         auto hr = rf::gr::d3d::device->SetRenderTarget(g_orig_render_target, g_orig_depth_stencil_surface);
         if (FAILED(hr)) {
-            ERR_ONCE("IDirect3DDevice8::SetRenderTarget failed 0x{:X}", hr);
+            ERR_ONCE("IDirect3DDevice8::SetRenderTarget failed: {}", get_d3d_error_str(hr));
         }
         g_orig_render_target.release();
         g_orig_depth_stencil_surface.release();
@@ -69,13 +69,13 @@ bool gr_d3d_set_render_target(int bmh)
     if (!g_render_to_texture_active) {
         auto hr = rf::gr::d3d::device->GetRenderTarget(&orig_render_target);
         if (FAILED(hr)) {
-            ERR_ONCE("IDirect3DDevice8::GetRenderTarget failed 0x{:X}", hr);
+            ERR_ONCE("IDirect3DDevice8::GetRenderTarget failed: {}", get_d3d_error_str(hr));
             return false;
         }
 
         hr = rf::gr::d3d::device->GetDepthStencilSurface(&orig_depth_stencil_surface);
         if (FAILED(hr)) {
-            ERR_ONCE("IDirect3DDevice8::GetDepthStencilSurface failed 0x{:X}", hr);
+            ERR_ONCE("IDirect3DDevice8::GetDepthStencilSurface failed: {}", get_d3d_error_str(hr));
             return false;
         }
     }
@@ -83,14 +83,14 @@ bool gr_d3d_set_render_target(int bmh)
     ComPtr<IDirect3DSurface8> tex_surface;
     auto hr = d3d_tex->GetSurfaceLevel(0, &tex_surface);
     if (FAILED(hr)) {
-        ERR_ONCE("IDirect3DTexture8::GetSurfaceLevel failed 0x{:X}", hr);
+        ERR_ONCE("IDirect3DTexture8::GetSurfaceLevel failed: {}", get_d3d_error_str(hr));
         return false;
     }
 
     IDirect3DSurface8* depth_stencil = get_cached_depth_stencil_surface();
     hr = rf::gr::d3d::device->SetRenderTarget(tex_surface, depth_stencil);
     if (FAILED(hr)) {
-        ERR_ONCE("IDirect3DDevice8::SetRenderTarget failed 0x{:X}", hr);
+        ERR_ONCE("IDirect3DDevice8::SetRenderTarget failed: {}", get_d3d_error_str(hr));
         return false;
     }
 
@@ -111,14 +111,14 @@ CallHook<rf::bm::Format(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer
         ComPtr<IDirect3DSurface8> back_buffer;
         HRESULT hr = rf::gr::d3d::device->GetRenderTarget(&back_buffer);
         if (FAILED(hr)) {
-            ERR_ONCE("IDirect3DDevice8::GetRenderTarget failed 0x{:X}", hr);
+            ERR_ONCE("IDirect3DDevice8::GetRenderTarget failed: {}", get_d3d_error_str(hr));
             return rf::bm::FORMAT_NONE;
         }
 
         D3DSURFACE_DESC desc;
         hr = back_buffer->GetDesc(&desc);
         if (FAILED(hr)) {
-            ERR_ONCE("IDirect3DSurface8::GetDesc failed 0x{:X}", hr);
+            ERR_ONCE("IDirect3DSurface8::GetDesc failed: {}", get_d3d_error_str(hr));
             return rf::bm::FORMAT_NONE;
         }
 
@@ -134,7 +134,7 @@ CallHook<rf::bm::Format(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer
         if (!g_capture_tmp_surface) {
             hr = rf::gr::d3d::device->CreateImageSurface(desc.Width, desc.Height, desc.Format, &g_capture_tmp_surface);
             if (FAILED(hr)) {
-                ERR_ONCE("IDirect3DDevice8::CreateImageSurface failed 0x{:X}", hr);
+                ERR_ONCE("IDirect3DDevice8::CreateImageSurface failed: {}", get_d3d_error_str(hr));
                 return rf::bm::FORMAT_NONE;
             }
         }
@@ -145,7 +145,7 @@ CallHook<rf::bm::Format(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer
 
         hr = rf::gr::d3d::device->CopyRects(back_buffer, &src_rect, 1, g_capture_tmp_surface, &dst_pt);
         if (FAILED(hr)) {
-            ERR_ONCE("IDirect3DDevice8::CopyRects failed 0x{:X}", hr);
+            ERR_ONCE("IDirect3DDevice8::CopyRects failed: {}", get_d3d_error_str(hr));
             return rf::bm::FORMAT_NONE;
         }
 
@@ -153,7 +153,7 @@ CallHook<rf::bm::Format(int, int, int, int, std::byte*)> gr_d3d_read_back_buffer
         D3DLOCKED_RECT locked_rect;
         hr = g_capture_tmp_surface->LockRect(&locked_rect, nullptr, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
         if (FAILED(hr)) {
-            ERR_ONCE("IDirect3DSurface8::LockRect failed 0x{:X} ({})", hr, get_d3d_error_str(hr));
+            ERR_ONCE("IDirect3DSurface8::LockRect failed: {}", get_d3d_error_str(hr));
             return rf::bm::FORMAT_NONE;
         }
 

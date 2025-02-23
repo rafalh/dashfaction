@@ -9,6 +9,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <common/utils/string-utils.h>
+#include <common/error/d3d-error.h>
 #include "../../rf/gr/gr.h"
 #include "../../rf/gr/gr_direct3d.h"
 #include "../../main/main.h"
@@ -111,7 +112,7 @@ FunHook<GrD3DSetTextureData_Type> gr_d3d_set_texture_data_hook{
         D3DSURFACE_DESC desc;
         auto hr = texture->GetLevelDesc(level, &desc);
         if (FAILED(hr)) {
-            xlog::error("GetLevelDesc failed {:x}", hr);
+            xlog::error("GetLevelDesc failed: {}", get_d3d_error_str(hr));
             return -1;
         }
 
@@ -196,7 +197,9 @@ FunHook<int(rf::bm::Format, int, int, int, IDirect3DTexture8**)> gr_d3d_create_v
         xlog::trace("Creating texture bm_format 0x{:x} d3d_format 0x{:x}", static_cast<int>(format), static_cast<int>(d3d_format));
         auto hr = rf::gr::d3d::device->CreateTexture(width, height, levels, usage, d3d_format, d3d_pool, texture_out);
         if (FAILED(hr)) {
-            xlog::error("Failed to create texture {}x{} in format {}", width, height, static_cast<int>(d3d_format));
+            xlog::error("Failed to create texture {}x{} levels {} usage {} format {} pool {}: {}",
+                width, height, levels, static_cast<int>(usage), static_cast<int>(d3d_format), static_cast<int>(d3d_pool),
+                get_d3d_error_str(hr));
             return -1;
         }
         return 0;
@@ -308,7 +311,7 @@ bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo *lock) {
     }
     auto hr = d3d_texture->LockRect(0, &locked_rect, nullptr, lock_flags);
     if (FAILED(hr)) {
-        xlog::warn("gr_d3d_lock: IDirect3DTexture8::LockRect failed with result 0x{:x}", hr);
+        xlog::warn("gr_d3d_lock: IDirect3DTexture8::LockRect failed: {}", get_d3d_error_str(hr));
         return false;
     }
 
@@ -316,7 +319,7 @@ bool gr_d3d_lock(int bm_handle, int section, rf::gr::LockInfo *lock) {
     D3DSURFACE_DESC desc;
     hr = d3d_texture->GetLevelDesc(0, &desc);
     if (FAILED(hr)) {
-        xlog::warn("gr_d3d_lock: IDirect3DTexture8::GetLevelDesc failed with result {:x}", hr);
+        xlog::warn("gr_d3d_lock: IDirect3DTexture8::GetLevelDesc failed: {}", get_d3d_error_str(hr));
         return false;
     }
 

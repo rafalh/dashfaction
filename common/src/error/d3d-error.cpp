@@ -1,6 +1,7 @@
 #include <common/error/d3d-error.h>
 #include <d3d8.h>
 #include <map>
+#include <format>
 
 #define DEFINE_HRESULT_ERROR(hr) {hr, #hr}
 
@@ -34,10 +35,10 @@
 };
 // clang-format on
 
-const char* get_d3d_error_str(HRESULT hr)
+std::string get_d3d_error_str(HRESULT hr)
 {
     auto it = DX_ERRORS.find(hr);
     if (it != DX_ERRORS.end())
         return it->second;
-    return nullptr;
+    return std::format("0x{:x}", static_cast<unsigned>(hr));
 }

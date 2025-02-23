@@ -111,9 +111,9 @@ CodeInjection gr_d3d_init_error_patch{
     0x00545CBD,
     [](auto& regs) {
         auto hr = static_cast<HRESULT>(regs.eax);
-        xlog::error("D3D CreateDevice failed (hr 0x{:x} - {})", hr, get_d3d_error_str(hr));
+        xlog::error("D3D CreateDevice failed (hr {})", get_d3d_error_str(hr));
 
-        auto text = std::format("Failed to create Direct3D device object - error 0x{:X} ({}).\n"
+        auto text = std::format("Failed to create Direct3D device object - error {}.\n"
                                  "A critical error has occurred and the program cannot continue.\n"
                                  "Press OK to exit the program",
                                  hr, get_d3d_error_str(hr));
@@ -121,13 +121,15 @@ CodeInjection gr_d3d_init_error_patch{
         hr = rf::gr::d3d::d3d->CheckDeviceType(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
             rf::gr::d3d::pp.BackBufferFormat, rf::gr::d3d::pp.Windowed);
         if (FAILED(hr)) {
-            xlog::error("CheckDeviceType for format {} failed: {:x}", static_cast<unsigned>(rf::gr::d3d::pp.BackBufferFormat), hr);
+            xlog::error("CheckDeviceType for format {} failed: {}",
+                static_cast<unsigned>(rf::gr::d3d::pp.BackBufferFormat), get_d3d_error_str(hr));
         }
 
         hr = rf::gr::d3d::d3d->CheckDeviceFormat(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
             D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, rf::gr::d3d::pp.AutoDepthStencilFormat);
         if (FAILED(hr)) {
-            xlog::error("CheckDeviceFormat for depth-stencil format {} failed: {:x}", static_cast<unsigned>(rf::gr::d3d::pp.AutoDepthStencilFormat), hr);
+            xlog::error("CheckDeviceFormat for depth-stencil format {} failed: {}",
+                static_cast<unsigned>(rf::gr::d3d::pp.AutoDepthStencilFormat), get_d3d_error_str(hr));
         }
 
         if (!(rf::gr::d3d::device_caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)) {
@@ -197,7 +199,7 @@ CodeInjection update_pp_hook{
                 rf::gr::d3d::pp.MultiSampleType = multi_sample_type;
             }
             else {
-                xlog::warn("MSAA not supported (0x{:x})...", hr);
+                xlog::warn("MSAA not supported ({})...", get_d3d_error_str(hr));
                 g_game_config.msaa = D3DMULTISAMPLE_NONE;
             }
         }

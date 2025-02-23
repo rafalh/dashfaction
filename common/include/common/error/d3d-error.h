@@ -1,5 +1,6 @@
 #pragma once
 
 #include <windows.h>
+#include <string>
 
-const char* get_d3d_error_str(HRESULT hr);
+std::string get_d3d_error_str(HRESULT hr);

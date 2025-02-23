@@ -40,7 +40,7 @@ inline D3DFORMAT get_d3d_format_from_bm_format(rf::bm::Format format)
     case rf::bm::FORMAT_DXT5:
         return D3DFMT_DXT5;
     default:
-        xlog::warn("unknown BM format {}", static_cast<int>(format));
+        xlog::warn("unknown BM format: {}", static_cast<int>(format));
         return D3DFMT_UNKNOWN;
     }
 }
@@ -74,7 +74,7 @@ inline rf::bm::Format get_bm_format_from_d3d_format(D3DFORMAT d3d_fmt)
     case D3DFMT_DXT5:
         return rf::bm::FORMAT_DXT5;
     default:
-        xlog::error("unknown D3D format 0x{:x}", static_cast<int>(d3d_fmt));
+        xlog::error("unknown D3D format: {}", static_cast<int>(d3d_fmt));
         return rf::bm::FORMAT_NONE;
     }
 }
