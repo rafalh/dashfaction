@@ -592,7 +592,7 @@ CodeInjection gr_d3d_init_load_library_injection{
     0x005459AE,
     [](auto& regs) {
         if (g_game_config.renderer == GameConfig::Renderer::d3d9) {
-            auto d3d8to9_path = get_module_dir(g_hmodule) + "\\d3d8to9.dll";
+            auto d3d8to9_path = get_module_dir(g_hmodule) + "d3d8to9.dll";
             xlog::info("Loading d3d8to9.dll: {}", d3d8to9_path);
             HMODULE d3d8to9_module = LoadLibraryA(d3d8to9_path.c_str());
             if (d3d8to9_module) {
