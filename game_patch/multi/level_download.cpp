@@ -2,6 +2,7 @@
 #include <future>
 #include <fstream>
 #include <format>
+#include <chrono>
 #include <windows.h>
 #include <unrar/dll.hpp>
 #include <unzip.h>
