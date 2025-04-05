@@ -85,7 +85,7 @@ BEGIN
     LTEXT           "Mod:",IDC_STATIC,48,176,17,8
     COMBOBOX        IDC_MOD_COMBO,67,174,95,200,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Checking for update...",IDC_UPDATE_STATUS,6,204,114,8,SS_NOTIFY
-    CONTROL         "<a>Discord Support Channel</a>",IDC_SUPPORT_LINK,"SysLink",LWS_RIGHT | WS_TABSTOP,124,192,86,8
+    CONTROL         "<a>Report an issue</a>",IDC_SUPPORT_LINK,"SysLink",LWS_RIGHT | WS_TABSTOP,154,192,56,8
     CONTROL         "<a>About Dash Faction</a>",IDC_ABOUT_LINK,"SysLink",LWS_RIGHT | WS_TABSTOP,142,204,68,8
 END
 
