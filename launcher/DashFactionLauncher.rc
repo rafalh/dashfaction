@@ -213,7 +213,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Dash Faction",IDC_APP_NAME,12,6,100,16
     LTEXT           "Version: ?", IDC_APP_VERSION,12,22,100,8
-    LTEXT           "Copyright (C) 2022 rafalh",IDC_STATIC,12,34,100,8
+    LTEXT           "Copyright (C) 2025 rafalh",IDC_STATIC,12,34,100,8
     LTEXT           "This software uses open-source components.",IDC_STATIC,12,46,160,8
     CONTROL         "<a href=""https://github.com/rafalh/dashfaction"">Source code</a>",IDC_SRC_LINK,"SysLink",WS_TABSTOP,12,58,100,8
     CONTROL         "<a>Licensing information</a>",IDC_LICENSE_LINK,"SysLink",WS_TABSTOP,12,70,100,8
