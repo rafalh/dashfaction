@@ -16,6 +16,11 @@ struct DashLevelProps
         return instance;
     }
 
+    void reset(int version)
+    {
+        lightmaps_full_depth = version >= 300;
+    }
+
     void deserialize(rf::File& file)
     {
         lightmaps_full_depth = file.read<std::uint8_t>();

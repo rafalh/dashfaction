@@ -67,10 +67,10 @@ CallHook level_init_pre_console_output_hook{
     },
 };
 
-CodeInjection level_load_init_inj{
-    0x00460860,
+CodeInjection level_read_header_inj{
+    0x004616FB,
     []() {
-        DashLevelProps::instance() = {};
+        DashLevelProps::instance().reset(rf::level.version);
     },
 };
 
@@ -123,7 +123,7 @@ void level_apply_patch()
     level_init_pre_console_output_hook.install();
 
     // Load custom rfl chunks
-    level_load_init_inj.install();
+    level_read_header_inj.install();
     level_load_chunk_inj.install();
 
     // Increase PPM (Pixels per Meter) for GeoMod textures if they have higher dimensions than 256x256
