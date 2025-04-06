@@ -1,7 +1,7 @@
 Dash Faction Changelog
 ======================
 
-Version 1.9.0 (not released yet)
+Version 1.9.0 (released 2025-04-06)
 --------------------------------
 [@rafalh](https://github.com/rafalh)
 - Added experimental D3D11 renderer
