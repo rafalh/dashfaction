@@ -109,4 +109,12 @@ add_custom_command(
 )
 add_custom_target(LicensingInfoTxt ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/licensing-info.txt)
 
+# Copy RED.chm
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/bin/RED.chm
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/RED.chm ${CMAKE_BINARY_DIR}/bin/RED.chm
+    MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/RED.chm
+)
+add_custom_target(RedHelp ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/RED.chm)
+
 add_subdirectory(shaders)

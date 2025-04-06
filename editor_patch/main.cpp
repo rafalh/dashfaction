@@ -249,10 +249,16 @@ void* GetLevelFromMainFrame(CWnd* main_frame)
 
 void CMainFrame_OpenHelp(CWnd* this_)
 {
+    auto chm_path = get_module_dir(g_module) + "RED.chm";
+    ShellExecuteA(WndToHandle(this_), "open", chm_path.c_str(), nullptr, nullptr, SW_SHOW);
+}
+
+void CMainFrame_OpenWikiEditingHelp(CWnd* this_)
+{
     ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RF1_Editing_Main_Page", nullptr, nullptr, SW_SHOW);
 }
 
-void CMainFrame_OpenHotkeysHelp(CWnd* this_)
+void CMainFrame_OpenWikiHotkeysHelp(CWnd* this_)
 {
     ShellExecuteA(WndToHandle(this_), "open", "https://redfactionwiki.com/wiki/RED_Hotkey_Reference", nullptr, nullptr, SW_SHOW);
 }
@@ -294,11 +300,14 @@ BOOL __fastcall CMainFrame_OnCmdMsg(CWnd* this_, int, UINT nID, int nCode, void*
     if (nCode == CN_COMMAND) {
         std::function<void()> handler;
         switch (nID) {
-            case ID_WIKI_EDITING_MAIN_PAGE:
+            case ID_HELP_TOPICS:
                 handler = std::bind(CMainFrame_OpenHelp, this_);
                 break;
+            case ID_WIKI_EDITING_MAIN_PAGE:
+                handler = std::bind(CMainFrame_OpenWikiEditingHelp, this_);
+                break;
             case ID_WIKI_HOTKEYS:
-                handler = std::bind(CMainFrame_OpenHotkeysHelp, this_);
+                handler = std::bind(CMainFrame_OpenWikiHotkeysHelp, this_);
                 break;
             case ID_HIDE_ALL_OBJECTS:
                 handler = std::bind(CMainFrame_HideAllObjects, this_);
