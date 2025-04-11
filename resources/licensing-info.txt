@@ -34,7 +34,7 @@ natalie <webmistress@natalie.ee>:
 is-this-c:
 * code contributions
 
-Mystyle:
+Mystyle48:
 * setup code improvements
 
 ###############################################################################

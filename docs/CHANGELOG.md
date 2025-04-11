@@ -1,8 +1,13 @@
 Dash Faction Changelog
 ======================
 
-Version 1.9.0 (released 2025-04-06)
+Version 1.9.1 (not released yet)
 --------------------------------
+[@Mystyle-48](https://github.com/Mystyle-48)
+- Replace converted RED help file with official 1.1 version
+
+Version 1.9.0 (released 2025-04-06)
+-----------------------------------
 [@rafalh](https://github.com/rafalh)
 - Added experimental D3D11 renderer
 - Added option to switch between D3D8, D3D9 and D3D11 renderer
