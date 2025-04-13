@@ -27,6 +27,12 @@ public:
         return index;
     }
 
+    void force_event_mapping(std::string_view name, int index)
+    {
+        auto name_lower = string_to_lower(name);
+        event_name_map[name_lower] = index;
+    }
+
     std::optional<int> find(std::string_view name)
     {
         auto name_lower = string_to_lower(name);
@@ -48,8 +54,10 @@ const char* custom_event_names[] = {
 };
 
 enum EventType : int {
-    // There are 90 builtin events so start from 90
-    AF_Teleport_Player = 90,
+    Teleport = 4,
+    Teleport_Player = 0x3F,
+    // There are 90 builtin events so start from 0x5A (90)
+    AF_Teleport_Player = 0x5A,
     Clone_Entity,
     Anchor_Marker_Orient,
 };
@@ -344,6 +352,8 @@ void apply_event_patches()
     for (auto& n : custom_event_names) {
         event_name_mapper.register_event(n);
     }
+    // Temporarly handle AF_Teleport_Player as Teleport_Player
+    event_name_mapper.force_event_mapping("AF_Teleport_Player", {EventType::Teleport_Player});
     level_read_events_injection_orient.install();
 
     // Register commands

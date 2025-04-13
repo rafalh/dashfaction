@@ -5,6 +5,7 @@ Version 1.9.1 (not released yet)
 --------------------------------
 [@rafalh](https://github.com/rafalh)
 - Fix crash when loading levels in version 300 with `AF_Teleport_Player` or `Clone_Entity` events
+- Add basic handling for `AF_Teleport_Player` event
 
 Version 1.9.0 (released 2025-04-06)
 --------------------------------
