@@ -25,4 +25,5 @@ namespace rf
     static_assert(sizeof(Event) == 0x2B8);
 
     static auto& event_lookup_from_uid = addr_as_ref<Event*(int uid)>(0x004B6820);
+    static auto& event_names = addr_as_ref<const char*[90]>(0x005A1A3C);
 }

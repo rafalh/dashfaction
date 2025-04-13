@@ -4,16 +4,55 @@
 #include <patch_common/AsmWriter.h>
 #include <xlog/xlog.h>
 #include <cassert>
+#include <unordered_map>
 #include "../rf/object.h"
 #include "../rf/event.h"
 #include "../rf/entity.h"
 #include "../rf/level.h"
 #include "../rf/multi.h"
+#include "../rf/file/file.h"
 #include "../rf/player/player.h"
 #include "../rf/os/console.h"
 #include "../os/console.h"
 
+class EventNameMapper {
+    std::unordered_map<std::string, int> event_name_map;
+
+public:
+    int register_event(std::string_view name)
+    {
+        int index = static_cast<int>(event_name_map.size());
+        auto name_lower = string_to_lower(name);
+        event_name_map.emplace(name_lower, index);
+        return index;
+    }
+
+    std::optional<int> find(std::string_view name)
+    {
+        auto name_lower = string_to_lower(name);
+        auto it = event_name_map.find(name_lower);
+        if (it == event_name_map.end()) {
+            return {};
+        }
+        return {it->second};
+    }
+};
+
 bool event_debug_enabled;
+EventNameMapper event_name_mapper;
+
+const char* custom_event_names[] = {
+    "AF_Teleport_Player",
+    "Clone_Entity",
+    "Anchor_Marker_Orient",
+};
+
+enum EventType : int {
+    // There are 90 builtin events so start from 90
+    AF_Teleport_Player = 90,
+    Clone_Entity,
+    Anchor_Marker_Orient,
+};
 
 CodeInjection switch_model_event_custom_mesh_patch{
     0x004BB921,
@@ -224,6 +263,41 @@ CodeInjection level_read_events_unknown_class_injection{
     },
 };
 
+FunHook event_lookup_type_hook{
+    0x004BD700,
+    [](const rf::String& name) {
+        auto it = event_name_mapper.find(name.c_str());
+        if (!it) {
+            xlog::warn("Unsupported event class: {}", name);
+            return -1;
+        }
+        return it.value();
+    },
+};
+
+CodeInjection level_read_events_injection_orient{
+    0x00462367,
+    [](auto& regs) {
+        int event_type = regs.ebp;
+        rf::File* file = regs.edi;
+        auto& orient = addr_as_ref<rf::Matrix3>(regs.esp + 0x9C - 0x30);
+
+        int orient_ver = 0;
+        switch (event_type) {
+            case EventType::AF_Teleport_Player:
+            case EventType::Clone_Entity:
+                orient_ver = 300;
+                break;
+            case EventType::Anchor_Marker_Orient:
+                orient_ver = 301;
+                break;
+        }
+        if (orient_ver) {
+            orient = file->read_matrix(orient_ver);
+        }
+    },
+};
+
 ConsoleCommand2 debug_event_msg_cmd{
     "debug_event_msg",
     []() {
@@ -261,6 +335,16 @@ void apply_event_patches()
 
     // Log a warning when trying to create event with unknown class
     level_read_events_unknown_class_injection.install();
+
+    // Support new event classes
+    event_lookup_type_hook.install();
+    for (auto& n : rf::event_names) {
+        event_name_mapper.register_event(n);
+    }
+    for (auto& n : custom_event_names) {
+        event_name_mapper.register_event(n);
+    }
+    level_read_events_injection_orient.install();
 
     // Register commands
     debug_event_msg_cmd.register_cmd();

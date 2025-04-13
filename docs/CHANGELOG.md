@@ -1,6 +1,11 @@
 Dash Faction Changelog
 ======================
 
+Version 1.9.1 (not released yet)
+--------------------------------
+[@rafalh](https://github.com/rafalh)
+- Fix crash when loading levels in version 300 with `AF_Teleport_Player` or `Clone_Entity` events
+
 Version 1.9.0 (released 2025-04-06)
 --------------------------------
 [@rafalh](https://github.com/rafalh)

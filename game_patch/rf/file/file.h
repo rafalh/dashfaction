@@ -2,10 +2,13 @@
 
 #include <patch_common/MemUtils.h>
 #include "../os/vtypes.h"
+#include "../math/matrix.h"
 
 namespace rf
 {
     constexpr std::size_t max_path_len = 256;
+
+    static auto& file_default_matrix = addr_as_ref<Matrix3>(0x01BDB278);
 
     class File
     {
@@ -93,6 +96,13 @@ namespace rf
                 }
             }
             return def_val;
+        }
+
+        Matrix3 read_matrix(int ver = 0, Matrix3* deflt = &file_default_matrix)
+        {
+            Matrix3 result;
+            AddrCaller{0x0052CAC0}.this_call<int>(this, &result, ver, deflt);
+            return result;
         }
     };
 
