@@ -6,7 +6,7 @@ on:
 
 env:
   BUILD_TYPE: Release
-  SCCACHE_GHA_ENABLED: "true"
+  SCCACHE_GHA_ENABLED: 'true'
 
 jobs:
   build-mingw:
@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: mozilla-actions/sccache-action@v0.0.7
+    - uses: mozilla-actions/sccache-action@v0.0.9
 
     - name: Install packages
       run: |
@@ -32,7 +32,7 @@ jobs:
           -D CMAKE_C_COMPILER_LAUNCHER=sccache \
           -D CMAKE_CXX_COMPILER_LAUNCHER=sccache \
           -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
-          -D CMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake \
+          -D CMAKE_TOOLCHAIN_FILE=../cmake/mingw-ubuntu.cmake
 
     - name: Build
       working-directory: ./build
@@ -43,12 +43,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: mozilla-actions/sccache-action@v0.0.7
+    - uses: mozilla-actions/sccache-action@v0.0.9
 
     - name: Install Ninja
       run: choco install ninja
 
-    - name: Add Launch-VsDevShell.ps1 to PATH
+    - name: Add Launch-VsDevShell to PATH
       run: |
         $vs = (Get-CimInstance MSFT_VSInstance -Namespace root/cimv2/vs).InstallLocation
         Write-Output (Join-Path $vs Common7\Tools) >> $env:GITHUB_PATH
@@ -59,7 +59,7 @@ jobs:
     - name: Configure CMake
       working-directory: ./build
       run: |
-        Launch-VsDevShell.ps1 -HostArch amd64 -Arch x86 -SkipAutomaticLocation
+        Launch-VsDevShell -HostArch amd64 -Arch x86 -SkipAutomaticLocation
         cmake .. `
           -G Ninja `
           -D CMAKE_C_COMPILER_LAUNCHER=sccache `
@@ -69,5 +69,5 @@ jobs:
     - name: Build
       working-directory: ./build
       run: |
-        Launch-VsDevShell.ps1 -HostArch amd64 -Arch x86 -SkipAutomaticLocation
+        Launch-VsDevShell -HostArch amd64 -Arch x86 -SkipAutomaticLocation
         cmake --build . -j $env:NUMBER_OF_PROCESSORS
