@@ -178,13 +178,14 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "Skip Cutscene Control", skip_cutscene_ctrl);
     result &= visitor(dash_faction_key, "Damage Screen Flash", damage_screen_flash);
     result &= visitor(dash_faction_key, "Language", language);
-    result &= visitor(dash_faction_key, "Reduced Speed In Background", reduced_speed_in_background);
+    result &= visitor(dash_faction_key, "Reduced Speed in Background", reduced_speed_in_background);
     result &= visitor(dash_faction_key, "Big HUD", big_hud);
     result &= visitor(dash_faction_key, "Reticle Scale", reticle_scale);
     result &= visitor(dash_faction_key, "Mesh Static Lighting", mesh_static_lighting);
     result &= visitor(dash_faction_key, "Muzzle Flash", muzzle_flash);
     result &= visitor(dash_faction_key, "Player Join Beep", player_join_beep);
     result &= visitor(dash_faction_key, "Autosave", autosave);
+    result &= visitor(dash_faction_key, "Disguise as Alpine Faction", disguise_as_af);
 
     return result;
 }
