@@ -37,7 +37,7 @@ endif()
 
 target_compile_definitions(d3d8to9 PUBLIC
   $<$<CONFIG:Debug>:D3D_DEBUG_INFO;_DEBUG>
-  $<$<CONFIG:RelWithDebInfo>:D3D_DEBUG_INFO;_DEBUG>
+  $<$<CONFIG:RelWithDebInfo>:D3D_DEBUG_INFO>
   $<$<CONFIG:Release>:D3D8TO9NOLOG>
   $<$<CONFIG:MinSizeRel>:D3D8TO9NOLOG>
 )
