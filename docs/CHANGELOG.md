@@ -8,6 +8,10 @@ Version 1.9.1 (not released yet)
 - Add basic handling for `AF_Teleport_Player` event
 - Add a new editor help file that includes information from the original red.hlp included with the game and the newer red.chm (RED help 1.1) published online
 
+[@is-this-c](https://github.com/is-this-c)
+- Fix Alpine Faction disguise option
+- Build improvements
+
 Version 1.9.0 (released 2025-04-06)
 --------------------------------
 [@rafalh](https://github.com/rafalh)
