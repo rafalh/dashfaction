@@ -56,6 +56,8 @@ const char* custom_event_names[] = {
 enum EventType : int {
     Teleport = 4,
     Teleport_Player = 0x3F,
+    PlayVclip = 0x46,
+    Alarm = 0x2E,
     // There are 90 builtin events so start from 0x5A (90)
     AF_Teleport_Player = 0x5A,
     Clone_Entity,
@@ -273,14 +275,22 @@ FunHook event_lookup_type_hook{
 };
 
 CodeInjection level_read_events_injection_orient{
-    0x00462367,
+    0x00462327,
     [](auto& regs) {
         int event_type = regs.ebp;
         rf::File* file = regs.edi;
-        auto& orient = addr_as_ref<rf::Matrix3>(regs.esp + 0x9C - 0x30);
+        auto& orient = addr_as_ref<rf::Matrix3>(regs.esp + 0x98 - 0x30);
 
         int orient_ver = 0;
         switch (event_type) {
+            case EventType::Teleport:
+            case EventType::Teleport_Player:
+            case EventType::PlayVclip:
+                orient_ver = 145;
+                break;
+            case EventType::Alarm:
+                orient_ver = 152;
+                break;
             case EventType::AF_Teleport_Player:
             case EventType::Clone_Entity:
                 orient_ver = 300;
@@ -292,6 +302,23 @@ CodeInjection level_read_events_injection_orient{
         if (orient_ver) {
             orient = file->read_matrix(orient_ver);
         }
+
+        auto color = file->read<std::uint32_t>(0xB0);
+
+        // If this is a unknown event type in a level with an unsupported version
+        // try to determine if color is actually the first value in a rotation matrix
+        if (file->check_version(301) && event_type == -1) {
+            float color_fl = 0.0f;
+            std::memcpy(&color_fl, &color, sizeof(color_fl));
+            // Rotation matrix elements are always between -1.0 and +1.0
+            if (color_fl >= -1.0f && color_fl <= 1.0f) {
+                // It is most likely a rotation matrix, so skip it together with the real color field
+                xlog::warn("Skipping unexpected rotation matrix in event data");
+                file->seek(sizeof(rf::Matrix3), rf::File::SeekOrigin::seek_cur);
+            }
+        }
+
+        regs.eip = 0x0046237F;
     },
 };
 
