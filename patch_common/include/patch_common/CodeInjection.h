@@ -15,6 +15,7 @@ private:
     uintptr_t m_addr;
     subhook::Hook m_subhook;
     CodeBuffer m_code_buf;
+    bool m_needs_trampoline;
 
 public:
 
@@ -187,7 +188,8 @@ public:
     #undef X86_GP_REG_X_UNION
     #undef X86_GP_REG_UNION
 
-    BaseCodeInjection(uintptr_t addr) : m_addr(addr), m_code_buf(256) {}
+    BaseCodeInjection(uintptr_t addr, bool needs_trampoline) :
+        m_addr(addr), m_code_buf(256), m_needs_trampoline(needs_trampoline) {}
 
     void install() override;
 
@@ -216,8 +218,8 @@ protected:
 
     WrapperPtr m_wrapper_ptr;
 
-    BaseCodeInjectionWithRegsAccess(uintptr_t addr, WrapperPtr wrapper_ptr) :
-        BaseCodeInjection(addr), m_wrapper_ptr(wrapper_ptr)
+    BaseCodeInjectionWithRegsAccess(uintptr_t addr, WrapperPtr wrapper_ptr, bool needs_trampoline) :
+        BaseCodeInjection(addr, needs_trampoline), m_wrapper_ptr(wrapper_ptr)
     {}
 
     void emit_code(AsmWriter& asm_writter, void* trampoline) override;
@@ -230,8 +232,8 @@ class CodeInjection2<T, decltype(std::declval<T>()(std::declval<BaseCodeInjectio
     T m_functor;
 
 public:
-    CodeInjection2(uintptr_t addr, T handler) :
-        BaseCodeInjectionWithRegsAccess(addr, reinterpret_cast<WrapperPtr>(&wrapper)),
+    CodeInjection2(uintptr_t addr, T handler, bool needs_trampoline) :
+        BaseCodeInjectionWithRegsAccess(addr, reinterpret_cast<WrapperPtr>(&wrapper), needs_trampoline),
         m_functor(handler)
     {}
 
@@ -251,8 +253,8 @@ protected:
 
     WrapperPtr m_wrapper_ptr;
 
-    BaseCodeInjectionWithoutRegsAccess(uintptr_t addr, WrapperPtr wrapper_ptr) :
-        BaseCodeInjection(addr), m_wrapper_ptr(wrapper_ptr)
+    BaseCodeInjectionWithoutRegsAccess(uintptr_t addr, WrapperPtr wrapper_ptr, bool needs_trampoline) :
+        BaseCodeInjection(addr, needs_trampoline), m_wrapper_ptr(wrapper_ptr)
     {}
 
     void emit_code(AsmWriter& asm_writter, void* trampoline) override;
@@ -264,8 +266,8 @@ class CodeInjection2<T, decltype(std::declval<T>()())> : public BaseCodeInjectio
     T m_functor;
 
 public:
-    CodeInjection2(uintptr_t addr, T handler) :
-        BaseCodeInjectionWithoutRegsAccess(addr, reinterpret_cast<WrapperPtr>(&wrapper)),
+    CodeInjection2(uintptr_t addr, T handler, bool needs_trampoline) :
+        BaseCodeInjectionWithoutRegsAccess(addr, reinterpret_cast<WrapperPtr>(&wrapper), needs_trampoline),
         m_functor(handler)
     {}
 
@@ -280,7 +282,7 @@ template<typename T>
 class CodeInjection : public CodeInjection2<T>
 {
 public:
-    CodeInjection(uintptr_t addr, T handler) :
-        CodeInjection2<T>(addr, handler)
+    CodeInjection(uintptr_t addr, T handler, bool needs_trampoline = true) :
+        CodeInjection2<T>(addr, handler, needs_trampoline)
     {}
 };

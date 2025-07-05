@@ -320,6 +320,7 @@ CodeInjection level_read_events_injection_orient{
 
         regs.eip = 0x0046237F;
     },
+    false,
 };
 
 ConsoleCommand2 debug_event_msg_cmd{

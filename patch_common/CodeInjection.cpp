@@ -4,10 +4,16 @@
 
 void BaseCodeInjection::install()
 {
-    m_subhook.Install(reinterpret_cast<void*>(m_addr), m_code_buf);
-    void* trampoline = m_subhook.GetTrampoline();
-    if (!trampoline)
-        xlog::warn("trampoline is null for 0x{:x}", m_addr);
+    void* trampoline = nullptr;
+    if (m_needs_trampoline) {
+        m_subhook.Install(reinterpret_cast<void*>(m_addr), m_code_buf);
+        trampoline = m_subhook.GetTrampoline();
+        if (!trampoline)
+            xlog::warn("trampoline is null for 0x{:x}", m_addr);
+    }
+    else {
+        AsmWriter{m_addr}.jmp(m_code_buf.get());
+    }
 
     AsmWriter asm_writter{m_code_buf};
     emit_code(asm_writter, trampoline);
