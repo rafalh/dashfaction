@@ -10,15 +10,22 @@
 #include "../rf/geometry.h"
 #include "../rf/file/file.h"
 #include "level.h"
+#include "../main/main.h"
 
 CodeInjection level_load_header_version_check_patch{
     0x004615BF,
     [](auto& regs) {
         int version = regs.eax;
         if (version == 300) {
-            xlog::warn("Loading level in partially supported version {}", version);
-            regs.eip = 0x004615DF;
+            xlog::warn("Loading level in a partially supported version: {}", version);
+        } else if (g_game_config.ignore_level_version) {
+            xlog::warn("Attempting to load level in an unsupported version: {}", version);
+        } else {
+            // Do not load and display error
+            return;
         }
+        // Attempt loading the level
+        regs.eip = 0x004615DF;
     },
 };
 

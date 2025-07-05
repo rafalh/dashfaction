@@ -7,6 +7,7 @@ Version 1.9.1 (not released yet)
 - Fix crash when loading levels in version 300 with `AF_Teleport_Player` or `Clone_Entity` events
 - Add basic handling for `AF_Teleport_Player` event
 - Add a new editor help file that includes information from the original red.hlp included with the game and the newer red.chm (RED help 1.1) published online
+- Add option to ignore level version
 
 [@is-this-c](https://github.com/is-this-c)
 - Fix Alpine Faction disguise option

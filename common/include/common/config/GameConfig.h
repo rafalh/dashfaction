@@ -100,6 +100,7 @@ struct GameConfig
     CfgVar<bool> player_join_beep = false;
     CfgVar<bool> autosave = true;
     CfgVar<bool> disguise_as_af = false;
+    CfgVar<bool> ignore_level_version = false;
 
     // Internal
     CfgVar<std::string> dash_faction_version{""};
