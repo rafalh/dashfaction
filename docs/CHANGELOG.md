@@ -8,6 +8,7 @@ Version 1.9.1 (not released yet)
 - Add basic handling for `AF_Teleport_Player` event
 - Add a new editor help file that includes information from the original red.hlp included with the game and the newer red.chm (RED help 1.1) published online
 - Add option to ignore level version
+- Fix warnings in main menu caused by missing files (e.g. bigboom.vbm)
 
 [@is-this-c](https://github.com/is-this-c)
 - Fix Alpine Faction disguise option
