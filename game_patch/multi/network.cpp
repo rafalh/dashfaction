@@ -654,7 +654,7 @@ std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_af_signature(
     df_sign_packet_ext ext;
     ext.df_signature = ALPINE_FACTION_SIGNATURE;
     ext.version_major = 1;
-    ext.version_minor = 0;
+    ext.version_minor = 1;
     return extend_packet(data, len, ext);
 }
 
