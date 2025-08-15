@@ -321,7 +321,7 @@ void gr_d3d11_apply_patch()
     gr_d3d_setup_3d_injection.install();
     gr_d3d_setup_fustrum_injection.install();
     vif_lod_mesh_ctor_injection.install();
-    vif_lod_mesh_dtor_injection.install();
+    vif_lod_mesh_destroy_injection.install();
     v3d_page_in_injection.install();
     character_instance_page_in_injection.install();
     level_page_in_injection.install();
