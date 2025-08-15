@@ -1,6 +1,11 @@
 Dash Faction Changelog
 ======================
 
+Version 1.9.2 (not released yet)
+--------------------------------
+[@is-this-c](https://github.com/is-this-c)
+- Fix a potential crash after a client quits a game if Directd3D 11 is enabled
+
 Version 1.9.1 (released 2025-07-05)
 --------------------------------
 [@rafalh](https://github.com/rafalh)
