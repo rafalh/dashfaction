@@ -261,7 +261,7 @@ namespace df::gr::d3d11
         },
     };
 
-    static CodeInjection vif_lod_mesh_dtor_injection{
+    static CodeInjection vif_lod_mesh_destroy_injection{
         0x005695D0,
         [](auto& regs) {
             const auto lod_mesh = addr_as_ref<rf::VifLodMesh*>(regs.esp + 4);
