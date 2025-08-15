@@ -11,6 +11,7 @@ Version 1.9.1 (released 2025-07-05)
 - Fix warnings in main menu caused by missing files (e.g. bigboom.vbm)
 
 [@is-this-c](https://github.com/is-this-c)
+- Fix a crash that may happen after a client quits a game if Directd3D 11 was enabled
 - Fix Alpine Faction disguise option
 - Build improvements
 
