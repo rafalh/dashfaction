@@ -620,7 +620,7 @@ struct df_sign_packet_ext
     uint8_t version_minor = VERSION_MINOR;
 };
 
-struct af_join_req_packet_ext_v2
+struct af_join_req_tail_v2
 {
     uint32_t signature = ALPINE_FACTION_SIGNATURE;
     uint8_t version_major = 1;
@@ -660,16 +660,16 @@ std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_df_signature(
     return extend_packet(data, len, ext);
 }
 
-std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_af_join_req(std::byte* data, size_t len)
+std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_af_join_req_tail(std::byte* data, size_t len)
 {
-    af_join_req_packet_ext_v2 ext{};
+    af_join_req_tail_v2 ext{};
     return extend_packet(data, len, ext);
 }
 
 std::pair<std::unique_ptr<std::byte[]>, size_t> extend_join_req_packet(std::byte* data, size_t len)
 {
     if (g_game_config.disguise_as_af) {
-        return extend_packet_with_af_join_req(data, len);
+        return extend_packet_with_af_join_req_tail(data, len);
     } else {
         return extend_packet_with_df_signature(data, len);
     }
