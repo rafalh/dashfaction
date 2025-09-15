@@ -620,6 +620,17 @@ struct df_sign_packet_ext
     uint8_t version_minor = VERSION_MINOR;
 };
 
+struct af_join_req_tail_v2
+{
+    uint32_t signature = ALPINE_FACTION_SIGNATURE;
+    uint8_t version_major = 1;
+    uint8_t version_minor = 1;
+    uint8_t version_patch = 0;
+    uint8_t version_type = VERSION_TYPE;
+    uint32_t max_rfl_version = 301;
+    uint32_t flags = 0;
+};
+
 template<typename T>
 std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet(const std::byte* data, size_t len, const T& ext_data)
 {
@@ -649,19 +660,16 @@ std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_df_signature(
     return extend_packet(data, len, ext);
 }
 
-std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_af_signature(std::byte* data, size_t len)
+std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_af_join_req_tail(std::byte* data, size_t len)
 {
-    df_sign_packet_ext ext;
-    ext.df_signature = ALPINE_FACTION_SIGNATURE;
-    ext.version_major = 1;
-    ext.version_minor = 1;
+    af_join_req_tail_v2 ext{};
     return extend_packet(data, len, ext);
 }
 
-std::pair<std::unique_ptr<std::byte[]>, size_t> extend_with_client_signature(std::byte* data, size_t len)
+std::pair<std::unique_ptr<std::byte[]>, size_t> extend_join_req_packet(std::byte* data, size_t len)
 {
     if (g_game_config.disguise_as_af) {
-        return extend_packet_with_af_signature(data, len);
+        return extend_packet_with_af_join_req_tail(data, len);
     } else {
         return extend_packet_with_df_signature(data, len);
     }
@@ -698,7 +706,7 @@ CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_req_packet_hook{
     0x0047ABFB,
     [](const rf::NetAddr* addr, std::byte* data, size_t len) {
         // Add client signature to join_req packet
-        auto [new_data, new_len] = extend_with_client_signature(data, len);
+        auto [new_data, new_len] = extend_join_req_packet(data, len);
         return send_join_req_packet_hook.call_target(addr, new_data.get(), new_len);
     },
 };
