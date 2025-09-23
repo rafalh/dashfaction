@@ -1,5 +1,5 @@
-# CMake 3.15 is required for CMAKE_MSVC_RUNTIME_LIBRARY.
-cmake_minimum_required(VERSION 3.15)
+# CMake 3.20 is required for C++23.
+cmake_minimum_required(VERSION 3.20)
 project(DashFaction)
 
 if(NOT "${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
