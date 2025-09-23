@@ -36,6 +36,7 @@
 #include "../rf/os/timer.h"
 #include "../rf/geometry.h"
 #include "../rf/level.h"
+#include "../rf/sound/sound.h"
 #include "../misc/misc.h"
 #include "../misc/player.h"
 #include "../object/object.h"
@@ -185,6 +186,7 @@ enum packet_type : uint8_t {
     sound                  = 0x34,
     team_score             = 0x35,
     glass_kill             = 0x36,
+    af_damage_notify       = 0x52,
 };
 
 // client -> server
@@ -256,10 +258,12 @@ std::array g_client_side_packet_whitelist{
     sound,
     team_score,
     glass_kill,
+    af_damage_notify,
 };
 // clang-format on
 
-std::optional<DashFactionServerInfo> g_df_server_info;
+std::optional<DashFactionServerInfo> g_df_server_info{};
+std::optional<AlpineFactionServerInfo> g_af_server_info{};
 
 CodeInjection process_game_packet_whitelist_filter{
     0x0047918D,
@@ -702,6 +706,33 @@ struct DashFactionJoinAcceptPacketExt
 template<>
 struct EnableEnumBitwiseOperators<DashFactionJoinAcceptPacketExt::Flags> : std::true_type {};
 
+struct AlpineFactionJoinAcceptPacketExt {
+    uint32_t af_signature = ALPINE_FACTION_SIGNATURE;
+    uint8_t version_major = 1;
+    uint8_t version_minor = 1;
+
+    enum class Flags : uint32_t {
+        none                = 0,
+        saving_enabled      = 1 << 0,
+        max_fov             = 1 << 1,
+        allow_fb_mesh       = 1 << 2,
+        allow_lmap          = 1 << 3,
+        allow_no_ss         = 1 << 4,
+        no_player_collide   = 1 << 5,
+        allow_no_mf         = 1 << 6,
+        click_limit         = 1 << 7,
+        unlimited_fps       = 1 << 8,
+        gaussian_spread     = 1 << 9,
+        location_pinging    = 1 << 10,
+    } flags = Flags::none;
+
+    float max_fov{};
+    int semi_auto_cooldown{};
+};
+
+template<>
+struct EnableEnumBitwiseOperators<AlpineFactionJoinAcceptPacketExt::Flags> : std::true_type {};
+
 CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_req_packet_hook{
     0x0047ABFB,
     [](const rf::NetAddr* addr, std::byte* data, size_t len) {
@@ -728,33 +759,80 @@ CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_accept_packet_ho
     },
 };
 
+bool try_process_df_join_accept_tail(const std::byte* const tail) {
+    DashFactionJoinAcceptPacketExt ext{};
+    std::copy(tail, tail + sizeof(ext), reinterpret_cast<std::byte*>(&ext));
+    xlog::debug("Checking for join_accept DF extension: {:#08x}", ext.df_signature);
+    if (ext.df_signature != DASH_FACTION_SIGNATURE) {
+        return false;
+    }
+    xlog::debug(
+        "Got DF server info: {} {} {:#x}",
+        ext.version_major,
+        ext.version_minor,
+        static_cast<uint32_t>(ext.flags)
+    );
+    DashFactionServerInfo server_info{};
+    server_info.version_major = ext.version_major;
+    server_info.version_minor = ext.version_minor;
+    using Flags = DashFactionJoinAcceptPacketExt::Flags;
+    server_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
+    constexpr const float default_fov = 90.f;
+    if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
+        server_info.max_fov = std::optional{ext.max_fov};
+    }
+    g_df_server_info = std::optional{server_info};
+    return true;
+}
+
+bool try_process_af_join_accept_tail(const std::byte* const tail) {
+    AlpineFactionJoinAcceptPacketExt ext{};
+    std::copy(tail, tail + sizeof(ext), reinterpret_cast<std::byte*>(&ext));
+    xlog::debug("Checking for join_accept AF extension: {:#08x}", ext.af_signature);
+    if (ext.af_signature != ALPINE_FACTION_SIGNATURE) {
+        return false;
+    }
+    xlog::debug(
+        "Got AF server info: {} {} {:#x}",
+        ext.version_major,
+        ext.version_minor,
+        static_cast<uint32_t>(ext.flags)
+    );
+    AlpineFactionServerInfo server_info{};
+    server_info.version_major = ext.version_major;
+    server_info.version_minor = ext.version_minor;
+    using Flags = AlpineFactionJoinAcceptPacketExt::Flags;
+    server_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
+    server_info.allow_fb_mesh = !!(ext.flags & Flags::allow_fb_mesh);
+    server_info.allow_lmap = !!(ext.flags & Flags::allow_lmap);
+    server_info.allow_no_ss = !!(ext.flags & Flags::allow_no_ss);
+    server_info.no_player_collide = !!(ext.flags & Flags::no_player_collide);
+    server_info.allow_no_mf = !!(ext.flags & Flags::allow_no_mf);
+    server_info.click_limit = !!(ext.flags & Flags::click_limit);
+    server_info.unlimited_fps = !!(ext.flags & Flags::unlimited_fps);
+    server_info.gaussian_spread = !!(ext.flags & Flags::gaussian_spread);
+    server_info.location_pinging = !!(ext.flags & Flags::location_pinging);
+    constexpr const float default_fov = 90.f;
+    if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
+        server_info.max_fov = std::optional{ext.max_fov};
+    }
+    if (server_info.click_limit) {
+        server_info.semi_auto_cooldown = std::optional{ext.semi_auto_cooldown};
+    }
+    g_af_server_info = std::optional{server_info};
+    return true;
+}
+
 CodeInjection process_join_accept_injection{
     0x0047A979,
-    [](auto& regs) {
-        std::byte* packet = regs.ebp;
-        auto ext_offset = regs.esi + 5;
-        DashFactionJoinAcceptPacketExt ext_data;
-        std::copy(packet + ext_offset, packet + ext_offset + sizeof(DashFactionJoinAcceptPacketExt),
-            reinterpret_cast<std::byte*>(&ext_data));
-        xlog::debug("Checking for join_accept DF extension: {:08X}", ext_data.df_signature);
-        if (ext_data.df_signature == DASH_FACTION_SIGNATURE) {
-            DashFactionServerInfo server_info;
-            server_info.version_major = ext_data.version_major;
-            server_info.version_minor = ext_data.version_minor;
-            xlog::debug("Got DF server info: {} {} {}", ext_data.version_major, ext_data.version_minor,
-                static_cast<int>(ext_data.flags));
-            server_info.saving_enabled = !!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::saving_enabled);
-
-            constexpr float default_fov = 90.0f;
-            if (!!(ext_data.flags & DashFactionJoinAcceptPacketExt::Flags::max_fov) && ext_data.max_fov >= default_fov) {
-                server_info.max_fov = ext_data.max_fov;
-            }
-            g_df_server_info = std::optional{server_info};
+    [] (const auto& regs) {
+        const std::byte* const packet = regs.ebp;
+        const int len = regs.esi + 5;
+        const std::byte* const tail = packet + len;
+        if (!try_process_df_join_accept_tail(tail)) {
+            try_process_af_join_accept_tail(tail);
         }
-        else {
-            g_df_server_info.reset();
-        }
-    },
+    }
 };
 
 CodeInjection process_join_accept_send_game_info_req_injection{
@@ -917,6 +995,7 @@ FunHook<void()> multi_stop_hook{
     []() {
         // Clear server info when leaving
         g_df_server_info.reset();
+        g_af_server_info.reset();
         multi_stop_hook.call_target();
         if (rf::local_player) {
             reset_player_additional_data(rf::local_player);
@@ -927,6 +1006,10 @@ FunHook<void()> multi_stop_hook{
 const std::optional<DashFactionServerInfo>& get_df_server_info()
 {
     return g_df_server_info;
+}
+
+const std::optional<AlpineFactionServerInfo>& get_af_server_info() {
+    return g_af_server_info;
 }
 
 void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* sender, bool is_team_msg)
@@ -1049,10 +1132,78 @@ void __fastcall multi_io_stats_add_new(void *this_, int edx, int size, bool is_s
 
 FunHook<void __fastcall(void*, int, int, bool, int)> multi_io_stats_add_hook{0x0047CAC0, multi_io_stats_add_new};
 
+#pragma pack(push, 1)
+
+struct af_damage_notify_packet {
+    RF_GamePacketHeader header;
+    uint8_t player_id;
+    uint16_t damage;
+    uint8_t flags;
+};
+
+#pragma pack(pop)
+
+void af_process_damage_notify_packet(const void* const data, const size_t len, const rf::NetAddr& addr) {
+    // Receive: client <- server
+    if (!rf::is_multi || rf::is_server || rf::is_dedicated_server) {
+        return;
+    }
+
+    af_damage_notify_packet damage_notify_packet{};
+    if (len < sizeof(damage_notify_packet)) {
+        return;
+    }
+
+    std::memcpy(&damage_notify_packet, data, sizeof(damage_notify_packet));
+
+    const rf::Player* const player = rf::multi_find_player_by_id(damage_notify_packet.player_id);
+    if (!player) {
+        return;
+    }
+
+    const rf::Entity* const entity = rf::entity_from_handle(player->entity_handle);
+    if (!entity) {
+        return;
+    }
+
+    const bool died = static_cast<bool>(damage_notify_packet.flags & 0x01);
+    if (g_game_config.play_hit_sounds) {
+        rf::snd_play(29, 0, 0.f, 1.f);
+    }
+}
+
+bool af_process_packet(
+    const void* const data,
+    const int len,
+    const rf::NetAddr& addr,
+    const rf::Player* const player
+) {
+    RF_GamePacketHeader header{};
+    if (len < static_cast<int>(sizeof(header))) {
+        return false;
+    }
+
+    std::memcpy(&header, data, sizeof(header));
+    const packet_type packet_ty = static_cast<packet_type>(header.type);
+
+    switch (packet_ty) {
+        case packet_type::af_damage_notify: {
+            af_process_damage_notify_packet(data, len, addr);
+            break;
+        }
+        default: {
+            return false;
+        }
+    }
+    return true;
+}
+
 static void process_custom_packet([[maybe_unused]] void* data, [[maybe_unused]] int len,
                                   [[maybe_unused]] const rf::NetAddr& addr, [[maybe_unused]] rf::Player* player)
 {
-    pf_process_packet(data, len, addr, player);
+    if (!pf_process_packet(data, len, addr, player)) {
+        af_process_packet(data, len, addr, player);
+    }
 }
 
 CodeInjection multi_io_process_packets_injection{

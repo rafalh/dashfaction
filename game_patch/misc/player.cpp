@@ -269,6 +269,16 @@ ConsoleCommand2 damage_screen_flash_cmd{
     "Toggle damage screen flash effect",
 };
 
+ConsoleCommand2 hit_sounds_cmd{
+    "hit_sounds",
+    [] {
+        g_game_config.play_hit_sounds = !g_game_config.play_hit_sounds;
+        rf::console::print("Hit sounds is {}", g_game_config.play_hit_sounds ? "enabled" : "disabled");
+    },
+    "Toggle whether to play a sound, when you hit players in multiplayer, if enabled by a server",
+    "hit_sounds",
+};
+
 CallHook<void(rf::VMesh*, rf::Vector3*, rf::Matrix3*, void*)> player_cockpit_vmesh_render_hook{
     0x004A7907,
     [](rf::VMesh *vmesh, rf::Vector3 *pos, rf::Matrix3 *orient, void *params) {
@@ -356,4 +366,5 @@ void player_do_patch()
 
     // Commands
     damage_screen_flash_cmd.register_cmd();
+    hit_sounds_cmd.register_cmd();
 }

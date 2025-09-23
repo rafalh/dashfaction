@@ -126,6 +126,47 @@ CallHook<void(rf::Vector3&, float, float, int, int)> weapon_hit_wall_obj_apply_r
     },
 };
 
+bool server_click_limit() {
+    if (rf::is_multi
+        && get_af_server_info().has_value()
+        && get_af_server_info().value().click_limit) {
+        return true;
+    }
+    return false;
+}
+
+std::optional<int> server_fire_wait_override() {
+    return get_af_server_info().and_then([] (const AlpineFactionServerInfo& server_info) {
+        return server_info.semi_auto_cooldown;
+    });
+}
+
+CodeInjection player_fire_primary_weapon_semi_auto_patch{
+    0x004A50BB,
+    [] (auto& regs) {
+        const rf::Entity* const entity = regs.esi;
+        if (server_click_limit() && !entity->ai.next_fire_primary.elapsed()) {
+            regs.eip = 0x004A58B8;
+        }
+    },
+};
+
+CodeInjection entity_fire_primary_weapon_semi_auto_patch{
+    0x004259B8,
+    [] (auto& regs) {
+        // HACKFIX: Override fire wait for stock semi auto weapons.
+        BaseCodeInjection::Reg<int>& fire_wait = regs.eax;
+        const int weapon_type = regs.ebx;
+        const rf::Entity* const entity = regs.esi;
+        if (server_fire_wait_override().has_value()
+            && rf::obj_is_player(entity)
+            && rf::weapon_is_semi_automatic(weapon_type)
+            && fire_wait == 500) {
+            fire_wait = server_fire_wait_override().value();
+        }
+    },
+};
+
 void apply_weapon_patches()
 {
     // Fix crashes caused by too many records in weapons.tbl file
@@ -157,4 +198,7 @@ void apply_weapon_patches()
 
     // Fix rockets not making damage after hitting a detail brush
     weapon_hit_wall_obj_apply_radius_damage_hook.install();
+
+    player_fire_primary_weapon_semi_auto_patch.install();
+    entity_fire_primary_weapon_semi_auto_patch.install();
 }

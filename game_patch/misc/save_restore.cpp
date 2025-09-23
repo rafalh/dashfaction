@@ -253,13 +253,25 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
     },
 };
 
+bool server_saving_enabled() {
+    const bool df_saving_enabled = get_df_server_info()
+        .transform([] (const DashFactionServerInfo& server_info) {
+            return server_info.saving_enabled;
+        })
+        .value_or(false);
+    const bool af_saving_enabled = get_af_server_info()
+        .transform([] (const AlpineFactionServerInfo& server_info) {
+            return server_info.saving_enabled;
+        })
+        .value_or(false);
+    return rf::is_multi && !rf::is_server && (df_saving_enabled || af_saving_enabled);
+}
+
 FunHook<void()> quick_save_hook{
     0x004B6160,
     []() {
         quick_save_hook.call_target();
-        bool server_side_saving_enabled = rf::is_multi && !rf::is_server && get_df_server_info()
-            && get_df_server_info().value().saving_enabled;
-        if (server_side_saving_enabled) {
+        if (server_saving_enabled()) {
             send_chat_line_packet("/save", nullptr);
         }
     },
@@ -269,9 +281,7 @@ FunHook<void()> quick_load_hook{
     0x004B6180,
     []() {
         quick_load_hook.call_target();
-        bool server_side_saving_enabled = rf::is_multi && !rf::is_server && get_df_server_info()
-            && get_df_server_info().value().saving_enabled;
-        if (server_side_saving_enabled) {
+        if (server_saving_enabled()) {
             send_chat_line_packet("/load", nullptr);
         }
     },
