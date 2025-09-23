@@ -624,14 +624,14 @@ struct df_sign_packet_ext
     uint8_t version_minor = VERSION_MINOR;
 };
 
-struct af_join_req_tail_v2
+struct AFJoinReqV2
 {
     uint32_t signature = ALPINE_FACTION_SIGNATURE;
     uint8_t version_major = 1;
     uint8_t version_minor = 1;
     uint8_t version_patch = 0;
     uint8_t version_type = VERSION_TYPE;
-    uint32_t max_rfl_version = 301;
+    uint32_t max_rfl_version = 200;
     uint32_t flags = 0;
 };
 
@@ -666,7 +666,7 @@ std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_df_signature(
 
 std::pair<std::unique_ptr<std::byte[]>, size_t> extend_packet_with_af_join_req_tail(std::byte* data, size_t len)
 {
-    af_join_req_tail_v2 ext{};
+    AFJoinReqV2 ext{};
     return extend_packet(data, len, ext);
 }
 
