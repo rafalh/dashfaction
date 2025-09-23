@@ -715,7 +715,7 @@ CodeInjection multi_level_init_injection{
 
 CallHook<rf::Entity* (int, const char*, int, const rf::Vector3&, rf::Matrix3&, int, int)> player_create_entity_entity_create_hook{
     0x004A41D3,
-    [] (int type, const char* name, int parent_handle, const rf::Vector3& pos, rf::Matrix3& orient, int create_flags, int mp_character) {
+    [] (const int type, const char* const name, const int parent_handle, const rf::Vector3& pos, rf::Matrix3& orient, int create_flags, const int mp_character) {
         if (get_af_server_info().has_value() && get_af_server_info().value().no_player_collide) {
             create_flags |= 0x4;
         }
