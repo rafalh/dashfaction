@@ -827,8 +827,8 @@ CodeInjection process_join_accept_injection{
     0x0047A979,
     [] (const auto& regs) {
         const std::byte* const packet = regs.ebp;
-        const int len = regs.esi + 5;
-        const std::byte* const tail = packet + len;
+        const int tail_offset = regs.esi + 5;
+        const std::byte* const tail = packet + tail_offset;
         if (!try_process_df_join_accept_tail(tail)) {
             try_process_af_join_accept_tail(tail);
         }
