@@ -123,6 +123,21 @@ CodeInjection key_get_hook{
     },
 };
 
+CodeInjection key_down_handler_injection{
+    0x0051E9AC,
+    [] (auto& regs) {
+        const int w_param = addr_as_ref<int>(regs.esp + 4);
+        // The scan code may be wrong for these keys, if it was from a numeric keypad.
+        if (w_param == VK_PRIOR) {
+            regs.eax = rf::KEY_PAGEUP;
+        } else if (w_param == VK_NEXT) {
+            regs.eax = rf::KEY_PAGEDOWN;
+        } else if (w_param == VK_END) {
+            regs.eax = rf::KEY_END;
+        }
+    },
+};
+
 void key_apply_patch()
 {
     // Support non-US keyboard layouts
@@ -135,4 +150,6 @@ void key_apply_patch()
 
     // win32 console support and addition of os_poll
     key_get_hook.install();
+
+    key_down_handler_injection.install();
 }
