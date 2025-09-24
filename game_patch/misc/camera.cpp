@@ -1,7 +1,11 @@
 #include <patch_common/AsmWriter.h>
+#include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include "../rf/player/player.h"
 #include "../rf/os/frametime.h"
+#include "../os/console.h"
+#include "../main/main.h"
+#include "../multi/multi.h"
 
 constexpr auto screen_shake_fps = 150.0f;
 
