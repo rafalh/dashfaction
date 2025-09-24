@@ -49,7 +49,7 @@ ConsoleCommand2 weapon_shake_cmd{
                 : "disabled [multiplayer servers may force weapon shake]"
         );
     },
-    "Toggle camera shake from weapon fire [mutiplayer servers may force weapon shake]",
+    "Toggle camera shake from weapon fire [multiplayer servers may force weapon shake]",
 };
 
 void camera_do_patch()
