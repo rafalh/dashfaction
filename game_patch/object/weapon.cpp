@@ -136,8 +136,8 @@ bool server_click_limit() {
 }
 
 std::optional<int> server_fire_wait_override() {
-    return get_af_server_info().and_then([] (const AlpineFactionServerInfo& server_info) {
-        return server_info.semi_auto_cooldown;
+    return get_af_server_info().and_then([] (const AlpineFactionServerInfo& af_server_info) {
+        return af_server_info.semi_auto_cooldown;
     });
 }
 
