@@ -255,13 +255,13 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
 
 bool server_saving_enabled() {
     const bool df_saving_enabled = get_df_server_info()
-        .transform([] (const DashFactionServerInfo& server_info) {
-            return server_info.saving_enabled;
+        .transform([] (const DashFactionServerInfo& df_server_info) {
+            return df_server_info.saving_enabled;
         })
         .value_or(false);
     const bool af_saving_enabled = get_af_server_info()
-        .transform([] (const AlpineFactionServerInfo& server_info) {
-            return server_info.saving_enabled;
+        .transform([] (const AlpineFactionServerInfo& af_server_info) {
+            return af_server_info.saving_enabled;
         })
         .value_or(false);
     return rf::is_multi && !rf::is_server && (df_saving_enabled || af_saving_enabled);
