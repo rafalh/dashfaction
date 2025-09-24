@@ -273,6 +273,7 @@ ConsoleCommand2 hit_sounds_cmd{
     "hit_sounds",
     [] {
         g_game_config.play_hit_sounds = !g_game_config.play_hit_sounds;
+        g_game_config.save();
         rf::console::print("Hit sounds is {}", g_game_config.play_hit_sounds ? "enabled" : "disabled");
     },
     "Toggle whether to play a sound, when you hit players in multiplayer, if enabled by a server",
