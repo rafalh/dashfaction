@@ -82,15 +82,15 @@ float gr_scale_world_fov(float horizontal_fov = 90.0f)
         horizontal_fov = gr_scale_fov_hor_plus(horizontal_fov);
     }
 
-    if (const auto& df_server_info = get_df_server_info(); df_server_info.has_value()) {
-        const DashFactionServerInfo& server_info = df_server_info.value();
-        if (server_info.max_fov.has_value()) {
-            horizontal_fov = std::min(horizontal_fov, server_info.max_fov.value());
+    if (get_df_server_info().has_value()) {
+        const DashFactionServerInfo& df_server_info = get_df_server_info().value();
+        if (df_server_info.max_fov.has_value()) {
+            rf::console::print("Server FOV limit: {:.2f}", df_server_info.max_fov.value());
         }
-    } else if (const auto& af_server_info = get_af_server_info(); af_server_info.has_value()) {
-        const AlpineFactionServerInfo& server_info = af_server_info.value();
-        if (server_info.max_fov.has_value()) {
-            horizontal_fov = std::min(horizontal_fov, server_info.max_fov.value());
+    } else if (get_af_server_info().has_value()) {
+        const AlpineFactionServerInfo& af_server_info = get_af_server_info().value();
+        if (af_server_info.max_fov.has_value()) {
+            rf::console::print("Server FOV limit: {:.2f}", af_server_info.max_fov.value());
         }
     }
 
@@ -131,15 +131,15 @@ ConsoleCommand2 fov_cmd{
         }
         rf::console::print("Horizontal FOV: {:.2f}", gr_scale_world_fov());
  
-        if (const auto& df_server_info = get_df_server_info(); df_server_info.has_value()) {
-            const DashFactionServerInfo& server_info = df_server_info.value();
-            if (server_info.max_fov.has_value()) {
-                rf::console::print("Server FOV limit: {:.2f}", server_info.max_fov.value());
+        if (get_df_server_info().has_value()) {
+            const DashFactionServerInfo& df_server_info = get_df_server_info().value();
+            if (df_server_info.max_fov.has_value()) {
+                rf::console::print("Server FOV limit: {:.2f}", df_server_info.max_fov.value());
             }
-        } else if (const auto& af_server_info = get_af_server_info(); af_server_info.has_value()) {
-            const AlpineFactionServerInfo& server_info = af_server_info.value();
-            if (server_info.max_fov.has_value()) {
-                rf::console::print("Server FOV limit: {:.2f}", server_info.max_fov.value());
+        } else if (get_af_server_info().has_value()) {
+            const AlpineFactionServerInfo& af_server_info = get_af_server_info().value();
+            if (af_server_info.max_fov.has_value()) {
+                rf::console::print("Server FOV limit: {:.2f}", af_server_info.max_fov.value());
             }
         }
     },
