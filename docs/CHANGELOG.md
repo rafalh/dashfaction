@@ -6,6 +6,7 @@ Version 1.9.2 (not released yet)
 [@is-this-c](https://github.com/is-this-c)
 - Fix a potential crash after a client quits a game if Directd3D 11 is enabled
 - Improve compatibility with Alpine Faction servers
+- Add `af_hitsound1.wav` and `af_killsound1.wav` from [@GooberRF](https://github.com/GooberRF)
 - Add `hit_sounds` cmd
 - Add `weapon_shake` cmd
 
@@ -20,7 +21,6 @@ Version 1.9.1 (released 2025-07-05)
 
 [@is-this-c](https://github.com/is-this-c)
 - Fix Alpine Faction disguise option
-- Build improvements
 
 Version 1.9.0 (released 2025-04-06)
 --------------------------------
