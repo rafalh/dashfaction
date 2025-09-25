@@ -6,6 +6,7 @@ Version 1.9.2 (not released yet)
 [@is-this-c](https://github.com/is-this-c)
 - Fix a potential crash after a client quits a game if Directd3D 11 is enabled
 - Improve compatibility with Alpine Faction servers
+- Support `PgUp` and `PgDown` etc. on numeric keypads
 
 Version 1.9.1 (released 2025-07-05)
 --------------------------------
