@@ -103,4 +103,5 @@ namespace rf
     static auto snd_pc_load_hint = addr_as_ref<int(int handle, bool skip_data_loading, bool is_bluebeard_btz)>(0x00543760);
     static auto snd_pc_is_ds3d_enabled = addr_as_ref<bool()>(0x00544750);
     static auto snd_pc_calculate_pan = addr_as_ref<float(const Vector3& pos)>(0x00543EA0);
+    static auto snd_get_handle = addr_as_ref<int(const char*, float, float, float)>(0x005054B0);
 }
