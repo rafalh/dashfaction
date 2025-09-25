@@ -95,6 +95,8 @@ add_packfile(dashfaction.vpp
     meshes/meatchunk4.v3m
     meshes/meatchunk5.v3m
 
+    audio/af_hitsound1.wav
+    audio/af_killsound1.wav
     # Dummy audio files to silence warnings
     audio/fp_shotgun_reload.wav
     "audio/Laser loop.wav"
