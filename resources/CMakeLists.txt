@@ -75,7 +75,7 @@ add_packfile(dashfaction.vpp
     images/pls_airlockmat01-mip2.tga
     images/consolebutton2A.tga
     images/gore1.tga # https://www.filterforge.com/filters/7459.html
-    images/dummmy/bigboom.vbm # Dummy bitmap to silence warning
+    images/dummy/bigboom.vbm # Dummy bitmap to silence warning
 
     fonts/biggerfont.vf
     fonts/regularfont.ttf
