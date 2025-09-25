@@ -835,6 +835,60 @@ CodeInjection process_join_accept_injection{
     }
 };
 
+ConsoleCommand2 dbg_server_flags_cmd{
+    "dbg_server_flags",
+    [] {
+        if (g_df_server_info.has_value()) {
+            const DashFactionServerInfo& df_server_info = g_df_server_info.value();
+            rf::console::print("====================");
+            rf::console::print(
+                "Dash Faction {}.{}",
+                df_server_info.version_major,
+                df_server_info.version_minor
+            );
+            rf::console::print("====================");
+            rf::console::print("saving_enabled: {}", df_server_info.saving_enabled);
+            if (df_server_info.max_fov.has_value()) {
+                rf::console::print("max_fov: Some({})", df_server_info.max_fov.value());
+            } else {
+                rf::console::print("max_fov: None");
+            }
+        } else if (g_af_server_info.has_value()) {
+            const AlpineFactionServerInfo& af_server_info = g_af_server_info.value();
+            rf::console::print("====================");
+            rf::console::print(
+                "Alpine Faction {}.{}",
+                af_server_info.version_major,
+                af_server_info.version_minor
+            );
+            rf::console::print("====================");
+            rf::console::print("saving_enabled: {}", af_server_info.saving_enabled);
+            if (af_server_info.max_fov.has_value()) {
+                rf::console::print("max_fov: Some({})", af_server_info.max_fov.value());
+            } else {
+                rf::console::print("max_fov: None");
+            }
+            rf::console::print("allow_fb_mesh: {}", af_server_info.allow_fb_mesh);
+            rf::console::print("allow_lmap: {}", af_server_info.allow_lmap);
+            rf::console::print("allow_no_ss: {}", af_server_info.allow_no_ss);
+            rf::console::print("no_player_collide: {}", af_server_info.no_player_collide);
+            rf::console::print("allow_no_mf: {}", af_server_info.allow_no_mf);
+            rf::console::print("click_limit: {}", af_server_info.click_limit);
+            if (af_server_info.semi_auto_cooldown.has_value()) {
+                rf::console::print(
+                    "semi_auto_cooldown: Some({})",
+                    af_server_info.semi_auto_cooldown.value()
+                );
+            } else {
+                rf::console::print("semi_auto_cooldown: None");
+            }
+            rf::console::print("unlimited_fps: {}", af_server_info.unlimited_fps);
+            rf::console::print("gaussian_spread: {}", af_server_info.gaussian_spread);
+            rf::console::print("location_pinging: {}", af_server_info.location_pinging);
+        }
+    }
+};
+
 CodeInjection process_join_accept_send_game_info_req_injection{
     0x0047AA00,
     [](auto& regs) {
@@ -1408,4 +1462,6 @@ void network_init()
 
     // Ignore browsers when calculating player count for info requests
     game_info_num_players_hook.install();
+
+    dbg_server_flags_cmd.register_cmd();
 }
