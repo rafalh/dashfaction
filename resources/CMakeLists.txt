@@ -75,7 +75,7 @@ add_packfile(dashfaction.vpp
     images/pls_airlockmat01-mip2.tga
     images/consolebutton2A.tga
     images/gore1.tga # https://www.filterforge.com/filters/7459.html
-    images/bigboom.vbm # Dummy bitmap to silence warning
+    images/dummmy/bigboom.vbm # Dummy bitmap to silence warning
 
     fonts/biggerfont.vf
     fonts/regularfont.ttf
@@ -98,8 +98,8 @@ add_packfile(dashfaction.vpp
     audio/af_hitsound1.wav
     audio/af_killsound1.wav
     # Dummy audio files to silence warnings
-    audio/fp_shotgun_reload.wav
-    "audio/Laser loop.wav"
+    audio/dummy/fp_shotgun_reload.wav
+    "audio/dummy/Laser loop.wav"
 
     standard_vs:${CMAKE_BINARY_DIR}/shaders/standard_vs.bin
     character_vs:${CMAKE_BINARY_DIR}/shaders/character_vs.bin
