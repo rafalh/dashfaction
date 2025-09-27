@@ -835,8 +835,8 @@ CodeInjection process_join_accept_injection{
     }
 };
 
-ConsoleCommand2 dbg_server_flags_cmd{
-    "dbg_server_flags",
+ConsoleCommand2 dbg_remote_flags_cmd{
+    "dbg_remote_flags",
     [] {
         if (g_df_server_info.has_value()) {
             const DashFactionServerInfo& df_server_info = g_df_server_info.value();
@@ -1463,5 +1463,5 @@ void network_init()
     // Ignore browsers when calculating player count for info requests
     game_info_num_players_hook.install();
 
-    dbg_server_flags_cmd.register_cmd();
+    dbg_remote_flags_cmd.register_cmd();
 }
