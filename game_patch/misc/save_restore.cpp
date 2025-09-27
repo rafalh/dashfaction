@@ -254,16 +254,10 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
 };
 
 bool server_saving_enabled() {
-    const bool df_saving_enabled = get_df_server_info()
-        .transform([] (const DashFactionServerInfo& df_server_info) {
-            return df_server_info.saving_enabled;
-        })
-        .value_or(false);
-    const bool af_saving_enabled = get_af_server_info()
-        .transform([] (const AlpineFactionServerInfo& af_server_info) {
-            return af_server_info.saving_enabled;
-        })
-        .value_or(false);
+    const bool df_saving_enabled = get_df_server_info().has_value()
+        && get_df_server_info().value().saving_enabled;
+    const bool af_saving_enabled = get_af_server_info().has_value()
+        && get_af_server_info().value().saving_enabled;
     return rf::is_multi && !rf::is_server && (df_saving_enabled || af_saving_enabled);
 }
 
