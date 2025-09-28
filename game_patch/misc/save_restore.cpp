@@ -253,19 +253,19 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
     },
 };
 
-bool server_saving_enabled() {
+bool remote_saving_enabled() {
     const bool df_saving_enabled = get_df_server_info().has_value()
         && get_df_server_info().value().saving_enabled;
     const bool af_saving_enabled = get_af_server_info().has_value()
         && get_af_server_info().value().saving_enabled;
-    return rf::is_multi && !rf::is_server && (df_saving_enabled || af_saving_enabled);
+    return df_saving_enabled || af_saving_enabled;
 }
 
 FunHook<void()> quick_save_hook{
     0x004B6160,
     []() {
         quick_save_hook.call_target();
-        if (server_saving_enabled()) {
+        if (remote_saving_enabled()) {
             send_chat_line_packet("/save", nullptr);
         }
     },
@@ -275,7 +275,7 @@ FunHook<void()> quick_load_hook{
     0x004B6180,
     []() {
         quick_load_hook.call_target();
-        if (server_saving_enabled()) {
+        if (remote_saving_enabled()) {
             send_chat_line_packet("/load", nullptr);
         }
     },
