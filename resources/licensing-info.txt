@@ -22,10 +22,6 @@ be found below.
 Assets
 ---------------------------------
 
-natalie <webmistress@natalie.ee>:
-* af_hitsound1.wav
-    Source: https://github.com/GooberRF/alpinefaction
-
 soneproject:
 * af_killsound1.wav
     Title: ecofuture3
