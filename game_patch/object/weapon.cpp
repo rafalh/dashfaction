@@ -126,16 +126,14 @@ CallHook<void(rf::Vector3&, float, float, int, int)> weapon_hit_wall_obj_apply_r
     },
 };
 
-bool server_click_limit() {
-    if (rf::is_multi
-        && get_af_server_info().has_value()
-        && get_af_server_info().value().click_limit) {
+bool remote_click_limit() {
+    if (get_af_server_info().has_value() && get_af_server_info().value().click_limit) {
         return true;
     }
     return false;
 }
 
-std::optional<int> server_fire_wait_override() {
+std::optional<int> remote_fire_wait_override() {
     return get_af_server_info().and_then([] (const AlpineFactionServerInfo& af_server_info) {
         return af_server_info.semi_auto_cooldown;
     });
@@ -145,7 +143,7 @@ CodeInjection player_fire_primary_weapon_semi_auto_patch{
     0x004A50BB,
     [] (auto& regs) {
         const rf::Entity* const entity = regs.esi;
-        if (server_click_limit() && !entity->ai.next_fire_primary.elapsed()) {
+        if (remote_click_limit() && !entity->ai.next_fire_primary.elapsed()) {
             regs.eip = 0x004A58B8;
         }
     },
@@ -158,11 +156,11 @@ CodeInjection entity_fire_primary_weapon_semi_auto_patch{
         BaseCodeInjection::Reg<int>& fire_wait = regs.eax;
         const int weapon_type = regs.ebx;
         const rf::Entity* const entity = regs.esi;
-        if (server_fire_wait_override().has_value()
+        if (remote_fire_wait_override().has_value()
             && rf::obj_is_player(entity)
             && rf::weapon_is_semi_automatic(weapon_type)
             && fire_wait == 500) {
-            fire_wait = server_fire_wait_override().value();
+            fire_wait = remote_fire_wait_override().value();
         }
     },
 };
