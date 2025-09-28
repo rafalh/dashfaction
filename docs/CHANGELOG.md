@@ -9,7 +9,7 @@ Version 1.9.2 (not released yet)
 - Add `af_hitsound1.wav` and `af_killsound1.wav` from [@GooberRF](https://github.com/GooberRF)
 - Add `hit_sounds` command
 - Add `weapon_shake` command
-- Add `dbg_server_flags` command
+- Add `dbg_remote_flags` command
 
 Version 1.9.1 (released 2025-07-05)
 --------------------------------
