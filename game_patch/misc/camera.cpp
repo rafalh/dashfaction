@@ -27,8 +27,8 @@ FunHook<void(rf::Camera*)> camera_update_shake_hook{
 CallHook<void(rf::Camera*, float, float)> entity_fire_primary_weapon_camera_shake_hook{
     0x00426C79,
     [] (rf::Camera* const cp, const float amplitude, const float time_seconds) {
-        const bool remote_force_weapon_shake = get_af_server_info().has_value()
-            && !get_af_server_info().value().allow_no_ss;
+        const bool remote_force_weapon_shake = get_af_remote_info().has_value() 
+            && !get_af_remote_info().value().allow_no_ss;
         if (g_game_config.weapon_shake || remote_force_weapon_shake) {
             entity_fire_primary_weapon_camera_shake_hook.call_target(cp, amplitude, time_seconds);
         }

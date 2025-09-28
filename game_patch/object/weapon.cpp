@@ -127,15 +127,15 @@ CallHook<void(rf::Vector3&, float, float, int, int)> weapon_hit_wall_obj_apply_r
 };
 
 bool remote_click_limit() {
-    if (get_af_server_info().has_value() && get_af_server_info().value().click_limit) {
+    if (get_af_remote_info().has_value() && get_af_remote_info().value().click_limit) {
         return true;
     }
     return false;
 }
 
 std::optional<int> remote_fire_wait_override() {
-    return get_af_server_info().and_then([] (const AlpineFactionServerInfo& af_server_info) {
-        return af_server_info.semi_auto_cooldown;
+    return get_af_remote_info().and_then([] (const AlpineFactionRemoteInfo& af_remote_info) {
+        return af_remote_info.semi_auto_cooldown;
     });
 }
 
