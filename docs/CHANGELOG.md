@@ -6,7 +6,7 @@ Version 1.9.2 (not released yet)
 [@is-this-c](https://github.com/is-this-c)
 - Fix a potential crash after a client quits a game if Directd3D 11 is enabled
 - Improve compatibility with Alpine Faction servers
-- Add `af_hitsound1.wav` and `af_killsound1.wav` from [Alpine Faction](https://github.com/GooberRF/alpinefaction)
+- Add `af_hitsound1.wav` and `af_killsound1.wav` from Alpine Faction
 - Add `hit_sounds` command
 - Add `weapon_shake` command
 - Add `dbg_remote_flags` command
