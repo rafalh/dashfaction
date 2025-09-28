@@ -126,13 +126,6 @@ CallHook<void(rf::Vector3&, float, float, int, int)> weapon_hit_wall_obj_apply_r
     },
 };
 
-bool remote_click_limit() {
-    if (get_af_remote_info().has_value() && get_af_remote_info().value().click_limit) {
-        return true;
-    }
-    return false;
-}
-
 std::optional<int> remote_fire_wait_override() {
     return get_af_remote_info().and_then([] (const AlpineFactionRemoteInfo& af_remote_info) {
         return af_remote_info.semi_auto_cooldown;
@@ -143,7 +136,9 @@ CodeInjection player_fire_primary_weapon_semi_auto_patch{
     0x004A50BB,
     [] (auto& regs) {
         const rf::Entity* const entity = regs.esi;
-        if (remote_click_limit() && !entity->ai.next_fire_primary.elapsed()) {
+        if (get_af_remote_info().has_value()
+            && get_af_remote_info().value().click_limit
+            && !entity->ai.next_fire_primary.elapsed()) {
             regs.eip = 0x004A58B8;
         }
     },
