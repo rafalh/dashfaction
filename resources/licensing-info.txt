@@ -19,23 +19,37 @@ Dash Faction uses some open-source third-party components. Their licenses can
 be found below.
 
 ---------------------------------
+Assets
+---------------------------------
+
+natalie <webmistress@natalie.ee>:
+* af_hitsound1.wav
+    Source: https://github.com/GooberRF/alpinefaction
+
+soneproject:
+* af_killsound1.wav
+    Title: ecofuture3
+    Source: https://freesound.org/s/346425
+    License: https://creativecommons.org/licenses/by/3.0
+
+---------------------------------
 Contributors
 ---------------------------------
 
 Chris "Goober" Parsons:
-* code contributions
-* HUD textures for the big mode
-* symbol glyphs in ttf fonts
-* launcher header
+* Code contributions
+* Textures for `bighud`
+* Symbol glyphs in TTF fonts
+* Launcher header
 
 natalie <webmistress@natalie.ee>:
-* code contributions
+* Code contributions
 
 is-this-c:
-* code contributions
+* Code contributions
 
 Mystyle:
-* setup code improvements
+* Setup code improvements
 
 ###############################################################################
 ## subhook
