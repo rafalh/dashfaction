@@ -6,7 +6,7 @@ Version 1.9.2 (not released yet)
 [@is-this-c](https://github.com/is-this-c)
 - Fix a potential crash after a client quits a game if Directd3D 11 is enabled
 - Improve compatibility with Alpine Faction servers
-- Add `af_hitsound1.wav` and `af_killsound1.wav` from [@GooberRF](https://github.com/GooberRF)
+- Add `af_hitsound1.wav` and `af_killsound1.wav` from [Alpine Faction](https://github.com/GooberRF/alpinefaction)
 - Add `hit_sounds` command
 - Add `weapon_shake` command
 - Add `dbg_remote_flags` command
@@ -14,10 +14,10 @@ Version 1.9.2 (not released yet)
 Version 1.9.1 (released 2025-07-05)
 --------------------------------
 [@rafalh](https://github.com/rafalh)
-- Fix crash when loading levels in version 300 with `AF_Teleport_Player` or `Clone_Entity` events
+- Fix a crash when loading levels in version 300 with `AF_Teleport_Player` or `Clone_Entity` events
 - Add basic handling for `AF_Teleport_Player` event
 - Add a new editor help file that includes information from the original red.hlp included with the game and the newer red.chm (RED help 1.1) published online
-- Add option to ignore level version
+- Add an option to ignore level version
 - Fix warnings in main menu caused by missing files (e.g. bigboom.vbm)
 
 [@is-this-c](https://github.com/is-this-c)
@@ -68,9 +68,9 @@ Version 1.9.0 (released 2025-04-06)
 - Fix items being too dim in multi-player (RF bug)
 - Fix clutters and items being too bright when static mesh lighting was enabled
 - Add level property which enables full lightmaps depth (enabled by default in new maps)
-- Add option to disguise as Alpine Faction to avoids AF advertisements and allow playing in servers that reject non-AF players
-- Enable loading RFL version 300
-- Log a warning when RFL uses unsupported event class
+- Add an option to disguise as Alpine Faction to avoid AF advertisements and allow playing in servers that reject non-AF players
+- Enable loading partially supported RFL version 300
+- Log a warning when RFL uses an unsupported event class
 - Add support for high resolution GeoMod textures
 - Add gibs support based on RF PS2 demo (use `gibs` command to enable)
 - Add muzzle flash option in the launcher
