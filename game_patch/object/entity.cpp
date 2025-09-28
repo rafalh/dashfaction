@@ -280,11 +280,9 @@ static FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
 CallHook<void(rf::Entity&)> entity_update_muzzle_flash_light_hook{
     0x0041E814,
     [] (rf::Entity& ep) {
-        const bool server_force_muzzle_flash = rf::is_multi
-            && !rf::is_server
-            && get_af_server_info()
-            && !get_af_server_info()->allow_no_mf;
-        if (g_game_config.muzzle_flash || server_force_muzzle_flash) {
+        const bool remote_force_muzzle_flash = get_af_server_info().has_value()
+            && !get_af_server_info().value().allow_no_mf;
+        if (g_game_config.muzzle_flash || remote_force_muzzle_flash) {
             entity_update_muzzle_flash_light_hook.call_target(ep);
         }
     },
