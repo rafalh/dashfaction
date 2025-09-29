@@ -65,7 +65,7 @@ Name                          | Description
 `gibs`                        | toggle gibs (characters exploding into parts)
 `muzzle_flash`                | toggle muzzle flash
 `hit_sounds`                  | toggle whether to play a sound, when you hit players in multiplayer, if enabled by a server
-`weapon_shake`                | toggle camera shake from weapon fire [multiplayer servers may force weapon shake]
+`weapon_screen_shake`                | toggle camera shake from weapon fire [multiplayer servers may force weapon shake]
 
 ### Server commands
 

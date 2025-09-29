@@ -8,7 +8,7 @@ Version 1.9.2 (not released yet)
 - Improve compatibility with Alpine Faction servers
 - Add `af_killsound1.wav` from Alpine Faction
 - Add `hit_sounds` command
-- Add `weapon_shake` command
+- Add `weapon_screen_shake` command
 - Add `dbg_remote_flags` command
 
 Version 1.9.1 (released 2025-07-05)

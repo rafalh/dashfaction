@@ -27,27 +27,27 @@ FunHook<void(rf::Camera*)> camera_update_shake_hook{
 CallHook<void(rf::Camera*, float, float)> entity_fire_primary_weapon_camera_shake_hook{
     0x00426C79,
     [] (rf::Camera* const cp, const float amplitude, const float time_seconds) {
-        const bool remote_force_weapon_shake = get_af_remote_info().has_value() 
+        const bool remote_force_ss = get_af_remote_info().has_value() 
             && !get_af_remote_info().value().allow_no_ss;
-        if (g_game_config.weapon_shake || remote_force_weapon_shake) {
+        if (g_game_config.weapon_screen_shake || remote_force_ss) {
             entity_fire_primary_weapon_camera_shake_hook.call_target(cp, amplitude, time_seconds);
         }
     },
 };
 
-ConsoleCommand2 weapon_shake_cmd{
-    "weapon_shake",
+ConsoleCommand2 weapon_screen_shake_cmd{
+    "weapon_screen_shake",
     [] {
-        g_game_config.weapon_shake = !g_game_config.weapon_shake;
+        g_game_config.weapon_screen_shake = !g_game_config.weapon_screen_shake;
         g_game_config.save();
         rf::console::print(
-            "Weapon shake is {}",
-            g_game_config.weapon_shake
+            "Weapon screen shake is {}",
+            g_game_config.weapon_screen_shake
                 ? "enabled"
-                : "disabled [multiplayer servers may force weapon shake]"
+                : "disabled [multiplayer servers may force weapon screen shake]"
         );
     },
-    "Toggle camera shake from weapon fire [multiplayer servers may force weapon shake]",
+    "Toggle camera shake from weapon fire [multiplayer servers may force weapon screen shake]",
 };
 
 void camera_do_patch()

@@ -58,7 +58,7 @@ struct GameConfig
     CfgVar<bool> muzzle_flash = true;
     CfgVar<bool> glares = true;
     CfgVar<bool> show_enemy_bullets = true;
-    CfgVar<bool> weapon_shake = true;
+    CfgVar<bool> weapon_screen_shake = true;
 
     static constexpr float min_fov = 75.0f;
     static constexpr float max_fov = 160.0f;
