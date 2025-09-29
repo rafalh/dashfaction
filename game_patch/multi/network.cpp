@@ -759,7 +759,7 @@ CallHook<int(const rf::NetAddr*, std::byte*, size_t)> send_join_accept_packet_ho
     },
 };
 
-bool try_process_df_join_accept_tail(const std::byte* const tail) {
+bool parse_df_join_accept_tail(const std::byte* const tail) {
     DashFactionJoinAcceptPacketExt ext{};
     std::memcpy(&ext, tail, sizeof(ext));
     xlog::debug("Checking for join_accept DF extension: {:#08x}", ext.df_signature);
@@ -779,13 +779,13 @@ bool try_process_df_join_accept_tail(const std::byte* const tail) {
     remote_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
     constexpr const float default_fov = 90.f;
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
-        remote_info.max_fov = std::optional{ext.max_fov};
+        remote_info.max_fov.emplace(ext.max_fov);
     }
     g_df_remote_info.emplace(remote_info);
     return true;
 }
 
-bool try_process_af_join_accept_tail(const std::byte* const tail) {
+bool parse_af_join_accept_tail(const std::byte* const tail) {
     AlpineFactionJoinAcceptPacketExt ext{};
     std::memcpy(&ext, tail, sizeof(ext));
     xlog::debug("Checking for join_accept AF extension: {:#08x}", ext.af_signature);
@@ -814,10 +814,10 @@ bool try_process_af_join_accept_tail(const std::byte* const tail) {
     remote_info.location_pinging = !!(ext.flags & Flags::location_pinging);
     constexpr const float default_fov = 90.f;
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
-        remote_info.max_fov = std::optional{ext.max_fov};
+        remote_info.max_fov.emplace(ext.max_fov);
     }
     if (remote_info.click_limit) {
-        remote_info.semi_auto_cooldown = std::optional{ext.semi_auto_cooldown};
+        remote_info.semi_auto_cooldown.emplace(ext.semi_auto_cooldown);
     }
     g_af_remote_info.emplace(remote_info);
     return true;
@@ -829,8 +829,8 @@ CodeInjection process_join_accept_injection{
         const std::byte* const packet = regs.ebp;
         const int ext_offset = regs.esi + 5;
         const std::byte* const tail = packet + ext_offset;
-        if (!try_process_df_join_accept_tail(tail)) {
-            try_process_af_join_accept_tail(tail);
+        if (!parse_df_join_accept_tail(tail)) {
+            parse_af_join_accept_tail(tail);
         }
     }
 };
@@ -1250,7 +1250,7 @@ bool af_process_packet(
         default: {
             return false;
         }
-    }   
+    }
     return true;
 }
 
