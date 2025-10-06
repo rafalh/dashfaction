@@ -835,8 +835,8 @@ CodeInjection process_join_accept_injection{
     }
 };
 
-ConsoleCommand2 dbg_remote_flags_cmd{
-    "dbg_remote_flags",
+ConsoleCommand2 remote_flags_cmd{
+    "remote_flags",
     [] {
         if (g_df_remote_info.has_value()) {
             const DashFactionRemoteInfo& df_remote_info = g_df_remote_info.value();
@@ -847,14 +847,14 @@ ConsoleCommand2 dbg_remote_flags_cmd{
                 df_remote_info.version_minor
             );
             rf::console::print("====================");
-            rf::console::print("saving_enabled: {}", df_remote_info.saving_enabled);
+            rf::console::print("Teleport: {}", df_remote_info.saving_enabled);
             if (df_remote_info.max_fov.has_value()) {
-                rf::console::print("max_fov: Some({})", df_remote_info.max_fov.value());
+                rf::console::print("Max FOV: Some({})", df_remote_info.max_fov.value());
             } else {
-                rf::console::print("max_fov: None");
+                rf::console::print("Max FOV: None");
             }
         } else if (g_af_remote_info.has_value()) {
-            const AlpineFactionRemoteInfo& af_remote_info = g_af_remote_info.value();
+            const AlpineFactionServerInfo& af_remote_info = g_af_remote_info.value();
             rf::console::print("====================");
             rf::console::print(
                 "Alpine Faction {}.{}",
@@ -862,29 +862,29 @@ ConsoleCommand2 dbg_remote_flags_cmd{
                 af_remote_info.version_minor
             );
             rf::console::print("====================");
-            rf::console::print("saving_enabled: {}", af_remote_info.saving_enabled);
+            rf::console::print("Teleport: {}", af_remote_info.saving_enabled);
             if (af_remote_info.max_fov.has_value()) {
-                rf::console::print("max_fov: Some({})", af_remote_info.max_fov.value());
+                rf::console::print("Max FOV: Some({})", af_remote_info.max_fov.value());
             } else {
-                rf::console::print("max_fov: None");
+                rf::console::print("Max FOV: None");
             }
-            rf::console::print("allow_fb_mesh: {}", af_remote_info.allow_fb_mesh);
-            rf::console::print("allow_lmap: {}", af_remote_info.allow_lmap);
-            rf::console::print("allow_no_ss: {}", af_remote_info.allow_no_ss);
-            rf::console::print("no_player_collide: {}", af_remote_info.no_player_collide);
-            rf::console::print("allow_no_mf: {}", af_remote_info.allow_no_mf);
-            rf::console::print("click_limit: {}", af_remote_info.click_limit);
+            rf::console::print("Allow full-bright meshes: {}", af_remote_info.allow_fb_mesh);
+            rf::console::print("Allow light maps only: {}", af_remote_info.allow_lmap);
+            rf::console::print("Allow no screen shake: {}", af_remote_info.allow_no_ss);
+            rf::console::print("No player collide: {}", af_remote_info.no_player_collide);
+            rf::console::print("Allow no muzzle flash: {}", af_remote_info.allow_no_mf);
+            rf::console::print("Semiauto fire rate limit: {}", af_remote_info.click_limit);
             if (af_remote_info.semi_auto_cooldown.has_value()) {
                 rf::console::print(
-                    "semi_auto_cooldown: Some({})",
+                    "Semiauto cool-down: Some({})",
                     af_remote_info.semi_auto_cooldown.value()
                 );
             } else {
-                rf::console::print("semi_auto_cooldown: None");
+                rf::console::print("Semiauto cool-down: None");
             }
-            rf::console::print("unlimited_fps: {}", af_remote_info.unlimited_fps);
-            rf::console::print("gaussian_spread: {}", af_remote_info.gaussian_spread);
-            rf::console::print("location_pinging: {}", af_remote_info.location_pinging);
+            rf::console::print("Allow unlimited FPS: {}", af_remote_info.unlimited_fps);
+            rf::console::print("Gaussian spread: {}", af_remote_info.gaussian_spread);
+            rf::console::print("Ping locations: {}", af_remote_info.location_pinging);
         }
     }
 };
@@ -1453,5 +1453,5 @@ void network_init()
     // Ignore browsers when calculating player count for info requests
     game_info_num_players_hook.install();
 
-    dbg_remote_flags_cmd.register_cmd();
+    remote_flags_cmd.register_cmd();
 }
