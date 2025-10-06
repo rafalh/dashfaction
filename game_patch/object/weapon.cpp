@@ -148,7 +148,7 @@ CodeInjection entity_fire_primary_weapon_semi_auto_patch{
     0x004259B8,
     [] (auto& regs) {
         // HACKFIX: Override fire wait for stock semi auto weapons.
-        BaseCodeInjection::Reg<int>& fire_wait = regs.eax;
+        auto& fire_wait = regs.eax;
         const int weapon_type = regs.ebx;
         const rf::Entity* const entity = regs.esi;
         if (remote_fire_wait_override().has_value()
