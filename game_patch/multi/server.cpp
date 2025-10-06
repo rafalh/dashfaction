@@ -717,7 +717,7 @@ CallHook<rf::Entity* (int, const char*, int, const rf::Vector3&, rf::Matrix3&, i
     0x004A41D3,
     [] (const int type, const char* const name, const int parent_handle, const rf::Vector3& pos, rf::Matrix3& orient, int create_flags, const int mp_character) {
         if (get_af_remote_info().has_value() && get_af_remote_info().value().no_player_collide) {
-            constexpr const int NO_PCOLLIDE = 0x4;
+            constexpr int NO_PCOLLIDE = 0x4;
             create_flags |= NO_PCOLLIDE;
         }
         return player_create_entity_entity_create_hook.call_target(type, name, parent_handle, pos, orient, create_flags, mp_character);
