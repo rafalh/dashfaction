@@ -126,14 +126,17 @@ CodeInjection key_get_hook{
 CodeInjection key_down_handler_injection{
     0x0051E9AC,
     [] (auto& regs) {
-        const int w_param = addr_as_ref<int>(regs.esp + 4);
-        // The scan code may be wrong for these keys, if it was from a numeric keypad.
-        if (w_param == VK_PRIOR) {
-            regs.eax = rf::KEY_PAGEUP;
-        } else if (w_param == VK_NEXT) {
-            regs.eax = rf::KEY_PAGEDOWN;
-        } else if (w_param == VK_END) {
-            regs.eax = rf::KEY_END;
+        const int virtual_key = addr_as_ref<int>(regs.esp + 4);
+        // For numeric keypads, we need to fix these keys' scan codes.
+        auto& scan_code = regs.eax;
+        if (virtual_key == VK_PRIOR) {
+            scan_code = rf::KEY_PAGEUP;
+        } else if (virtual_key == VK_NEXT) {
+            scan_code = rf::KEY_PAGEDOWN;
+        } else if (virtual_key == VK_END) {
+            scan_code = rf::KEY_END;
+        } else if (virtual_key == VK_HOME) {
+            scan_code = rf::KEY_HOME;
         }
     },
 };
