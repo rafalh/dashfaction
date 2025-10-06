@@ -85,12 +85,12 @@ float gr_scale_world_fov(float horizontal_fov = 90.0f)
     if (get_df_remote_info().has_value()) {
         const DashFactionRemoteInfo& df_remote_info = get_df_remote_info().value();
         if (df_remote_info.max_fov.has_value()) {
-            rf::console::print("Server FOV limit: {:.2f}", df_remote_info.max_fov.value());
+            horizontal_fov = std::min(horizontal_fov, df_remote_info.max_fov.value());
         }
     } else if (get_af_remote_info().has_value()) {
         const AlpineFactionRemoteInfo& af_remote_info = get_af_remote_info().value();
         if (af_remote_info.max_fov.has_value()) {
-            rf::console::print("Server FOV limit: {:.2f}", af_remote_info.max_fov.value());
+            horizontal_fov = std::min(horizontal_fov, af_remote_info.max_fov.value());
         }
     }
 
