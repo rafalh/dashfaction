@@ -1210,7 +1210,7 @@ void af_process_damage_notify_packet(const void* const data, const size_t len, c
 
     std::memcpy(&damage_notify_packet, data, sizeof(damage_notify_packet));
 
-    const bool died = static_cast<bool>(damage_notify_packet.flags & 0x01);
+    const bool died = static_cast<bool>(damage_notify_packet.flags & 0x1);
     if (g_game_config.play_hit_sounds) {
         constexpr int hit_sound_id = 29;
         static const int kill_sound_id = rf::snd_get_handle("af_killsound1.wav", 5.f, 1.f, 1.f);
