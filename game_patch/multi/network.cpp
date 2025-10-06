@@ -1222,7 +1222,7 @@ void af_process_damage_notify_packet(const void* const data, const size_t len, c
 
     const bool died = static_cast<bool>(damage_notify_packet.flags & 0x01);
     if (g_game_config.play_hit_sounds) {
-        constexpr const int hit_sound_id = 29;
+        constexpr int hit_sound_id = 29;
         static const int kill_sound_id = rf::snd_get_handle("af_killsound1.wav", 5.f, 1.f, 1.f);
         rf::snd_play(died ? kill_sound_id : hit_sound_id, 0, 0.f, 1.f);
     }
