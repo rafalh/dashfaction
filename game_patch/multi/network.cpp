@@ -777,7 +777,7 @@ bool parse_df_join_accept_tail(const std::byte* const tail) {
     remote_info.version_minor = ext.version_minor;
     using Flags = DashFactionJoinAcceptPacketExt::Flags;
     remote_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
-    constexpr const float default_fov = 90.f;
+    constexpr float default_fov = 90.f;
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
         remote_info.max_fov.emplace(ext.max_fov);
     }
@@ -812,7 +812,7 @@ bool parse_af_join_accept_tail(const std::byte* const tail) {
     remote_info.unlimited_fps = !!(ext.flags & Flags::unlimited_fps);
     remote_info.gaussian_spread = !!(ext.flags & Flags::gaussian_spread);
     remote_info.location_pinging = !!(ext.flags & Flags::location_pinging);
-    constexpr const float default_fov = 90.f;
+    constexpr float default_fov = 90.f;
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
         remote_info.max_fov.emplace(ext.max_fov);
     }
