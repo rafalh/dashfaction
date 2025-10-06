@@ -277,6 +277,32 @@ static FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
     },
 };
 
+CallHook<void(rf::Camera*, float, float)> entity_fire_primary_weapon_camera_shake_hook{
+    0x00426C79,
+    [] (rf::Camera* const cp, const float amplitude, const float time_seconds) {
+        const bool remote_force_ss = get_af_remote_info().has_value() 
+            && !get_af_remote_info().value().allow_no_ss;
+        if (g_game_config.weapon_screen_shake || remote_force_ss) {
+            entity_fire_primary_weapon_camera_shake_hook.call_target(cp, amplitude, time_seconds);
+        }
+    },
+};
+
+ConsoleCommand2 weapon_screen_shake_cmd{
+    "weapon_screen_shake",
+    [] {
+        g_game_config.weapon_screen_shake = !g_game_config.weapon_screen_shake;
+        g_game_config.save();
+        rf::console::print(
+            "Weapon screen shake is {}",
+            g_game_config.weapon_screen_shake
+                ? "enabled"
+                : "disabled [multiplayer servers may force weapon screen shake]"
+        );
+    },
+    "Toggle camera shake from weapon fire [multiplayer servers may force weapon screen shake]",
+};
+
 CallHook<void(rf::Entity&)> entity_update_muzzle_flash_light_hook{
     0x0041E814,
     [] (rf::Entity& ep) {
@@ -365,7 +391,10 @@ void entity_do_patch()
     // Don't create muzzle flash lights
     entity_update_muzzle_flash_light_hook.install();
 
+    entity_fire_primary_weapon_camera_shake_hook.install();
+
     // Commands
     gibs_cmd.register_cmd();
     muzzle_flash_cmd.register_cmd();
+    weapon_screen_shake_cmd.register_cmd();
 }

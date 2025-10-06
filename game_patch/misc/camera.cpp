@@ -1,11 +1,7 @@
 #include <patch_common/AsmWriter.h>
-#include <patch_common/CallHook.h>
 #include <patch_common/FunHook.h>
 #include "../rf/player/player.h"
 #include "../rf/os/frametime.h"
-#include "../os/console.h"
-#include "../main/main.h"
-#include "../multi/multi.h"
 
 constexpr auto screen_shake_fps = 150.0f;
 
@@ -22,32 +18,6 @@ FunHook<void(rf::Camera*)> camera_update_shake_hook{
 
         camera_update_shake_hook.call_target(camera);
     },
-};
-
-CallHook<void(rf::Camera*, float, float)> entity_fire_primary_weapon_camera_shake_hook{
-    0x00426C79,
-    [] (rf::Camera* const cp, const float amplitude, const float time_seconds) {
-        const bool remote_force_ss = get_af_remote_info().has_value() 
-            && !get_af_remote_info().value().allow_no_ss;
-        if (g_game_config.weapon_screen_shake || remote_force_ss) {
-            entity_fire_primary_weapon_camera_shake_hook.call_target(cp, amplitude, time_seconds);
-        }
-    },
-};
-
-ConsoleCommand2 weapon_screen_shake_cmd{
-    "weapon_screen_shake",
-    [] {
-        g_game_config.weapon_screen_shake = !g_game_config.weapon_screen_shake;
-        g_game_config.save();
-        rf::console::print(
-            "Weapon screen shake is {}",
-            g_game_config.weapon_screen_shake
-                ? "enabled"
-                : "disabled [multiplayer servers may force weapon screen shake]"
-        );
-    },
-    "Toggle camera shake from weapon fire [multiplayer servers may force weapon screen shake]",
 };
 
 void camera_do_patch()
