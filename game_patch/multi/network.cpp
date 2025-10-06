@@ -854,7 +854,7 @@ ConsoleCommand2 remote_flags_cmd{
                 rf::console::print("Max FOV: None");
             }
         } else if (g_af_remote_info.has_value()) {
-            const AlpineFactionServerInfo& af_remote_info = g_af_remote_info.value();
+            const AlpineFactionRemoteInfo& af_remote_info = g_af_remote_info.value();
             rf::console::print("====================");
             rf::console::print(
                 "Alpine Faction {}.{}",
