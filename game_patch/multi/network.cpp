@@ -1210,16 +1210,6 @@ void af_process_damage_notify_packet(const void* const data, const size_t len, c
 
     std::memcpy(&damage_notify_packet, data, sizeof(damage_notify_packet));
 
-    const rf::Player* const player = rf::multi_find_player_by_id(damage_notify_packet.player_id);
-    if (!player) {
-        return;
-    }
-
-    const rf::Entity* const entity = rf::entity_from_handle(player->entity_handle);
-    if (!entity) {
-        return;
-    }
-
     const bool died = static_cast<bool>(damage_notify_packet.flags & 0x01);
     if (g_game_config.play_hit_sounds) {
         constexpr int hit_sound_id = 29;
