@@ -9,6 +9,7 @@
 #include "../rf/level.h"
 #include "../rf/geometry.h"
 #include "../rf/file/file.h"
+#include "../rf/player/player.h"
 #include "../rf/player/camera.h"
 #include "level.h"
 #include "../main/main.h"
