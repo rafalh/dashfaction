@@ -391,6 +391,7 @@ void entity_do_patch()
     // Don't create muzzle flash lights
     entity_update_muzzle_flash_light_hook.install();
 
+    // Support disabling camera shake from weapon fire.
     entity_fire_primary_weapon_camera_shake_hook.install();
 
     // Commands
