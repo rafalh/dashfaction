@@ -27,3 +27,5 @@ struct DashLevelProps
         xlog::debug("lightmaps_full_depth {}", lightmaps_full_depth);
     }
 };
+
+extern bool g_level_has_unsupported_event_classes;

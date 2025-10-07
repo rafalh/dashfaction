@@ -8,6 +8,7 @@
 #include "../rf/weapon.h"
 #include "../rf/hud.h"
 #include "../rf/input.h"
+#include "../rf/level.h"
 #include "../os/console.h"
 #include "../main/main.h"
 #include "../multi/multi.h"
@@ -306,7 +307,6 @@ CodeInjection sr_load_player_weapon_anims_injection{
 CodeInjection player_execute_action_spawn_player_injection{
     0x004A678B,
     [] (auto& regs) {
-        extern bool g_level_has_unsupported_event_classes;
         if (g_level_has_unsupported_event_classes) {
             const std::string text = std::format(
                 "You cannot spawn in a level that has unsupported event classes!\nRFL version: {}",
