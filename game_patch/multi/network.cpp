@@ -860,7 +860,7 @@ ConsoleCommand2 remote_flags_cmd{
         if (g_af_remote_info) {
             const AlpineFactionRemoteInfo& af_remote_info = g_af_remote_info.value();
             rf::console::print("Allow full-bright meshes: {}", af_remote_info.allow_fb_mesh);
-            rf::console::print("Allow light-maps-only mode: {}", af_remote_info.allow_lmap);
+            rf::console::print("Allow light maps only: {}", af_remote_info.allow_lmap);
             rf::console::print("Allow no screen shake: {}", af_remote_info.allow_no_ss);
             rf::console::print("No player collide: {}", af_remote_info.no_player_collide);
             rf::console::print("Allow no muzzle flash: {}", af_remote_info.allow_no_mf);
