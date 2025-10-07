@@ -262,8 +262,8 @@ std::array g_client_side_packet_whitelist{
 };
 // clang-format on
 
-std::optional<RemoteInfo> g_remote_info{};
-std::optional<AlpineFactionRemoteInfo> g_af_remote_info{};
+std::optional<RemoteServerInfo> g_remote_server_info{};
+std::optional<AlpineFactionRemoteServerInfo> g_af_remote_server_info{};
 
 CodeInjection process_game_packet_whitelist_filter{
     0x0047918D,
@@ -772,16 +772,16 @@ bool parse_df_join_accept_tail(const std::byte* const tail) {
         ext.version_minor,
         static_cast<uint32_t>(ext.flags)
     );
-    RemoteInfo remote_info{};
-    remote_info.version_major = ext.version_major;
-    remote_info.version_minor = ext.version_minor;
+    RemoteServerInfo remote_server_info{};
+    remote_server_info.version_major = ext.version_major;
+    remote_server_info.version_minor = ext.version_minor;
     using Flags = DashFactionJoinAcceptPacketExt::Flags;
-    remote_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
+    remote_server_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
     constexpr float default_fov = 90.f;
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
-        remote_info.max_fov.emplace(ext.max_fov);
+        remote_server_info.max_fov.emplace(ext.max_fov);
     }
-    g_remote_info.emplace(remote_info);
+    g_remote_server_info.emplace(remote_server_info);
     return true;
 }
 
@@ -798,30 +798,30 @@ bool parse_af_join_accept_tail(const std::byte* const tail) {
         ext.version_minor,
         static_cast<uint32_t>(ext.flags)
     );
-    RemoteInfo remote_info{};
-    remote_info.version_major = ext.version_major;
-    remote_info.version_minor = ext.version_minor;
+    RemoteServerInfo remote_server_info{};
+    remote_server_info.version_major = ext.version_major;
+    remote_server_info.version_minor = ext.version_minor;
     using Flags = AlpineFactionJoinAcceptPacketExt::Flags;
-    remote_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
+    remote_server_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
     constexpr float default_fov = 90.f;
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
-        remote_info.max_fov.emplace(ext.max_fov);
+        remote_server_info.max_fov.emplace(ext.max_fov);
     }
-    g_remote_info.emplace(remote_info);
-    AlpineFactionRemoteInfo af_remote_info{};
-    af_remote_info.allow_fb_mesh = !!(ext.flags & Flags::allow_fb_mesh);
-    af_remote_info.allow_lmap = !!(ext.flags & Flags::allow_lmap);
-    af_remote_info.allow_no_ss = !!(ext.flags & Flags::allow_no_ss);
-    af_remote_info.no_player_collide = !!(ext.flags & Flags::no_player_collide);
-    af_remote_info.allow_no_mf = !!(ext.flags & Flags::allow_no_mf);
-    af_remote_info.click_limit = !!(ext.flags & Flags::click_limit);
-    af_remote_info.unlimited_fps = !!(ext.flags & Flags::unlimited_fps);
-    af_remote_info.gaussian_spread = !!(ext.flags & Flags::gaussian_spread);
-    af_remote_info.location_pinging = !!(ext.flags & Flags::location_pinging);
-    if (af_remote_info.click_limit) {
-        af_remote_info.semi_auto_cooldown.emplace(ext.semi_auto_cooldown);
+    g_remote_server_info.emplace(remote_server_info);
+    AlpineFactionRemoteServerInfo af_remote_server_info{};
+    af_remote_server_info.allow_fb_mesh = !!(ext.flags & Flags::allow_fb_mesh);
+    af_remote_server_info.allow_lmap = !!(ext.flags & Flags::allow_lmap);
+    af_remote_server_info.allow_no_ss = !!(ext.flags & Flags::allow_no_ss);
+    af_remote_server_info.no_player_collide = !!(ext.flags & Flags::no_player_collide);
+    af_remote_server_info.allow_no_mf = !!(ext.flags & Flags::allow_no_mf);
+    af_remote_server_info.click_limit = !!(ext.flags & Flags::click_limit);
+    af_remote_server_info.unlimited_fps = !!(ext.flags & Flags::unlimited_fps);
+    af_remote_server_info.gaussian_spread = !!(ext.flags & Flags::gaussian_spread);
+    af_remote_server_info.location_pinging = !!(ext.flags & Flags::location_pinging);
+    if (af_remote_server_info.click_limit) {
+        af_remote_server_info.semi_auto_cooldown.emplace(ext.semi_auto_cooldown);
     }
-    g_af_remote_info.emplace(af_remote_info);
+    g_af_remote_server_info.emplace(af_remote_server_info);
     return true;
 }
 
@@ -840,42 +840,42 @@ CodeInjection process_join_accept_injection{
 ConsoleCommand2 remote_flags_cmd{
     "remote_flags",
     [] {
-        if (g_remote_info) {
-            const RemoteInfo& remote_info = g_remote_info.value();
+        if (g_remote_server_info) {
+            const RemoteServerInfo& remote_server_info = g_remote_server_info.value();
             rf::console::print("====================");
             rf::console::print(
                 "{} Faction {}.{}",
-                g_af_remote_info ? "Alpine" : "Dash",
-                remote_info.version_major,
-                remote_info.version_minor
+                g_af_remote_server_info ? "Alpine" : "Dash",
+                remote_server_info.version_major,
+                remote_server_info.version_minor
             );
             rf::console::print("====================");
-            rf::console::print("Teleport: {}", remote_info.saving_enabled);
-            if (remote_info.max_fov) {
-                rf::console::print("Max FOV: Some({})", remote_info.max_fov.value());
+            rf::console::print("Teleport: {}", remote_server_info.saving_enabled);
+            if (remote_server_info.max_fov) {
+                rf::console::print("Max FOV: Some({})", remote_server_info.max_fov.value());
             } else {
                 rf::console::print("Max FOV: None");
             }
         }
-        if (g_af_remote_info) {
-            const AlpineFactionRemoteInfo& af_remote_info = g_af_remote_info.value();
-            rf::console::print("Allow full-bright meshes: {}", af_remote_info.allow_fb_mesh);
-            rf::console::print("Allow light maps only: {}", af_remote_info.allow_lmap);
-            rf::console::print("Allow no screen shake: {}", af_remote_info.allow_no_ss);
-            rf::console::print("No player collide: {}", af_remote_info.no_player_collide);
-            rf::console::print("Allow no muzzle flash: {}", af_remote_info.allow_no_mf);
-            rf::console::print("Semiauto fire rate limit: {}", af_remote_info.click_limit);
-            if (af_remote_info.semi_auto_cooldown) {
+        if (g_af_remote_server_info) {
+            const AlpineFactionRemoteServerInfo& af_remote_server_info = g_af_remote_server_info.value();
+            rf::console::print("Allow full-bright meshes: {}", af_remote_server_info.allow_fb_mesh);
+            rf::console::print("Allow light maps only: {}", af_remote_server_info.allow_lmap);
+            rf::console::print("Allow no screen shake: {}", af_remote_server_info.allow_no_ss);
+            rf::console::print("No player collide: {}", af_remote_server_info.no_player_collide);
+            rf::console::print("Allow no muzzle flash: {}", af_remote_server_info.allow_no_mf);
+            rf::console::print("Semiauto fire rate limit: {}", af_remote_server_info.click_limit);
+            if (af_remote_server_info.semi_auto_cooldown) {
                 rf::console::print(
                     "Semiauto cool-down: Some({})",
-                    af_remote_info.semi_auto_cooldown.value()
+                    af_remote_server_info.semi_auto_cooldown.value()
                 );
             } else {
                 rf::console::print("Semiauto cool-down: None");
             }
-            rf::console::print("Allow unlimited FPS: {}", af_remote_info.unlimited_fps);
-            rf::console::print("Gaussian spread: {}", af_remote_info.gaussian_spread);
-            rf::console::print("Ping locations: {}", af_remote_info.location_pinging);
+            rf::console::print("Allow unlimited FPS: {}", af_remote_server_info.unlimited_fps);
+            rf::console::print("Gaussian spread: {}", af_remote_server_info.gaussian_spread);
+            rf::console::print("Ping locations: {}", af_remote_server_info.location_pinging);
         }
     }
 };
@@ -1039,8 +1039,8 @@ FunHook<void()> multi_stop_hook{
     0x0046E2C0,
     []() {
         // Clear server info when leaving
-        g_remote_info.reset();
-        g_af_remote_info.reset();
+        g_remote_server_info.reset();
+        g_af_remote_server_info.reset();
         multi_stop_hook.call_target();
         if (rf::local_player) {
             reset_player_additional_data(rf::local_player);
@@ -1048,13 +1048,13 @@ FunHook<void()> multi_stop_hook{
     },
 };
 
-const std::optional<RemoteInfo>& get_remote_info()
+const std::optional<RemoteServerInfo>& get_remote_server_info()
 {
-    return g_remote_info;
+    return g_remote_server_info;
 }
 
-const std::optional<AlpineFactionRemoteInfo>& get_af_remote_info() {
-    return g_af_remote_info;
+const std::optional<AlpineFactionRemoteServerInfo>& get_af_remote_server_info() {
+    return g_af_remote_server_info;
 }
 
 void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* sender, bool is_team_msg)

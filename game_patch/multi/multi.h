@@ -73,14 +73,14 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     }
 };
 
-struct RemoteInfo {
+struct RemoteServerInfo {
     uint8_t version_major = 0;
     uint8_t version_minor = 0;
     bool saving_enabled = false;
     std::optional<float> max_fov{};
 };
 
-struct AlpineFactionRemoteInfo {
+struct AlpineFactionRemoteServerInfo {
     bool allow_fb_mesh = false;
     bool allow_lmap = false;
     bool allow_no_ss = false;
@@ -98,8 +98,8 @@ void multi_do_patch();
 void multi_after_full_game_init();
 void multi_init_player(rf::Player* player);
 void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* sender = nullptr, bool is_team_msg = false);
-const std::optional<RemoteInfo>& get_remote_info();
-const std::optional<AlpineFactionRemoteInfo>& get_af_remote_info();
+const std::optional<RemoteServerInfo>& get_remote_server_info();
+const std::optional<AlpineFactionRemoteServerInfo>& get_af_remote_server_info();
 void multi_level_download_do_frame();
 void multi_level_download_abort();
 void multi_ban_apply_patch();

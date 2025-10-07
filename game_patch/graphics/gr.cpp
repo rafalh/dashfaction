@@ -82,10 +82,10 @@ float gr_scale_world_fov(float horizontal_fov = 90.0f)
         horizontal_fov = gr_scale_fov_hor_plus(horizontal_fov);
     }
 
-    if (get_remote_info()) {
-        const RemoteInfo& remote_info = get_remote_info().value();
-        if (remote_info.max_fov) {
-            horizontal_fov = std::min(horizontal_fov, remote_info.max_fov.value());
+    if (get_remote_server_info()) {
+        const RemoteServerInfo& remote_server_info = get_remote_server_info().value();
+        if (remote_server_info.max_fov) {
+            horizontal_fov = std::min(horizontal_fov, remote_server_info.max_fov.value());
         }
     }
 
@@ -126,10 +126,10 @@ ConsoleCommand2 fov_cmd{
         }
         rf::console::print("Horizontal FOV: {:.2f}", gr_scale_world_fov());
  
-        if (get_remote_info()) {
-            const RemoteInfo& remote_info = get_remote_info().value();
-            if (remote_info.max_fov) {
-                rf::console::print("Server FOV limit: {:.2f}", remote_info.max_fov.value());
+        if (get_remote_server_info()) {
+            const RemoteServerInfo& remote_server_info = get_remote_server_info().value();
+            if (remote_server_info.max_fov) {
+                rf::console::print("Server FOV limit: {:.2f}", remote_server_info.max_fov.value());
             }
         }
     },
