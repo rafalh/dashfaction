@@ -8,9 +8,9 @@
 #include "../rf/weapon.h"
 #include "../rf/hud.h"
 #include "../rf/input.h"
-#include "../rf/level.h"
 #include "../os/console.h"
 #include "../main/main.h"
+#include "../misc/level.h"
 #include "../multi/multi.h"
 #include "../hud/multi_spectate.h"
 #include <common/utils/list-utils.h>

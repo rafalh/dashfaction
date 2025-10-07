@@ -8,12 +8,12 @@
 #include "../rf/object.h"
 #include "../rf/event.h"
 #include "../rf/entity.h"
-#include "../rf/level.h"
 #include "../rf/multi.h"
 #include "../rf/file/file.h"
 #include "../rf/player/player.h"
 #include "../rf/os/console.h"
 #include "../os/console.h"
+#include "../misc/level.h"
 
 class EventNameMapper {
     std::unordered_map<std::string, int> event_name_map;
