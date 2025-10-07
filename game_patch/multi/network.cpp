@@ -837,8 +837,8 @@ CodeInjection process_join_accept_injection{
     }
 };
 
-ConsoleCommand2 remote_flags_cmd{
-    "remote_flags",
+ConsoleCommand2 remote_server_flags_cmd{
+    "remote_server_flags",
     [] {
         if (g_remote_server_info) {
             const RemoteServerInfo& remote_server_info = g_remote_server_info.value();
@@ -1444,5 +1444,5 @@ void network_init()
     // Ignore browsers when calculating player count for info requests
     game_info_num_players_hook.install();
 
-    remote_flags_cmd.register_cmd();
+    remote_server_flags_cmd.register_cmd();
 }
