@@ -254,9 +254,9 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
 };
 
 bool remote_saving_enabled() {
-    const bool df_saving_enabled = get_df_remote_info().has_value()
+    const bool df_saving_enabled = get_df_remote_info()
         && get_df_remote_info().value().saving_enabled;
-    const bool af_saving_enabled = get_af_remote_info().has_value()
+    const bool af_saving_enabled = get_af_remote_info()
         && get_af_remote_info().value().saving_enabled;
     return df_saving_enabled || af_saving_enabled;
 }

@@ -82,14 +82,14 @@ float gr_scale_world_fov(float horizontal_fov = 90.0f)
         horizontal_fov = gr_scale_fov_hor_plus(horizontal_fov);
     }
 
-    if (get_df_remote_info().has_value()) {
+    if (get_df_remote_info()) {
         const DashFactionRemoteInfo& df_remote_info = get_df_remote_info().value();
-        if (df_remote_info.max_fov.has_value()) {
+        if (df_remote_info.max_fov) {
             horizontal_fov = std::min(horizontal_fov, df_remote_info.max_fov.value());
         }
-    } else if (get_af_remote_info().has_value()) {
+    } else if (get_af_remote_info()) {
         const AlpineFactionRemoteInfo& af_remote_info = get_af_remote_info().value();
-        if (af_remote_info.max_fov.has_value()) {
+        if (af_remote_info.max_fov) {
             horizontal_fov = std::min(horizontal_fov, af_remote_info.max_fov.value());
         }
     }
@@ -131,14 +131,14 @@ ConsoleCommand2 fov_cmd{
         }
         rf::console::print("Horizontal FOV: {:.2f}", gr_scale_world_fov());
  
-        if (get_df_remote_info().has_value()) {
+        if (get_df_remote_info()) {
             const DashFactionRemoteInfo& df_remote_info = get_df_remote_info().value();
-            if (df_remote_info.max_fov.has_value()) {
+            if (df_remote_info.max_fov) {
                 rf::console::print("Server FOV limit: {:.2f}", df_remote_info.max_fov.value());
             }
-        } else if (get_af_remote_info().has_value()) {
+        } else if (get_af_remote_info()) {
             const AlpineFactionRemoteInfo& af_remote_info = get_af_remote_info().value();
-            if (af_remote_info.max_fov.has_value()) {
+            if (af_remote_info.max_fov) {
                 rf::console::print("Server FOV limit: {:.2f}", af_remote_info.max_fov.value());
             }
         }
@@ -255,7 +255,7 @@ ConsoleCommand2 nearest_texture_filtering_cmd{
 ConsoleCommand2 lod_distance_scale_cmd{
     "lod_distance_scale",
     [](std::optional<float> scale_opt) {
-        if (scale_opt.has_value()) {
+        if (scale_opt) {
             gr_lod_dist_scale = scale_opt.value();
         }
         rf::console::print("LOD distance scale: {:.2f}", gr_lod_dist_scale);

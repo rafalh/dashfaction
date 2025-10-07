@@ -136,7 +136,7 @@ CodeInjection player_fire_primary_weapon_semi_auto_patch{
     0x004A50BB,
     [] (auto& regs) {
         const rf::Entity* const entity = regs.esi;
-        if (get_af_remote_info().has_value()
+        if (get_af_remote_info()
             && get_af_remote_info().value().click_limit
             && !entity->ai.next_fire_primary.elapsed()) {
             regs.eip = 0x004A58B8;
@@ -151,7 +151,7 @@ CodeInjection entity_fire_primary_weapon_semi_auto_patch{
         auto& fire_wait = regs.eax;
         const int weapon_type = regs.ebx;
         const rf::Entity* const entity = regs.esi;
-        if (remote_fire_wait_override().has_value()
+        if (remote_fire_wait_override()
             && rf::obj_is_player(entity)
             && rf::weapon_is_semi_automatic(weapon_type)
             && fire_wait == 500) {

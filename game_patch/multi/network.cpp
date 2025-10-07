@@ -838,7 +838,7 @@ CodeInjection process_join_accept_injection{
 ConsoleCommand2 remote_flags_cmd{
     "remote_flags",
     [] {
-        if (g_df_remote_info.has_value()) {
+        if (g_df_remote_info) {
             const DashFactionRemoteInfo& df_remote_info = g_df_remote_info.value();
             rf::console::print("====================");
             rf::console::print(
@@ -848,12 +848,12 @@ ConsoleCommand2 remote_flags_cmd{
             );
             rf::console::print("====================");
             rf::console::print("Teleport: {}", df_remote_info.saving_enabled);
-            if (df_remote_info.max_fov.has_value()) {
+            if (df_remote_info.max_fov) {
                 rf::console::print("Max FOV: Some({})", df_remote_info.max_fov.value());
             } else {
                 rf::console::print("Max FOV: None");
             }
-        } else if (g_af_remote_info.has_value()) {
+        } else if (g_af_remote_info) {
             const AlpineFactionRemoteInfo& af_remote_info = g_af_remote_info.value();
             rf::console::print("====================");
             rf::console::print(
@@ -863,7 +863,7 @@ ConsoleCommand2 remote_flags_cmd{
             );
             rf::console::print("====================");
             rf::console::print("Teleport: {}", af_remote_info.saving_enabled);
-            if (af_remote_info.max_fov.has_value()) {
+            if (af_remote_info.max_fov) {
                 rf::console::print("Max FOV: Some({})", af_remote_info.max_fov.value());
             } else {
                 rf::console::print("Max FOV: None");
@@ -874,7 +874,7 @@ ConsoleCommand2 remote_flags_cmd{
             rf::console::print("No player collide: {}", af_remote_info.no_player_collide);
             rf::console::print("Allow no muzzle flash: {}", af_remote_info.allow_no_mf);
             rf::console::print("Semiauto fire rate limit: {}", af_remote_info.click_limit);
-            if (af_remote_info.semi_auto_cooldown.has_value()) {
+            if (af_remote_info.semi_auto_cooldown) {
                 rf::console::print(
                     "Semiauto cool-down: Some({})",
                     af_remote_info.semi_auto_cooldown.value()
