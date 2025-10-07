@@ -68,7 +68,7 @@ struct GameConfig
     // Audio
     CfgVar<float> level_sound_volume = 1.0f;
     CfgVar<bool> eax_sound = true;
-    CfgVar<bool> play_hit_sounds = true;
+    CfgVar<bool> hit_sounds = true;
 
     // Multiplayer
     static const char default_rf_tracker[];
