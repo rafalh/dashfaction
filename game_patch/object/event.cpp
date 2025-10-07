@@ -266,17 +266,17 @@ CodeInjection event_load_level_turn_on_injection{
 FunHook event_lookup_type_hook{
     0x004BD700,
     [] (const rf::String& name) {
-        const char* const* const rf_event = std::find(
+        const auto event = std::find(
             std::begin(rf::event_names),
             std::end(rf::event_names),
             name
         ); 
-        if (rf_event == std::end(rf::event_names)) {
-            g_level_has_unsupported_event_classes = true;
-        }
-        std::optional<int> id = event_name_mapper.find(name.c_str());
-        if (!id) {
+        if (event == std::end(rf::event_names)) {
             xlog::warn("Unsupported event class: {}", name);
+            g_level_has_unsupported_event_classes = true;  
+        }
+        const std::optional<int> id = event_name_mapper.find(name);
+        if (!id) { 
             return -1;
         }
         return id.value();
