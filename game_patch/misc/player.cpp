@@ -316,7 +316,7 @@ CodeInjection player_execute_action_spawn_player_injection{
             );
             rf::ui::popup_message(
                 "Error",
-                text .c_str(),
+                text.c_str(),
                 nullptr,
                 false
             );

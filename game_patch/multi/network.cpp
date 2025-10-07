@@ -809,7 +809,6 @@ bool parse_af_join_accept_tail(const std::byte* const tail) {
     }
     g_remote_info.emplace(remote_info);
     AlpineFactionRemoteInfo af_remote_info{};
-    using Flags = AlpineFactionJoinAcceptPacketExt::Flags;
     af_remote_info.allow_fb_mesh = !!(ext.flags & Flags::allow_fb_mesh);
     af_remote_info.allow_lmap = !!(ext.flags & Flags::allow_lmap);
     af_remote_info.allow_no_ss = !!(ext.flags & Flags::allow_no_ss);
@@ -1190,7 +1189,7 @@ struct af_damage_notify_packet {
 #pragma pack(pop)
 
 void af_process_damage_notify_packet(const void* const data, const size_t len, const rf::NetAddr& addr) {
-    // Receive: client <- server
+    // As a client, receive from a server.
     if (!rf::is_multi || rf::is_server || rf::is_dedicated_server) {
         return;
     }
