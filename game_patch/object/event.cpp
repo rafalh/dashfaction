@@ -9,6 +9,7 @@
 #include "../rf/event.h"
 #include "../rf/entity.h"
 #include "../rf/multi.h"
+#include "../rf/level.h"
 #include "../rf/file/file.h"
 #include "../rf/player/player.h"
 #include "../rf/os/console.h"

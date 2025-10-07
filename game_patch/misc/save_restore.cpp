@@ -253,19 +253,11 @@ CodeInjection corpse_deserialize_all_obj_create_patch{
     },
 };
 
-bool remote_saving_enabled() {
-    const bool df_saving_enabled = get_df_remote_info()
-        && get_df_remote_info().value().saving_enabled;
-    const bool af_saving_enabled = get_af_remote_info()
-        && get_af_remote_info().value().saving_enabled;
-    return df_saving_enabled || af_saving_enabled;
-}
-
 FunHook<void()> quick_save_hook{
     0x004B6160,
     []() {
         quick_save_hook.call_target();
-        if (remote_saving_enabled()) {
+        if (get_remote_info() && get_remote_info().value().saving_enabled) {
             send_chat_line_packet("/save", nullptr);
         }
     },
@@ -275,7 +267,7 @@ FunHook<void()> quick_load_hook{
     0x004B6180,
     []() {
         quick_load_hook.call_target();
-        if (remote_saving_enabled()) {
+        if (get_remote_info() && get_remote_info().value().saving_enabled) {
             send_chat_line_packet("/load", nullptr);
         }
     },

@@ -262,7 +262,7 @@ std::array g_client_side_packet_whitelist{
 };
 // clang-format on
 
-std::optional<DashFactionRemoteInfo> g_df_remote_info{};
+std::optional<RemoteInfo> g_remote_info{};
 std::optional<AlpineFactionRemoteInfo> g_af_remote_info{};
 
 CodeInjection process_game_packet_whitelist_filter{
@@ -772,7 +772,7 @@ bool parse_df_join_accept_tail(const std::byte* const tail) {
         ext.version_minor,
         static_cast<uint32_t>(ext.flags)
     );
-    DashFactionRemoteInfo remote_info{};
+    RemoteInfo remote_info{};
     remote_info.version_major = ext.version_major;
     remote_info.version_minor = ext.version_minor;
     using Flags = DashFactionJoinAcceptPacketExt::Flags;
@@ -781,7 +781,7 @@ bool parse_df_join_accept_tail(const std::byte* const tail) {
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
         remote_info.max_fov.emplace(ext.max_fov);
     }
-    g_df_remote_info.emplace(remote_info);
+    g_remote_info.emplace(remote_info);
     return true;
 }
 
@@ -798,28 +798,31 @@ bool parse_af_join_accept_tail(const std::byte* const tail) {
         ext.version_minor,
         static_cast<uint32_t>(ext.flags)
     );
-    AlpineFactionRemoteInfo remote_info{};
+    RemoteInfo remote_info{};
     remote_info.version_major = ext.version_major;
     remote_info.version_minor = ext.version_minor;
     using Flags = AlpineFactionJoinAcceptPacketExt::Flags;
     remote_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
-    remote_info.allow_fb_mesh = !!(ext.flags & Flags::allow_fb_mesh);
-    remote_info.allow_lmap = !!(ext.flags & Flags::allow_lmap);
-    remote_info.allow_no_ss = !!(ext.flags & Flags::allow_no_ss);
-    remote_info.no_player_collide = !!(ext.flags & Flags::no_player_collide);
-    remote_info.allow_no_mf = !!(ext.flags & Flags::allow_no_mf);
-    remote_info.click_limit = !!(ext.flags & Flags::click_limit);
-    remote_info.unlimited_fps = !!(ext.flags & Flags::unlimited_fps);
-    remote_info.gaussian_spread = !!(ext.flags & Flags::gaussian_spread);
-    remote_info.location_pinging = !!(ext.flags & Flags::location_pinging);
     constexpr float default_fov = 90.f;
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
         remote_info.max_fov.emplace(ext.max_fov);
     }
-    if (remote_info.click_limit) {
-        remote_info.semi_auto_cooldown.emplace(ext.semi_auto_cooldown);
+    g_remote_info.emplace(remote_info);
+    AlpineFactionRemoteInfo af_remote_info{};
+    using Flags = AlpineFactionJoinAcceptPacketExt::Flags;
+    af_remote_info.allow_fb_mesh = !!(ext.flags & Flags::allow_fb_mesh);
+    af_remote_info.allow_lmap = !!(ext.flags & Flags::allow_lmap);
+    af_remote_info.allow_no_ss = !!(ext.flags & Flags::allow_no_ss);
+    af_remote_info.no_player_collide = !!(ext.flags & Flags::no_player_collide);
+    af_remote_info.allow_no_mf = !!(ext.flags & Flags::allow_no_mf);
+    af_remote_info.click_limit = !!(ext.flags & Flags::click_limit);
+    af_remote_info.unlimited_fps = !!(ext.flags & Flags::unlimited_fps);
+    af_remote_info.gaussian_spread = !!(ext.flags & Flags::gaussian_spread);
+    af_remote_info.location_pinging = !!(ext.flags & Flags::location_pinging);
+    if (af_remote_info.click_limit) {
+        af_remote_info.semi_auto_cooldown.emplace(ext.semi_auto_cooldown);
     }
-    g_af_remote_info.emplace(remote_info);
+    g_af_remote_info.emplace(af_remote_info);
     return true;
 }
 
@@ -838,36 +841,25 @@ CodeInjection process_join_accept_injection{
 ConsoleCommand2 remote_flags_cmd{
     "remote_flags",
     [] {
-        if (g_df_remote_info) {
-            const DashFactionRemoteInfo& df_remote_info = g_df_remote_info.value();
+        if (g_remote_info) {
+            const RemoteInfo& remote_info = g_remote_info.value();
             rf::console::print("====================");
             rf::console::print(
-                "Dash Faction {}.{}",
-                df_remote_info.version_major,
-                df_remote_info.version_minor
+                "{} Faction {}.{}",
+                g_af_remote_info ? "Alpine" : "Dash",
+                remote_info.version_major,
+                remote_info.version_minor
             );
             rf::console::print("====================");
-            rf::console::print("Teleport: {}", df_remote_info.saving_enabled);
-            if (df_remote_info.max_fov) {
-                rf::console::print("Max FOV: Some({})", df_remote_info.max_fov.value());
+            rf::console::print("Teleport: {}", remote_info.saving_enabled);
+            if (remote_info.max_fov) {
+                rf::console::print("Max FOV: Some({})", remote_info.max_fov.value());
             } else {
                 rf::console::print("Max FOV: None");
             }
-        } else if (g_af_remote_info) {
+        }
+        if (g_af_remote_info) {
             const AlpineFactionRemoteInfo& af_remote_info = g_af_remote_info.value();
-            rf::console::print("====================");
-            rf::console::print(
-                "Alpine Faction {}.{}",
-                af_remote_info.version_major,
-                af_remote_info.version_minor
-            );
-            rf::console::print("====================");
-            rf::console::print("Teleport: {}", af_remote_info.saving_enabled);
-            if (af_remote_info.max_fov) {
-                rf::console::print("Max FOV: Some({})", af_remote_info.max_fov.value());
-            } else {
-                rf::console::print("Max FOV: None");
-            }
             rf::console::print("Allow full-bright meshes: {}", af_remote_info.allow_fb_mesh);
             rf::console::print("Allow light maps only: {}", af_remote_info.allow_lmap);
             rf::console::print("Allow no screen shake: {}", af_remote_info.allow_no_ss);
@@ -1048,7 +1040,7 @@ FunHook<void()> multi_stop_hook{
     0x0046E2C0,
     []() {
         // Clear server info when leaving
-        g_df_remote_info.reset();
+        g_remote_info.reset();
         g_af_remote_info.reset();
         multi_stop_hook.call_target();
         if (rf::local_player) {
@@ -1057,9 +1049,9 @@ FunHook<void()> multi_stop_hook{
     },
 };
 
-const std::optional<DashFactionRemoteInfo>& get_df_remote_info()
+const std::optional<RemoteInfo>& get_remote_info()
 {
-    return g_df_remote_info;
+    return g_remote_info;
 }
 
 const std::optional<AlpineFactionRemoteInfo>& get_af_remote_info() {
