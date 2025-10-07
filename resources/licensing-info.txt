@@ -33,19 +33,19 @@ Contributors
 ---------------------------------
 
 Chris "Goober" Parsons:
-* Code contributions
-* Textures for `bighud`
-* Symbol glyphs in TTF fonts
-* Launcher header
+* code contributions
+* HUD textures for the big mode
+* symbol glyphs in ttf fonts
+* launcher header
 
 natalie <webmistress@natalie.ee>:
-* Code contributions
+* code contributions
 
 is-this-c:
-* Code contributions
+* code contributions
 
 Mystyle:
-* Setup code improvements
+* setup code improvements
 
 ###############################################################################
 ## subhook
