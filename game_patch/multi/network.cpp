@@ -850,7 +850,7 @@ ConsoleCommand2 remote_flags_cmd{
                 remote_info.version_minor
             );
             rf::console::print("====================");
-            rf::console::print("Saving: {}", remote_info.saving_enabled);
+            rf::console::print("Teleport: {}", remote_info.saving_enabled);
             if (remote_info.max_fov) {
                 rf::console::print("Max FOV: Some({})", remote_info.max_fov.value());
             } else {
@@ -860,22 +860,22 @@ ConsoleCommand2 remote_flags_cmd{
         if (g_af_remote_info) {
             const AlpineFactionRemoteInfo& af_remote_info = g_af_remote_info.value();
             rf::console::print("Allow full-bright meshes: {}", af_remote_info.allow_fb_mesh);
-            rf::console::print("Allow only light maps: {}", af_remote_info.allow_lmap);
+            rf::console::print("Allow light-maps-only mode: {}", af_remote_info.allow_lmap);
             rf::console::print("Allow no screen shake: {}", af_remote_info.allow_no_ss);
-            rf::console::print("No player collide: {}", af_remote_info.no_player_collide);
+            rf::console::print("No collide players: {}", af_remote_info.no_player_collide);
             rf::console::print("Allow no muzzle flash: {}", af_remote_info.allow_no_mf);
-            rf::console::print("Click limit: {}", af_remote_info.click_limit);
+            rf::console::print("Semiauto fire rate limit: {}", af_remote_info.click_limit);
             if (af_remote_info.semi_auto_cooldown) {
                 rf::console::print(
-                    "Semi auto cooldown: Some({})",
+                    "Semiauto cool-down: Some({})",
                     af_remote_info.semi_auto_cooldown.value()
                 );
             } else {
-                rf::console::print("Semi auto cooldown: None");
+                rf::console::print("Semiauto cool-down: None");
             }
             rf::console::print("Allow unlimited FPS: {}", af_remote_info.unlimited_fps);
             rf::console::print("Gaussian spread: {}", af_remote_info.gaussian_spread);
-            rf::console::print("Location pinging: {}", af_remote_info.location_pinging);
+            rf::console::print("Ping locations: {}", af_remote_info.location_pinging);
         }
     }
 };
