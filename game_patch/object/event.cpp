@@ -269,7 +269,7 @@ FunHook event_lookup_type_hook{
         const char* const* const rf_event = std::find(
             std::begin(rf::event_names),
             std::end(rf::event_names),
-            name.c_str()
+            name
         ); 
         if (rf_event == std::end(rf::event_names)) {
             g_level_has_unsupported_event_classes = true;
