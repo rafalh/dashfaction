@@ -74,10 +74,23 @@ CallHook level_init_pre_console_output_hook{
     },
 };
 
+bool g_level_has_unsupported_event_classes = false;
+
+CodeInjection level_load_player_create_entity_injection{
+    0x0045C7D9,
+    [] (auto& regs) {
+        if (g_level_has_unsupported_event_classes) {
+            rf::camera_enter_fixed(rf::local_player->cam);
+            regs.eip = 0x0045C80F;
+        }
+    },
+};
+
 CodeInjection level_read_header_inj{
     0x004616FB,
-    []() {
+    [] {
         DashLevelProps::instance().reset(rf::level.version);
+        g_level_has_unsupported_event_classes = false;
     },
 };
 
@@ -128,6 +141,9 @@ void level_apply_patch()
 
     // Add level name to "-- Level Initializing --" message
     level_init_pre_console_output_hook.install();
+
+    // If a level has unsupported event classes, do not automatically spawn in a listen server.
+    level_load_player_create_entity_injection.install();
 
     // Load custom rfl chunks
     level_read_header_inj.install();

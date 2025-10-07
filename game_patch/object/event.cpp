@@ -265,6 +265,15 @@ CodeInjection event_load_level_turn_on_injection{
 FunHook event_lookup_type_hook{
     0x004BD700,
     [](const rf::String& name) {
+        const auto rf_event = std::find(
+            std::begin(rf::event_names),
+            std::end(rf::event_names),
+            name
+        ); 
+        if (rf_event == std::end(rf::event_names)) {
+            extern bool g_level_has_unsupported_event_classes;
+            g_level_has_unsupported_event_classes = true;
+        }
         auto it = event_name_mapper.find(name.c_str());
         if (!it) {
             xlog::warn("Unsupported event class: {}", name);

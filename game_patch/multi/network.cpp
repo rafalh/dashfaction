@@ -631,7 +631,7 @@ struct AFJoinReqV2
     uint8_t version_minor = 1;
     uint8_t version_patch = 0;
     uint8_t version_type = VERSION_TYPE;
-    uint32_t max_rfl_version = 200;
+    uint32_t max_rfl_version = 301;
     uint32_t flags = 0;
 };
 

@@ -303,6 +303,26 @@ CodeInjection sr_load_player_weapon_anims_injection{
     },
 };
 
+CodeInjection player_execute_action_spawn_player_injection{
+    0x004A678B,
+    [] (auto& regs) {
+        extern bool g_level_has_unsupported_event_classes;
+        if (g_level_has_unsupported_event_classes) {
+            const std::string text = std::format(
+                "You cannot spawn in a level that has unsupported event classes!\nRFL version: {}",
+                 rf::level.version
+            );
+            rf::ui::popup_message(
+                "Error",
+                text .c_str(),
+                nullptr,
+                false
+            );
+            regs.eip = 0x004A679D;
+        }
+    },
+};
+
 void player_do_patch()
 {
     // general hooks
@@ -368,4 +388,6 @@ void player_do_patch()
     // Commands
     damage_screen_flash_cmd.register_cmd();
     hit_sounds_cmd.register_cmd();
+
+    player_execute_action_spawn_player_injection.install();
 }
