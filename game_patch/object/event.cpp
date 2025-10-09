@@ -59,6 +59,8 @@ enum EventType : int {
     Alarm = 0x2E,
     // There are 90 builtin events so start from 0x5A (90)
     AF_Teleport_Player = 0x5A,
+    Clone_Entity,
+    Anchor_Marker_Orient,
 };
 
 CodeInjection switch_model_event_custom_mesh_patch{
