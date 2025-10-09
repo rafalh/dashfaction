@@ -80,7 +80,18 @@ struct RemoteServerInfo {
     std::optional<float> max_fov{};
 };
 
+struct DashFactionRemoteServerInfo {
+    uint8_t version_major = 0;
+    uint8_t version_minor = 0;
+    bool saving_enabled = false;
+    std::optional<float> max_fov{};
+};
+
 struct AlpineFactionRemoteServerInfo {
+    uint8_t version_major = 0;
+    uint8_t version_minor = 0;
+    bool saving_enabled = false;
+    std::optional<float> max_fov{};
     bool allow_fb_mesh = false;
     bool allow_lmap = false;
     bool allow_no_ss = false;

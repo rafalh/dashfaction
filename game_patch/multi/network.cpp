@@ -263,6 +263,7 @@ std::array g_client_side_packet_whitelist{
 // clang-format on
 
 std::optional<RemoteServerInfo> g_remote_server_info{};
+std::optional<DashFactionRemoteServerInfo> g_df_remote_server_info{};
 std::optional<AlpineFactionRemoteServerInfo> g_af_remote_server_info{};
 
 CodeInjection process_game_packet_whitelist_filter{
@@ -772,16 +773,22 @@ bool parse_df_join_accept_tail(const std::byte* const tail) {
         ext.version_minor,
         static_cast<uint32_t>(ext.flags)
     );
-    RemoteServerInfo remote_server_info{};
-    remote_server_info.version_major = ext.version_major;
-    remote_server_info.version_minor = ext.version_minor;
+    DashFactionRemoteServerInfo df_remote_server_info{};
+    df_remote_server_info.version_major = ext.version_major;
+    df_remote_server_info.version_minor = ext.version_minor;
     using Flags = DashFactionJoinAcceptPacketExt::Flags;
-    remote_server_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
+    df_remote_server_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
     constexpr float default_fov = 90.f;
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
-        remote_server_info.max_fov.emplace(ext.max_fov);
+        df_remote_server_info.max_fov.emplace(ext.max_fov);
     }
-    g_remote_server_info.emplace(remote_server_info);
+    g_df_remote_server_info.emplace(df_remote_server_info);
+    g_remote_server_info.emplace(RemoteServerInfo{
+        .version_major = df_remote_server_info.version_major,
+        .version_minor = df_remote_server_info.version_minor, 
+        .saving_enabled = df_remote_server_info.saving_enabled,
+        .max_fov = df_remote_server_info.max_fov,
+    });
     return true;
 }
 
@@ -798,17 +805,15 @@ bool parse_af_join_accept_tail(const std::byte* const tail) {
         ext.version_minor,
         static_cast<uint32_t>(ext.flags)
     );
-    RemoteServerInfo remote_server_info{};
-    remote_server_info.version_major = ext.version_major;
-    remote_server_info.version_minor = ext.version_minor;
+    AlpineFactionRemoteServerInfo af_remote_server_info{};
+    af_remote_server_info.version_major = ext.version_major;
+    af_remote_server_info.version_minor = ext.version_minor;
     using Flags = AlpineFactionJoinAcceptPacketExt::Flags;
-    remote_server_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
+    af_remote_server_info.saving_enabled = !!(ext.flags & Flags::saving_enabled);
     constexpr float default_fov = 90.f;
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
-        remote_server_info.max_fov.emplace(ext.max_fov);
+        af_remote_server_info.max_fov.emplace(ext.max_fov);
     }
-    g_remote_server_info.emplace(remote_server_info);
-    AlpineFactionRemoteServerInfo af_remote_server_info{};
     af_remote_server_info.allow_fb_mesh = !!(ext.flags & Flags::allow_fb_mesh);
     af_remote_server_info.allow_lmap = !!(ext.flags & Flags::allow_lmap);
     af_remote_server_info.allow_no_ss = !!(ext.flags & Flags::allow_no_ss);
@@ -822,6 +827,12 @@ bool parse_af_join_accept_tail(const std::byte* const tail) {
         af_remote_server_info.semi_auto_cooldown.emplace(ext.semi_auto_cooldown);
     }
     g_af_remote_server_info.emplace(af_remote_server_info);
+    g_remote_server_info.emplace(RemoteServerInfo{
+        .version_major = af_remote_server_info.version_major,
+        .version_minor = af_remote_server_info.version_minor, 
+        .saving_enabled = af_remote_server_info.saving_enabled,
+        .max_fov = af_remote_server_info.max_fov,
+    });
     return true;
 }
 
