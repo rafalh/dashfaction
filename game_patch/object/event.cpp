@@ -50,8 +50,6 @@ EventNameMapper event_name_mapper;
 
 const char* custom_event_names[] = {
     "AF_Teleport_Player",
-    "Clone_Entity",
-    "Anchor_Marker_Orient",
 };
 
 enum EventType : int {
@@ -61,8 +59,6 @@ enum EventType : int {
     Alarm = 0x2E,
     // There are 90 builtin events so start from 0x5A (90)
     AF_Teleport_Player = 0x5A,
-    Clone_Entity,
-    Anchor_Marker_Orient,
 };
 
 CodeInjection switch_model_event_custom_mesh_patch{
@@ -266,17 +262,10 @@ CodeInjection event_load_level_turn_on_injection{
 FunHook event_lookup_type_hook{
     0x004BD700,
     [] (const rf::String& name) {
-        const auto event = std::find(
-            std::begin(rf::event_names),
-            std::end(rf::event_names),
-            name
-        ); 
-        if (event == std::end(rf::event_names)) {
+        const std::optional<int> id = event_name_mapper.find(name);
+        if (!id) {
             xlog::warn("Unsupported event class: {}", name);
             g_level_has_unsupported_event_classes = true;  
-        }
-        const std::optional<int> id = event_name_mapper.find(name);
-        if (!id) { 
             return -1;
         }
         return id.value();
