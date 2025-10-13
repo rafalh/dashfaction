@@ -854,24 +854,24 @@ ConsoleCommand2 remote_server_flags_cmd{
             } else {
                 rf::console::print("Max FOV: None");
             }
+            rf::console::print("Allow full-bright entities: {}", remote_server_info.allow_full_bright_entities);
+            rf::console::print("Allow light maps only: {}", remote_server_info.allow_light_maps_only);
+            rf::console::print("Allow no screen shake: {}", remote_server_info.allow_no_screen_shake);
+            rf::console::print("No player collide: {}", remote_server_info.no_player_collide);
+            rf::console::print("Allow no muzzle flash: {}", remote_server_info.allow_no_muzzle_flash);
+            rf::console::print("Semiauto fire rate limit: {}", remote_server_info.click_limit);
+            if (remote_server_info.semiauto_cool_down) {
+                rf::console::print(
+                    "Semiauto cool-down: Some({})",
+                    remote_server_info.semiauto_cool_down.value()
+                );
+            } else {
+                rf::console::print("Semiauto cool-down: None");
+            }
+            rf::console::print("Allow unlimited FPS: {}", remote_server_info.unlimited_fps);
+            rf::console::print("Gaussian spread: {}", remote_server_info.gaussian_spread);
+            rf::console::print("Ping locations: {}", remote_server_info.location_pinging);
         }
-        rf::console::print("Allow full-bright entities: {}", remote_server_info.allow_full_bright_entities);
-        rf::console::print("Allow light maps only: {}", remote_server_info.allow_light_maps_only);
-        rf::console::print("Allow no screen shake: {}", remote_server_info.allow_no_screen_shake);
-        rf::console::print("No player collide: {}", remote_server_info.no_player_collide);
-        rf::console::print("Allow no muzzle flash: {}", remote_server_info.allow_no_muzzle_flash);
-        rf::console::print("Semiauto fire rate limit: {}", remote_server_info.click_limit);
-        if (remote_server_info.semiauto_cool_down) {
-            rf::console::print(
-                "Semiauto cool-down: Some({})",
-                remote_server_info.semiauto_cool_down.value()
-            );
-        } else {
-            rf::console::print("Semiauto cool-down: None");
-        }
-        rf::console::print("Allow unlimited FPS: {}", remote_server_info.unlimited_fps);
-        rf::console::print("Gaussian spread: {}", remote_server_info.gaussian_spread);
-        rf::console::print("Ping locations: {}", remote_server_info.location_pinging);
     }
 };
 
