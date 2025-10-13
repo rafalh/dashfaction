@@ -395,7 +395,10 @@ namespace df::gr::d3d11
         rf::Vector3 ambient_light{0.f, 0.f, 0.f};
         light_get_ambient(&ambient_light.x, &ambient_light.y, &ambient_light.z);
         ambient_light *= 255.f;
+        // RF uses some hard-coded lights here but for now let's keep it simple
         ambient_light += 40.f;
+        // Ignore ambient_color from params, it changes sharply and RF uses it only indirectly for
+        // its hard-coded lights
         params.ambient_color.set(
             static_cast<rf::ubyte>(std::min(ambient_light.x, 255.f)),
             static_cast<rf::ubyte>(std::min(ambient_light.y, 255.f)),
