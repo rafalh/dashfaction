@@ -146,8 +146,8 @@ ConsoleCommand2 mesh_static_lighting_cmd{
 CodeInjection init_mesh_dynamic_light_data_patch{
     0x0052DBD0,
     [] (const auto& regs) {
-        const bool allow_full_bright = !(get_af_server_info()
-            && !get_af_server_info().value().allow_fb_mesh);
+        const bool allow_full_bright = !(get_remote_server_info()
+            && !get_remote_server_info().value().allow_fb_mesh);
         if (g_game_config.full_bright_entities && allow_full_bright) {
             // For Direct3d 11, we set in `gr_d3d11_mesh.cpp`.
             auto& ambient_light = addr_as_ref<rf::Vector3>(0x1C3D548);

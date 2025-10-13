@@ -439,8 +439,8 @@ namespace df::gr::d3d11
         }
         render_cache->update_bone_transforms_buffer(ci, render_context_);
         render_cache->bind_buffers(render_context_, morphed);
-        const bool allow_full_bright = !(get_af_server_info()
-            && !get_af_server_info().value().allow_fb_mesh);
+        const bool allow_full_bright = !(get_remote_server_info()
+            && !get_remote_server_info().value().allow_fb_mesh);
         rf::MeshRenderParams full_bright_params = params;
         if (g_game_config.full_bright_entities
             && allow_full_bright
