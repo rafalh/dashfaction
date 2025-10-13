@@ -77,7 +77,7 @@ struct RemoteServerInfo {
     struct {
         uint8_t major = 0;
         uint8_t minor = 0;
-    } version;
+    } version{};
     bool saving = false;
     std::optional<float> max_fov{};
     bool alpine_faction = false;
