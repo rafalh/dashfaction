@@ -412,7 +412,7 @@ namespace df::gr::d3d11
         draw_cached_mesh(lod_mesh, *render_cache, params, lod_index);
     }
 
-    void MeshRenderer::render_character_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, f::MeshRenderParams params)
+    void MeshRenderer::render_character_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, rf::MeshRenderParams params)
     {
         page_in_character_mesh(lod_mesh);
         auto render_cache = reinterpret_cast<CharacterMeshRenderCache*>(lod_mesh->render_cache);
