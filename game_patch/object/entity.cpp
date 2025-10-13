@@ -297,10 +297,10 @@ ConsoleCommand2 weapon_screen_shake_cmd{
             "Weapon screen shake is {}",
             g_game_config.weapon_screen_shake
                 ? "enabled"
-                : "disabled [multiplayer servers may force weapon screen shake]"
+                : "disabled [may be force enabled by multiplayer servers]"
         );
     },
-    "Toggle camera shake from weapon fire [multiplayer servers may force weapon screen shake]",
+    "Toggle camera shake from weapon fire [may be force enabled by multiplayer servers]",
 };
 
 CallHook<void(rf::Entity&)> entity_update_muzzle_flash_light_hook{

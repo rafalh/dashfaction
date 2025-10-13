@@ -150,7 +150,7 @@ CodeInjection init_mesh_dynamic_light_data_patch{
             && !get_remote_server_info().value().allow_full_bright_entities);
         if (g_game_config.full_bright_entities && allow_full_bright) {
             // For Direct3d 11, we set in `gr_d3d11_mesh.cpp`.
-            auto& ambient_light = addr_as_ref<rf::Vector3>(0x1C3D548);
+            auto& ambient_light = addr_as_ref<rf::Vector3>(0x01C3D548);
             ambient_light = rf::Vector3{255.f, 255.f, 255.f};
         }
     },
@@ -162,13 +162,13 @@ ConsoleCommand2 full_bright_entities_cmd{
         g_game_config.full_bright_entities = !g_game_config.full_bright_entities;
         g_game_config.save();
         rf::console::print(
-            "Full bright entities is {}",
+            "Full-bright entities is {}",
             g_game_config.full_bright_entities
-                ? "enabled [multiplayer servers may ignore]"
+                ? "enabled [may be force disabled by multiplayer servers]"
                 : "disabled"
         );
     },
-    "Toggle full-bright entities [multiplayer servers may ignore]",
+    "Toggle full-bright entities [may be force disabled by multiplayer servers]",
 };
 
 void obj_light_apply_patch()
