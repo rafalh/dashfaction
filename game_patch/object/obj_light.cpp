@@ -168,7 +168,7 @@ ConsoleCommand2 full_bright_entities_cmd{
                 : "disabled"
         );
     },
-    "Toggle full-bright entities [may be force disabled by servers]",
+    "Toggle full-bright entities [may be force disabled by multiplayer servers]",
 };
 
 void obj_light_apply_patch()
