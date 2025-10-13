@@ -9,6 +9,7 @@
 #include "../../rf/math/quaternion.h"
 #include "../../rf/v3d.h"
 #include "../../rf/character.h"
+#include "../../main/main.h"
 #include "../../multi/multi.h"
 #include "gr_d3d11.h"
 #include "gr_d3d11_mesh.h"
