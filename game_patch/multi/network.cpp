@@ -848,7 +848,7 @@ ConsoleCommand2 remote_server_flags_cmd{
                 remote_server_info.version.minor
             );
             rf::console::print("====================");
-            rf::console::print("Teleport: {}", remote_server_info.saving_enabled);
+            rf::console::print("Teleport: {}", remote_server_info.saving);
             if (remote_server_info.max_fov) {
                 rf::console::print("Max FOV: Some({})", remote_server_info.max_fov.value());
             } else {
