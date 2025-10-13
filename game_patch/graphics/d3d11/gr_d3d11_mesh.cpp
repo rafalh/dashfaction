@@ -433,7 +433,6 @@ namespace df::gr::d3d11
 
         const bool allow_full_bright = !(get_remote_server_info()
             && !get_remote_server_info().value().allow_full_bright_entities);
-        rf::MeshRenderParams full_bright_params = params;
         if (g_game_config.full_bright_entities
             && allow_full_bright
             && !(params.flags & MRF_FIRST_PERSON)) {
