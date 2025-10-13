@@ -798,8 +798,8 @@ bool parse_af_join_accept_tail(const std::byte* const tail) {
         static_cast<uint32_t>(ext.flags)
     );
     RemoteServerInfo remote_server_info{};
-    remote_server_info.version_major = ext.version_major;
-    remote_server_info.version_minor = ext.version_minor;
+    remote_server_info.version.major = ext.version_major;
+    remote_server_info.version.minor = ext.version_minor;
     using Flags = AlpineFactionJoinAcceptPacketExt::Flags;
     remote_server_info.saving = !!(ext.flags & Flags::saving_enabled);
     constexpr float default_fov = 90.f;
@@ -844,8 +844,8 @@ ConsoleCommand2 remote_server_flags_cmd{
             rf::console::print(
                 "{} Faction {}.{}",
                 remote_server_info.alpine_faction ? "Alpine" : "Dash",
-                remote_server_info.version_major,
-                remote_server_info.version_minor
+                remote_server_info.version.major,
+                remote_server_info.version.minor
             );
             rf::console::print("====================");
             rf::console::print("Teleport: {}", remote_server_info.saving_enabled);
