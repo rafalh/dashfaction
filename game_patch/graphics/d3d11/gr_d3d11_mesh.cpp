@@ -9,6 +9,7 @@
 #include "../../rf/math/quaternion.h"
 #include "../../rf/v3d.h"
 #include "../../rf/character.h"
+#include "../../multi/multi.h"
 #include "gr_d3d11.h"
 #include "gr_d3d11_mesh.h"
 #include "gr_d3d11_context.h"
@@ -440,7 +441,7 @@ namespace df::gr::d3d11
         render_cache->update_bone_transforms_buffer(ci, render_context_);
         render_cache->bind_buffers(render_context_, morphed);
         const bool allow_full_bright = !(get_remote_server_info()
-            && !get_remote_server_info().value().allow_fb_mesh);
+            && !get_remote_server_info().value().allow_full_bright_entities);
         rf::MeshRenderParams full_bright_params = params;
         if (g_game_config.full_bright_entities
             && allow_full_bright
