@@ -257,7 +257,7 @@ FunHook<void()> quick_save_hook{
     0x004B6160,
     []() {
         quick_save_hook.call_target();
-        if (get_remote_server_info() && get_remote_server_info().value().saving_enabled) {
+        if (get_remote_server_info() && get_remote_server_info().value().saving) {
             send_chat_line_packet("/save", nullptr);
         }
     },
@@ -267,7 +267,7 @@ FunHook<void()> quick_load_hook{
     0x004B6180,
     []() {
         quick_load_hook.call_target();
-        if (get_remote_server_info() && get_remote_server_info().value().saving_enabled) {
+        if (get_remote_server_info() && get_remote_server_info().value().saving) {
             send_chat_line_packet("/load", nullptr);
         }
     },

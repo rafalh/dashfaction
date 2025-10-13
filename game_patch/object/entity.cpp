@@ -280,8 +280,8 @@ static FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
 CallHook<void(rf::Camera*, float, float)> entity_fire_primary_weapon_camera_shake_hook{
     0x00426C79,
     [] (rf::Camera* const cp, const float amplitude, const float time_seconds) {
-        const bool remote_force_ss = get_af_remote_server_info() 
-            && !get_af_remote_server_info().value().allow_no_ss;
+        const bool remote_force_ss = get_remote_server_info() 
+            && !get_remote_server_info().value().allow_no_screen_shake;
         if (g_game_config.weapon_screen_shake || remote_force_ss) {
             entity_fire_primary_weapon_camera_shake_hook.call_target(cp, amplitude, time_seconds);
         }
@@ -306,8 +306,8 @@ ConsoleCommand2 weapon_screen_shake_cmd{
 CallHook<void(rf::Entity&)> entity_update_muzzle_flash_light_hook{
     0x0041E814,
     [] (rf::Entity& ep) {
-        const bool remote_force_muzzle_flash = get_af_remote_server_info()
-            && !get_af_remote_server_info().value().allow_no_mf;
+        const bool remote_force_muzzle_flash = get_remote_server_info()
+            && !get_remote_server_info().value().allow_no_muzzle_flash;
         if (g_game_config.muzzle_flash || remote_force_muzzle_flash) {
             entity_update_muzzle_flash_light_hook.call_target(ep);
         }

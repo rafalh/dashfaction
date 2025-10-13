@@ -74,31 +74,20 @@ struct PlayerStatsNew : rf::PlayerLevelStats
 };
 
 struct RemoteServerInfo {
-    uint8_t version_major = 0;
-    uint8_t version_minor = 0;
-    bool saving_enabled = false;
+    struct {
+        uint8_t major = 0;
+        uint8_t minor = 0;
+    } version;
+    bool saving = false;
     std::optional<float> max_fov{};
-};
-
-struct DashFactionRemoteServerInfo {
-    uint8_t version_major = 0;
-    uint8_t version_minor = 0;
-    bool saving_enabled = false;
-    std::optional<float> max_fov{};
-};
-
-struct AlpineFactionRemoteServerInfo {
-    uint8_t version_major = 0;
-    uint8_t version_minor = 0;
-    bool saving_enabled = false;
-    std::optional<float> max_fov{};
-    bool allow_fb_mesh = false;
-    bool allow_lmap = false;
-    bool allow_no_ss = false;
+    bool alpine_faction = false;
+    bool allow_full_bright_entities = true;
+    bool allow_light_maps_only = false;
+    bool allow_no_screen_shake = true;
     bool no_player_collide = false;
-    bool allow_no_mf = false;
+    bool allow_no_muzzle_flash = true;
     bool click_limit = false;
-    std::optional<int> semi_auto_cooldown{};
+    std::optional<int> semiauto_cool_down{};
     bool unlimited_fps = false;
     bool gaussian_spread = false;
     bool location_pinging = false;
@@ -110,7 +99,6 @@ void multi_after_full_game_init();
 void multi_init_player(rf::Player* player);
 void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* sender = nullptr, bool is_team_msg = false);
 const std::optional<RemoteServerInfo>& get_remote_server_info();
-const std::optional<AlpineFactionRemoteServerInfo>& get_af_remote_server_info();
 void multi_level_download_do_frame();
 void multi_level_download_abort();
 void multi_ban_apply_patch();
