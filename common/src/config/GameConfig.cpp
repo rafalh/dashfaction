@@ -176,6 +176,7 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "Linear Pitch", linear_pitch);
     result &= visitor(dash_faction_key, "Show Enemy Bullets", show_enemy_bullets);
     result &= visitor(dash_faction_key, "Weapon Screen Shake", weapon_screen_shake);
+    result &= visitor(dash_faction_key, "Full-Bright Entities", full_bright_entities);
     result &= visitor(dash_faction_key, "Keep Launcher Open", keep_launcher_open);
     result &= visitor(dash_faction_key, "Skip Cutscene Control", skip_cutscene_ctrl);
     result &= visitor(dash_faction_key, "Damage Screen Flash", damage_screen_flash);

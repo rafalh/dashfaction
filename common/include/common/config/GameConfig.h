@@ -59,6 +59,7 @@ struct GameConfig
     CfgVar<bool> glares = true;
     CfgVar<bool> show_enemy_bullets = true;
     CfgVar<bool> weapon_screen_shake = true;
+    CfgVar<bool> full_bright_entities = false;
 
     static constexpr float min_fov = 75.0f;
     static constexpr float max_fov = 160.0f;

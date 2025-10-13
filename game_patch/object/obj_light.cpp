@@ -2,6 +2,7 @@
 #include <xlog/xlog.h>
 #include <patch_common/FunHook.h>
 #include <patch_common/AsmWriter.h>
+#include <patch_common/CodeInjection.h>
 #include <common/utils/list-utils.h>
 #include "../rf/object.h"
 #include "../rf/item.h"
@@ -11,6 +12,7 @@
 #include "../rf/crt.h"
 #include "../os/console.h"
 #include "../main/main.h"
+#include "../multi/multi.h"
 
 float obj_light_scale = 1.0;
 
@@ -141,6 +143,34 @@ ConsoleCommand2 mesh_static_lighting_cmd{
     "Toggle mesh static lighting calculation",
 };
 
+CodeInjection init_mesh_dynamic_light_data_patch{
+    0x0052DBD0,
+    [] (const auto& regs) {
+        const bool allow_full_bright = !(get_af_server_info()
+            && !get_af_server_info().value().allow_fb_mesh);
+        if (g_game_config.full_bright_entities && allow_full_bright) {
+            // For Direct3d 11, we set in `gr_d3d11_mesh.cpp`.
+            auto& ambient_light = addr_as_ref<rf::Vector3>(0x1C3D548);
+            ambient_light = rf::Vector3{255.f, 255.f, 255.f};
+        }
+    },
+};
+
+ConsoleCommand2 full_bright_entities_cmd{
+    "full_bright_entities",
+    [] {
+        g_game_config.full_bright_entities = !g_game_config.full_bright_entities;
+        g_game_config.save();
+        rf::console::print(
+            "Full bright entities is {}",
+            g_game_config.full_bright_entities
+                ? "enabled [multiplayer servers may ignore]"
+                : "disabled"
+        );
+    },
+    "Toggle full-bright entities [multiplayer servers may ignore]",
+};
+
 void obj_light_apply_patch()
 {
     // Fix/improve items and clutters static lighting calculation: fix matrices being zero and use static lights
@@ -156,4 +186,8 @@ void obj_light_apply_patch()
 
     // Commands
     mesh_static_lighting_cmd.register_cmd();
+    full_bright_entities_cmd.register_cmd();
+
+    // Support full-bright entities.
+    init_mesh_dynamic_light_data_patch.install();
 }

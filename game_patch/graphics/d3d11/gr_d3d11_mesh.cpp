@@ -389,7 +389,30 @@ namespace df::gr::d3d11
         render_context_.set_index_buffer(v3d_ib_.buffer());
 
         auto render_cache = reinterpret_cast<MeshRenderCache*>(lod_mesh->render_cache);
-        draw_cached_mesh(lod_mesh, *render_cache, params, lod_index);
+
+        rf::MeshRenderParams v3d_params = params;
+        rf::Vector3 ambient{0.f, 0.f, 0.f};
+        light_get_ambient(&ambient.x, &ambient.y, &ambient.z);
+        v3d_params.ambient_color.set(
+            static_cast<rf::ubyte>(ambient.x * 255.f),
+            static_cast<rf::ubyte>(ambient.y * 255.f),
+            static_cast<rf::ubyte>(ambient.z * 255.f),
+            255
+        );
+        v3d_params.ambient_color.red = static_cast<rf::ubyte>(std::min(
+            static_cast<int>(v3d_params.ambient_color.red) + 40,
+            255
+        ));
+        v3d_params.ambient_color.green = static_cast<rf::ubyte>(std::min(
+            static_cast<int>(v3d_params.ambient_color.green) + 40,
+            255
+        ));
+        v3d_params.ambient_color.blue = static_cast<rf::ubyte>(std::min(
+            static_cast<int>(v3d_params.ambient_color.blue) + 40,
+            255
+        ));
+
+        draw_cached_mesh(lod_mesh, *render_cache, v3d_params, lod_index);
     }
 
     void MeshRenderer::render_character_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
@@ -416,7 +439,15 @@ namespace df::gr::d3d11
         }
         render_cache->update_bone_transforms_buffer(ci, render_context_);
         render_cache->bind_buffers(render_context_, morphed);
-        draw_cached_mesh(lod_mesh, *render_cache, params, lod_index);
+        const bool allow_full_bright = !(get_af_server_info()
+            && !get_af_server_info().value().allow_fb_mesh);
+        rf::MeshRenderParams full_bright_params = params;
+        if (g_game_config.full_bright_entities
+            && allow_full_bright
+            && !(params.flags & MRF_FIRST_PERSON)) {
+            full_bright_params.ambient_color.set(255, 255, 255, 255);
+        }
+        draw_cached_mesh(lod_mesh, *render_cache, full_bright_params, lod_index);
     }
 
     void MeshRenderer::clear_vif_cache(rf::VifLodMesh *lod_mesh)
@@ -458,20 +489,7 @@ namespace df::gr::d3d11
         }
         rf::Color color{255, 255, 255};
         if (!ir_scanner) {
-            // Ignore ambient_color from params, it changes sharply and RF uses it only indirectly for
-            // its hard-coded lights
-            float ambient_r, ambient_g, ambient_b;
-            light_get_ambient(&ambient_r, &ambient_g, &ambient_b);
-            color.set(
-                static_cast<rf::ubyte>(ambient_r * 255.0f),
-                static_cast<rf::ubyte>(ambient_g * 255.0f),
-                static_cast<rf::ubyte>(ambient_b * 255.0f),
-                255
-            );
-            // RF uses some hard-coded lights here but for now let's keep it simple
-            color.red += 40;
-            color.green += 40;
-            color.blue += 40;
+            color = params.ambient_color;
         } else {
             color = params.self_illum;
         }
