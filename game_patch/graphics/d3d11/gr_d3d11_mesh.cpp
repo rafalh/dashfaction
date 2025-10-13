@@ -380,7 +380,7 @@ namespace df::gr::d3d11
         render_caches_.clear();
     }
 
-    void MeshRenderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
+    void MeshRenderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, rf::MeshRenderParams params)
     {
         page_in_v3d_mesh(lod_mesh);
 
@@ -392,32 +392,21 @@ namespace df::gr::d3d11
 
         auto render_cache = reinterpret_cast<MeshRenderCache*>(lod_mesh->render_cache);
 
-        rf::MeshRenderParams v3d_params = params;
-        rf::Vector3 ambient{0.f, 0.f, 0.f};
-        light_get_ambient(&ambient.x, &ambient.y, &ambient.z);
-        v3d_params.ambient_color.set(
-            static_cast<rf::ubyte>(ambient.x * 255.f),
-            static_cast<rf::ubyte>(ambient.y * 255.f),
-            static_cast<rf::ubyte>(ambient.z * 255.f),
+        rf::Vector3 ambient_light{0.f, 0.f, 0.f};
+        light_get_ambient(&ambient_light.x, &ambient_light.y, &ambient_light.z);
+        ambient_light *= 255.f;
+        ambient_light += 40.f;
+        params.ambient_color.set(
+            static_cast<rf::ubyte>(std::min(ambient_light.x, 255.f)),
+            static_cast<rf::ubyte>(std::min(ambient_light.y, 255.f)),
+            static_cast<rf::ubyte>(std::min(ambient_light.z, 255.f)),
             255
         );
-        v3d_params.ambient_color.red = static_cast<rf::ubyte>(std::min(
-            static_cast<int>(v3d_params.ambient_color.red) + 40,
-            255
-        ));
-        v3d_params.ambient_color.green = static_cast<rf::ubyte>(std::min(
-            static_cast<int>(v3d_params.ambient_color.green) + 40,
-            255
-        ));
-        v3d_params.ambient_color.blue = static_cast<rf::ubyte>(std::min(
-            static_cast<int>(v3d_params.ambient_color.blue) + 40,
-            255
-        ));
 
         draw_cached_mesh(lod_mesh, *render_cache, v3d_params, lod_index);
     }
 
-    void MeshRenderer::render_character_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
+    void MeshRenderer::render_character_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, f::MeshRenderParams params)
     {
         page_in_character_mesh(lod_mesh);
         auto render_cache = reinterpret_cast<CharacterMeshRenderCache*>(lod_mesh->render_cache);
@@ -441,15 +430,17 @@ namespace df::gr::d3d11
         }
         render_cache->update_bone_transforms_buffer(ci, render_context_);
         render_cache->bind_buffers(render_context_, morphed);
+
         const bool allow_full_bright = !(get_remote_server_info()
             && !get_remote_server_info().value().allow_full_bright_entities);
         rf::MeshRenderParams full_bright_params = params;
         if (g_game_config.full_bright_entities
             && allow_full_bright
             && !(params.flags & MRF_FIRST_PERSON)) {
-            full_bright_params.ambient_color.set(255, 255, 255, 255);
+            params.ambient_color.set(255, 255, 255, 255);
         }
-        draw_cached_mesh(lod_mesh, *render_cache, full_bright_params, lod_index);
+
+        draw_cached_mesh(lod_mesh, *render_cache, params, lod_index);
     }
 
     void MeshRenderer::clear_vif_cache(rf::VifLodMesh *lod_mesh)
