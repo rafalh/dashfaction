@@ -126,12 +126,6 @@ CallHook<void(rf::Vector3&, float, float, int, int)> weapon_hit_wall_obj_apply_r
     },
 };
 
-std::optional<int> remote_fire_wait_override() {
-    return get_remote_server_info().and_then([] (const RemoteServerInfo& remote_server_info) {
-        return remote_server_info.semiauto_cool_down;
-    });
-}
-
 CodeInjection player_fire_primary_weapon_semi_auto_patch{
     0x004A50BB,
     [] (auto& regs) {
@@ -144,18 +138,24 @@ CodeInjection player_fire_primary_weapon_semi_auto_patch{
     },
 };
 
+std::optional<int> fire_wait_override() {
+    return get_remote_server_info().and_then([] (const RemoteServerInfo& remote_server_info) {
+        return remote_server_info.semiauto_cool_down;
+    });
+}
+
 CodeInjection entity_fire_primary_weapon_semi_auto_patch{
     0x004259B8,
     [] (auto& regs) {
-        // HACKFIX: Override fire wait for stock semi auto weapons.
+        // HACKFIX: Override fire wait for stock semiauto weapons.
         auto& fire_wait = regs.eax;
         const int weapon_type = regs.ebx;
         const rf::Entity* const entity = regs.esi;
-        if (remote_fire_wait_override()
+        if (fire_wait_override()
             && rf::obj_is_player(entity)
             && rf::weapon_is_semi_automatic(weapon_type)
             && fire_wait == 500) {
-            fire_wait = remote_fire_wait_override().value();
+            fire_wait = fire_wait_override().value();
         }
     },
 };

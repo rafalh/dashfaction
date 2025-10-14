@@ -150,7 +150,7 @@ CodeInjection init_mesh_dynamic_light_data_patch{
             && !get_remote_server_info().value().allow_full_bright_entities);
         if (g_game_config.full_bright_entities && allow_full_bright) {
             // For Direct3d 11, we set in `gr_d3d11_mesh.cpp`.
-            auto& ambient_light = addr_as_ref<rf::Vector3>(0x01C3D548);
+            rf::Vector3& ambient_light = addr_as_ref<rf::Vector3>(0x01C3D548);
             ambient_light = rf::Vector3{255.f, 255.f, 255.f};
         }
     },
