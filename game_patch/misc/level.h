@@ -3,7 +3,27 @@
 #include <xlog/xlog.h>
 #include "../rf/file/file.h"
 
+constexpr int alpine_props_chunk_id = 0x0AFBA5ED;
 constexpr int dash_level_props_chunk_id = 0xDA58FA00;
+
+struct AlpineLevelProps {
+    // backward compatible defaults
+    bool legacy_cyclic_timers = true;
+
+    static AlpineLevelProps& instance() {
+        static AlpineLevelProps instance{};
+        return instance;
+    }
+
+    void reset() {
+        legacy_cyclic_timers = true;
+    }
+
+    void deserialize(rf::File& file) {
+        legacy_cyclic_timers = file.read<std::uint8_t>();
+        xlog::debug("legacy_cyclic_timers {}", legacy_cyclic_timers);
+    }
+};
 
 struct DashLevelProps
 {

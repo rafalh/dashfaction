@@ -5,6 +5,7 @@
 #include <xlog/xlog.h>
 #include <cassert>
 #include <unordered_map>
+#include <unordered_set>
 #include "../rf/object.h"
 #include "../rf/event.h"
 #include "../rf/entity.h"
@@ -330,8 +331,184 @@ ConsoleCommand2 debug_event_msg_cmd{
     }
 };
 
+CodeInjection trigger_activate_linked_objects_activate_event_in_multi_patch{
+    0x004C038C,
+    [] (auto& regs) {
+        if (rf::level.version >= 300) {
+            const rf::Object* const obj = regs.esi;
+            const rf::Event* const event = static_cast<const rf::Event*>(obj);
+            static const std::unordered_set blocked_event_types{{
+                rf::EventType::Load_Level,
+                rf::EventType::Drop_Point_Marker,
+                rf::EventType::Go_Undercover,
+                rf::EventType::Win_PS2_Demo,
+                rf::EventType::Endgame,
+                rf::EventType::Defuse_Nuke,
+                rf::EventType::Play_Video,
+            }};
+            // RF does not allow triggers to activate events in multiplayer.
+            // In AF levels, we allow it, unless it is an event that would be 
+            // problematic in multiplayer. 
+            const rf::EventType event_type = static_cast<rf::EventType>(event->event_type);
+            if (!blocked_event_types.contains(event_type)) {
+                // Allow activation.
+                regs.eip = 0x004C03C2;
+            } else {
+                // Do not allow activation.
+                regs.eip = 0x004C03D3;
+            }
+        }
+    }
+};
+
+void event_process_handle_delay(rf::Event* const event) {
+    if (event->delay_timestamp.elapsed()) {
+        if (event_debug_enabled) {
+            rf::console::print(
+                "Processing {} message in event {} ({}) (delayed)",
+                event->delayed_msg ? "ON" : "OFF",
+                event->name,
+                event->uid
+            );
+        }
+
+        const rf::EventType event_type = static_cast<rf::EventType>(event->event_type);
+        if (event->delayed_msg) {
+            using Event_TurnOn = void(__thiscall)(rf::Event*);
+            if (event_type == rf::EventType::UnHide) {
+                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BCDD0);
+                event_turn_on(event);
+            } else if (event_type == rf::EventType::Alarm_Siren) {
+                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BA830);
+                event_turn_on(event);
+            } else if (event_type == rf::EventType::Make_Invulnerable) {
+                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BC7C0);
+                event_turn_on(event);
+            } else if (event_type == rf::EventType::Cyclic_Timer) {
+                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BB7A0);
+                event_turn_on(event);
+            } else if (event_type == rf::EventType::Play_Sound) {
+                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BA440);
+                event_turn_on(event);
+            } else {
+                // xlog::warn("{} turned on", event->uid);
+            }
+        } else {
+            using Event_TurnOff = void(__thiscall)(rf::Event*);
+            if (event_type == rf::EventType::UnHide) {
+                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BCDE0);
+                event_turn_off(event);
+            } else if (event_type == rf::EventType::Alarm_Siren) {
+                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BA8C0);
+                event_turn_off(event);
+            } else if (event_type == rf::EventType::Make_Invulnerable) {
+                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BC880);
+                event_turn_off(event);
+            } else if (event_type == rf::EventType::Cyclic_Timer) {
+                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BB8A0);
+                event_turn_off(event);
+            } else if (event_type == rf::EventType::Play_Sound) {
+                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BA690);
+                event_turn_off(event);
+            } else {
+                // xlog::warn("{} turned off", event->uid);
+            }
+        }
+
+        if (rf::event_type_forwards_messages(event_type)) {
+            using Event_ActivateLinks = void(__thiscall)(rf::Event*, int, int, bool);
+            const auto& event_activate_links = addr_as_ref<Event_ActivateLinks>(0x004B8B00);
+            event_activate_links(
+                event,
+                event->trigger_handle,
+                event->triggered_by_handle,
+                event->delayed_msg
+            );
+        }
+
+        event->delay_timestamp.invalidate();
+    }
+}
+
+CodeInjection EventUnhide__process_patch {
+    0x004BCDF0,
+    [] (const auto& regs) {
+        if (rf::level.version >= 300) {
+            rf::Event* const event = regs.ecx;
+            event_process_handle_delay(event);
+        }
+    }
+};
+
+CodeInjection EventAlarmSiren__process_patch {
+    0x004BA880,
+    [] (const auto& regs) {
+        if (rf::level.version >= 300) {
+            rf::Event* const event = regs.ecx;
+            event_process_handle_delay(event);
+        }
+    }
+};
+
+CodeInjection EventMakeInvulnerable__process_patch {
+    0x004BC8F0,
+    [] (const auto& regs) {
+        if (rf::level.version >= 300) {
+            rf::Event* const event = regs.ecx;
+            event_process_handle_delay(event);
+        }
+    }
+};
+
+CodeInjection EventCyclicTimer__process_patch {
+    0x004BB7B0,
+    [] (const auto& regs) {
+        if (rf::level.version >= 300) {
+            rf::Event* const event = regs.ecx;
+            event_process_handle_delay(event);
+        }
+    }
+};
+
+CodeInjection EventPlaySound__process_patch {
+    0x004BA570,
+    [] (const auto& regs) {
+        if (rf::level.version >= 300) {
+            rf::Event* const event = regs.ecx;
+            event_process_handle_delay(event);
+        }
+    }
+};
+
+CodeInjection event_type_forwards_messages_patch{
+    0x004B8C44,
+    [] (auto& regs) {
+        if (rf::level.version >= 300) {
+            const rf::EventType event_type = static_cast<rf::EventType>(regs.eax);
+            if (event_type == rf::EventType::Cyclic_Timer
+                    && !AlpineLevelProps::instance().legacy_cyclic_timers) {
+                // Do not forward messages.
+                regs.al = false;
+                regs.eip = 0x004B8C5D;
+            }
+        }
+    }
+};
+
 void apply_event_patches()
 {
+    event_type_forwards_messages_patch.install();
+
+    // In AF levels, fix events that are broken, if `delay_timestamp` is set.
+    EventUnhide__process_patch.install();
+    EventAlarmSiren__process_patch.install();
+    EventMakeInvulnerable__process_patch.install();
+    EventCyclicTimer__process_patch.install();
+    EventPlaySound__process_patch.install();
+
+    // In AF levels, allow triggers to activate events in multiplayer.
+    trigger_activate_linked_objects_activate_event_in_multi_patch.install();
+
     // Allow custom mesh (not used in clutter.tbl or items.tbl) in Switch_Model event
     switch_model_event_custom_mesh_patch.install();
     switch_model_event_obj_lighting_and_physics_fix.install();

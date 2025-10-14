@@ -1,11 +1,14 @@
 Dash Faction Changelog
 ======================
-
+Add support for Dash Level Properties chunk and full lightmap depth setting (commit f90f81a)
 Version 1.9.2 (not released yet)
 --------------------------------
 [@is-this-c](https://github.com/is-this-c)
 - Fix a potential crash after a client quits a game if Directd3D 11 is enabled
 - Improve compatibility with Alpine Faction servers
+- Add support for `AlpineLevelProps` and `legacy_cyclic_timers` in Alpine Faction levels
+- Allow triggers to activate events in multiplayer
+- Fix events that broke due to their delay parameter
 - Fix `PgUp`, `PgDown`, `End`, and `Home` on numeric keypads
 - Add `af_killsound1.wav` from Alpine Faction
 - Add `hit_sounds` command

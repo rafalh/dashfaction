@@ -92,6 +92,7 @@ CodeInjection level_read_header_inj{
     0x004616FB,
     [] {
         DashLevelProps::instance().reset(rf::level.version);
+        AlpineLevelProps::instance().reset();
         g_level_has_unsupported_event_classes = false;
     },
 };
@@ -107,6 +108,14 @@ CodeInjection level_load_chunk_inj{
             auto version = file.read<std::uint32_t>();
             if (version == 1) {
                 DashLevelProps::instance().deserialize(file);
+            } else {
+                file.seek(chunk_len - 4, rf::File::seek_cur);
+            }
+            regs.eip = 0x004608EF;
+        } else if (chunk_id == alpine_props_chunk_id) {
+            const std::uint32_t version = file.read<std::uint32_t>();
+            if (version >= 1) {
+                AlpineLevelProps::instance().deserialize(file);
             } else {
                 file.seek(chunk_len - 4, rf::File::seek_cur);
             }
