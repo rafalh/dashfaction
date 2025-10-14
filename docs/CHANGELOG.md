@@ -1,6 +1,6 @@
 Dash Faction Changelog
 ======================
-Add support for Dash Level Properties chunk and full lightmap depth setting (commit f90f81a)
+
 Version 1.9.2 (not released yet)
 --------------------------------
 [@is-this-c](https://github.com/is-this-c)
