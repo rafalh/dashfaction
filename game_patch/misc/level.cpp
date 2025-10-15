@@ -99,25 +99,20 @@ CodeInjection level_read_header_inj{
 
 CodeInjection level_load_chunk_inj{
     0x00460912,
-    [](auto& regs) {
-        int chunk_id = regs.eax;
+    [] (auto& regs) {
+        const int chunk_id = regs.eax;
         rf::File& file = addr_as_ref<rf::File>(regs.esp + 0x2B0 - 0x278);
-        auto chunk_len = addr_as_ref<std::size_t>(regs.esp + 0x2B0 - 0x2A0);
-
-        if (chunk_id == dash_level_props_chunk_id) {
-            auto version = file.read<std::uint32_t>();
-            if (version == 1) {
+        const std::size_t chunk_len = addr_as_ref<std::size_t>(regs.esp + 0x2B0 - 0x2A0);
+        if (chunk_id == dash_level_props_chunk_id
+            || chunk_id == alpine_props_chunk_id) {
+            const int chunk_end = file.tell() + chunk_len;
+            if (chunk_id == dash_level_props_chunk_id) {
                 DashLevelProps::instance().deserialize(file);
-            } else {
-                file.seek(chunk_len - 4, rf::File::seek_cur);
-            }
-            regs.eip = 0x004608EF;
-        } else if (chunk_id == alpine_props_chunk_id) {
-            const std::uint32_t version = file.read<std::uint32_t>();
-            if (version >= 1) {
+            } else if (chunk_id == alpine_props_chunk_id) {
                 AlpineLevelProps::instance().deserialize(file);
-            } else {
-                file.seek(chunk_len - 4, rf::File::seek_cur);
+            }
+            if (file.tell() != chunk_end) {
+                file.seek(chunk_end, rf::File::seek_set);
             }
             regs.eip = 0x004608EF;
         }

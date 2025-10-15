@@ -362,7 +362,7 @@ CodeInjection trigger_activate_linked_objects_activate_event_in_multi_patch{
 };
 
 void event_process_handle_delay(rf::Event* const event) {
-    if (event->delay_timestamp.elapsed()) {
+    if (rf::level.version >= 300 && event->delay_timestamp.elapsed()) {
         if (event_debug_enabled) {
             rf::console::print(
                 "Processing {} message in event {} ({}) (delayed)",
@@ -374,44 +374,34 @@ void event_process_handle_delay(rf::Event* const event) {
 
         const rf::EventType event_type = static_cast<rf::EventType>(event->event_type);
         if (event->delayed_msg) {
-            using Event_TurnOn = void(__thiscall)(rf::Event*);
-            if (event_type == rf::EventType::UnHide) {
-                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BCDD0);
-                event_turn_on(event);
-            } else if (event_type == rf::EventType::Alarm_Siren) {
-                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BA830);
-                event_turn_on(event);
-            } else if (event_type == rf::EventType::Make_Invulnerable) {
-                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BC7C0);
-                event_turn_on(event);
-            } else if (event_type == rf::EventType::Cyclic_Timer) {
-                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BB7A0);
-                event_turn_on(event);
-            } else if (event_type == rf::EventType::Play_Sound) {
-                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BA440);
+            static const std::unordered_map<rf::EventType, uintptr_t> handlers{{
+                { rf::EventType::UnHide, 0x004BCDD0 },
+                { rf::EventType::Alarm_Siren, 0x004BA830 },
+                { rf::EventType::Make_Invulnerable, 0x004BC7C0 },
+                { rf::EventType::Cyclic_Timer, 0x004BB7A0 },
+                { rf::EventType::Play_Sound, 0x004BA440 },
+            }};
+            if (const auto pair = handlers.find(event_type); pair != handlers.end()) {
+                using Event_TurnOn = void(__thiscall)(rf::Event*);
+                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(pair->second);
                 event_turn_on(event);
             } else {
-                // xlog::warn("{} turned on", event->uid);
+                // xlog::error("{} turned on", event->uid);
             }
         } else {
-            using Event_TurnOff = void(__thiscall)(rf::Event*);
-            if (event_type == rf::EventType::UnHide) {
-                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BCDE0);
-                event_turn_off(event);
-            } else if (event_type == rf::EventType::Alarm_Siren) {
-                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BA8C0);
-                event_turn_off(event);
-            } else if (event_type == rf::EventType::Make_Invulnerable) {
-                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BC880);
-                event_turn_off(event);
-            } else if (event_type == rf::EventType::Cyclic_Timer) {
-                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BB8A0);
-                event_turn_off(event);
-            } else if (event_type == rf::EventType::Play_Sound) {
-                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BA690);
+            static const std::unordered_map<rf::EventType, uintptr_t> handlers{{
+                { rf::EventType::UnHide, 0x004BCDE0 },
+                { rf::EventType::Alarm_Siren, 0x004BA8C0 },
+                { rf::EventType::Make_Invulnerable, 0x004BC880 },
+                { rf::EventType::Cyclic_Timer, 0x004BB8A0 },
+                { rf::EventType::Play_Sound, 0x004BA690 },
+            }};
+            if (const auto pair = handlers.find(event_type); pair != handlers.end()) {
+                using Event_TurnOff = void(__thiscall)(rf::Event*);
+                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(pair->second);
                 event_turn_off(event);
             } else {
-                // xlog::warn("{} turned off", event->uid);
+                // xlog::error("{} turned off", event->uid);
             }
         }
 
@@ -433,50 +423,40 @@ void event_process_handle_delay(rf::Event* const event) {
 CodeInjection EventUnhide__process_patch {
     0x004BCDF0,
     [] (const auto& regs) {
-        if (rf::level.version >= 300) {
-            rf::Event* const event = regs.ecx;
-            event_process_handle_delay(event);
-        }
+        rf::Event* const event = regs.ecx;
+        event_process_handle_delay(event);
     }
 };
 
 CodeInjection EventAlarmSiren__process_patch {
     0x004BA880,
     [] (const auto& regs) {
-        if (rf::level.version >= 300) {
-            rf::Event* const event = regs.ecx;
-            event_process_handle_delay(event);
-        }
+        rf::Event* const event = regs.ecx;
+        event_process_handle_delay(event);
     }
 };
 
 CodeInjection EventMakeInvulnerable__process_patch {
     0x004BC8F0,
     [] (const auto& regs) {
-        if (rf::level.version >= 300) {
-            rf::Event* const event = regs.ecx;
-            event_process_handle_delay(event);
-        }
+        rf::Event* const event = regs.ecx;
+        event_process_handle_delay(event);
     }
 };
 
 CodeInjection EventCyclicTimer__process_patch {
     0x004BB7B0,
     [] (const auto& regs) {
-        if (rf::level.version >= 300) {
-            rf::Event* const event = regs.ecx;
-            event_process_handle_delay(event);
-        }
+        rf::Event* const event = regs.ecx;
+        event_process_handle_delay(event);
     }
 };
 
 CodeInjection EventPlaySound__process_patch {
     0x004BA570,
     [] (const auto& regs) {
-        if (rf::level.version >= 300) {
-            rf::Event* const event = regs.ecx;
-            event_process_handle_delay(event);
-        }
+        rf::Event* const event = regs.ecx;
+        event_process_handle_delay(event);
     }
 };
 
