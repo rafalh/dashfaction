@@ -381,12 +381,10 @@ void event_process_handle_delay(rf::Event* const event) {
                 { rf::EventType::Cyclic_Timer, 0x004BB7A0 },
                 { rf::EventType::Play_Sound, 0x004BA440 },
             }};
-            if (const auto pair = handlers.find(event_type); pair != handlers.end()) {
+            if (const auto iter = handlers.find(event_type); iter != handlers.end()) {
                 using Event_TurnOn = void(__thiscall)(rf::Event*);
-                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(pair->second);
+                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(iter->second);
                 event_turn_on(event);
-            } else {
-                xlog::debug("{} turned on", event->uid);
             }
         } else {
             static const std::unordered_map<rf::EventType, uintptr_t> handlers{{
@@ -396,12 +394,10 @@ void event_process_handle_delay(rf::Event* const event) {
                 { rf::EventType::Cyclic_Timer, 0x004BB8A0 },
                 { rf::EventType::Play_Sound, 0x004BA690 },
             }};
-            if (const auto pair = handlers.find(event_type); pair != handlers.end()) {
+            if (const auto iter = handlers.find(event_type); iter != handlers.end()) {
                 using Event_TurnOff = void(__thiscall)(rf::Event*);
-                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(pair->second);
+                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(iter->second);
                 event_turn_off(event);
-            } else {
-                xlog::debug("{} turned off", event->uid);
             }
         }
 
