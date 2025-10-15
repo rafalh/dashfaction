@@ -386,7 +386,7 @@ void event_process_handle_delay(rf::Event* const event) {
                 const auto& event_turn_on = addr_as_ref<Event_TurnOn>(pair->second);
                 event_turn_on(event);
             } else {
-                // xlog::error("{} turned on", event->uid);
+                xlog::debug("{} turned on", event->uid);
             }
         } else {
             static const std::unordered_map<rf::EventType, uintptr_t> handlers{{
@@ -401,7 +401,7 @@ void event_process_handle_delay(rf::Event* const event) {
                 const auto& event_turn_off = addr_as_ref<Event_TurnOff>(pair->second);
                 event_turn_off(event);
             } else {
-                // xlog::error("{} turned off", event->uid);
+                xlog::debug("{} turned off", event->uid);
             }
         }
 

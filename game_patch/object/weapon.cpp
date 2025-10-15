@@ -138,7 +138,7 @@ CodeInjection player_fire_primary_weapon_semi_auto_patch{
     },
 };
 
-std::optional<int> fire_wait_override() {
+std::optional<int> get_fire_wait_override() {
     return get_remote_server_info().and_then([] (const RemoteServerInfo& remote_server_info) {
         return remote_server_info.semiauto_cool_down;
     });
@@ -151,11 +151,11 @@ CodeInjection entity_fire_primary_weapon_semi_auto_patch{
         auto& fire_wait = regs.eax;
         const int weapon_type = regs.ebx;
         const rf::Entity* const entity = regs.esi;
-        if (fire_wait_override()
+        if (get_fire_wait_override()
             && rf::obj_is_player(entity)
             && rf::weapon_is_semi_automatic(weapon_type)
             && fire_wait == 500) {
-            fire_wait = fire_wait_override().value();
+            fire_wait = get_fire_wait_override().value();
         }
     },
 };
