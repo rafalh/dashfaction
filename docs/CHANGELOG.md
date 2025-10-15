@@ -5,10 +5,10 @@ Version 1.9.2 (not released yet)
 --------------------------------
 [@is-this-c](https://github.com/is-this-c)
 - Fix a potential crash after a client quits a game if Directd3D 11 is enabled
-- Improve compatibility with Alpine Faction servers
-- Add support for `AlpineLevelProps` and `legacy_cyclic_timers` in Alpine Faction levels
-- Allow triggers to activate events in multiplayer
-- Fix events that broke due to their delay parameter
+- Improve compatibility with Alpine Faction network protocol
+- Handle `AlpineLevelProps::legacy_cyclic_timers` in Alpine Faction levels
+- Allow triggers to activate events in multiplayer in Alpine Faction levels
+- Fix events that broke if their delay parameter was set in Alpine Faction levels
 - Fix `PgUp`, `PgDown`, `End`, and `Home` on numeric keypads
 - Add `af_killsound1.wav` from Alpine Faction
 - Add `hit_sounds` command
