@@ -365,7 +365,7 @@ CodeInjection EventUnhide__process_patch{
     0x004BCDF0,
     [] (const auto& regs) {
         rf::Event* const event = regs.ecx;
-        rf::event_process_fixed_delay(event);
+        rf::Event__process(event);
     }
 };
 
