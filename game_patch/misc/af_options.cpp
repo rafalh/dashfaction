@@ -126,7 +126,7 @@ const std::unordered_map<std::string, LevelInfoMetadata> level_info_metadata = {
 };
 
 // Load level info from filename_info.tbl
-void load_level_info_config(const std::string& level_filename)
+void load_af_level_info_config(const std::string& level_filename)
 {
     std::string base_filename = level_filename.substr(0, level_filename.size() - 4);
     std::string info_filename = base_filename + "_info.tbl";
@@ -211,7 +211,7 @@ void load_level_info_config(const std::string& level_filename)
         auto meta_it = level_info_metadata.find(option_name);
         if (meta_it != level_info_metadata.end()) {
             const auto& metadata = meta_it->second;
-            auto parsed_value = metadata.parse_function(option_value);
+            auto parsed_value = metadata.parse(option_value);
             if (parsed_value) {
                 g_af_level_info_config.level_options[level_filename][metadata.id] = *parsed_value;
                 xlog::debug("Parsed and applied {} for {}: {}", option_name, level_filename, option_value);
