@@ -9,6 +9,9 @@ Version 1.9.2 (not released yet)
 - Handle `AlpineLevelProps::legacy_cyclic_timers` in Alpine Faction levels
 - Allow triggers to activate events in multiplayer in Alpine Faction levels
 - Fix events that broke if their delay parameter was set in Alpine Faction levels
+- Support loading Alpine Faction's `$Lightmap Clamp Floor`. and `$Lightmap Clamp Ceiling`, `$Crater Texture PPM`, and `$Mesh Replacement`from {map_name}_info.tbl
+- Support dynamic lights
+- Make particle emitters placed in levels respect their active distance parameter
 - Fix `PgUp`, `PgDown`, `End`, and `Home` on numeric keypads
 - Add `af_killsound1.wav` from Alpine Faction
 - Add `hit_sounds` command

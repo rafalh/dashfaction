@@ -45,8 +45,8 @@ struct AlpineLevelInfoConfig {
     // `mesh_replacements` is lowercase.
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> mesh_replacements{};
 
-    bool is_option_loaded(const std::string& level, const AlpineLevelInfoId option_id) const {
-        const auto level = level_options.find(level);
+    bool is_option_loaded(const std::string level_filename, const AlpineLevelInfoId option_id) const {
+        const auto level = level_options.find(level_filename);
         if (level != level_options.end()) {
             return level->second.find(option_id) != level->second.end();
         }
