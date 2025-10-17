@@ -4,7 +4,6 @@ Dash Faction Changelog
 Version 1.9.2 (not released yet)
 --------------------------------
 [@is-this-c](https://github.com/is-this-c)
-- Fix a potential crash after a client quits a game if Directd3D 11 is enabled
 - Features and changes derived from Alpine Faction's source code
 - - Improve compatibility with Alpine Faction network protocol
 - - In Alpine Faction levels
@@ -14,6 +13,7 @@ Version 1.9.2 (not released yet)
 - - - Support loading Alpine Faction's `$Lightmap Clamp Floor`, and `$Lightmap Clamp Ceiling`, `$Crater Texture PPM`, and `$Mesh Replacement`from {map_name}_info.tbl
 - - - Support dynamic lights
 - - - Make particle emitters placed in levels respect their active distance parameter
+- Fix a potential crash after a client quits a game if Directd3D 11 is enabled
 - Fix `PgUp`, `PgDown`, `End`, and `Home` on numeric keypads
 - Add `af_killsound1.wav` from Alpine Faction
 - Add `hit_sounds` command
