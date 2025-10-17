@@ -9,6 +9,7 @@
 #include "../rf/multi.h"
 #include "../rf/level.h"
 #include "../rf/player/camera.h"
+#include "../rf/player/player.h"
 
 FunHook<rf::ParticleEmitter*(int, rf::ParticleEmitterType&, rf::GRoom*, rf::Vector3&, bool)> particle_emitter_create_hook{
     0x00497CA0,
