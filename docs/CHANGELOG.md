@@ -4,13 +4,13 @@ Dash Faction Changelog
 Version 1.9.2 (not released yet)
 --------------------------------
 [@is-this-c](https://github.com/is-this-c)
-- Features and changes derived from Alpine Faction's source code
+- Changes derived from Alpine Faction's source code
 - - Improve compatibility with Alpine Faction network protocol
 - - In Alpine Faction levels
 - - - Handle `AlpineLevelProps::legacy_cyclic_timers`
 - - - Allow triggers to activate events in multiplayer
 - - - Fix events that broke if their delay parameter was set
-- - - Support loading Alpine Faction's `$Lightmap Clamp Floor`, and `$Lightmap Clamp Ceiling`, `$Crater Texture PPM`, and `$Mesh Replacement`from {map_name}_info.tbl
+- - - Support loading Alpine Faction's `$Lightmap Clamp Floor`, and `$Lightmap Clamp Ceiling`, `$Crater Texture PPM`, and `$Mesh Replacement`from `{map_name}_info.tbl`
 - - - Support dynamic lights
 - - - Make particle emitters placed in levels respect their active distance parameter
 - Fix a potential crash after a client quits a game if Directd3D 11 is enabled
