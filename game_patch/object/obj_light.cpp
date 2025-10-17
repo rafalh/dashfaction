@@ -171,6 +171,16 @@ ConsoleCommand2 full_bright_entities_cmd{
     "Toggle full-bright entities [may be force disabled by multiplayer servers]",
 };
 
+CodeInjection LevelLight__load_support_dynamic_lights_patch{
+    0x0045F500,
+    [] (auto& regs) {
+        // Will crash dedicated servers.
+        if (rf::level.version >= 300 && !rf::is_dedicated_server) {
+            regs.eip = 0x0045F507;
+        }
+    }
+};
+
 void obj_light_apply_patch()
 {
     // Fix/improve items and clutters static lighting calculation: fix matrices being zero and use static lights
@@ -190,4 +200,6 @@ void obj_light_apply_patch()
 
     // Support full-bright entities.
     init_mesh_dynamic_light_data_patch.install();
+
+    LevelLight__load_support_dynamic_lights_patch.install();
 }

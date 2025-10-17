@@ -3,6 +3,8 @@
 #include <xlog/xlog.h>
 #include "../rf/file/file.h"
 
+void set_levelmod_autotexture_ppm();
+
 constexpr int alpine_props_chunk_id = 0x0AFBA5ED;
 constexpr int dash_level_props_chunk_id = 0xDA58FA00;
 

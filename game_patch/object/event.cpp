@@ -361,118 +361,55 @@ CodeInjection trigger_activate_linked_objects_activate_event_in_multi_patch{
     }
 };
 
-void event_process_fixed_delay(rf::Event* const event) {
-    if (rf::level.version >= 300 && event->delay_timestamp.elapsed()) {
-        if (event_debug_enabled) {
-            rf::console::print(
-                "Processing {} message in event {} ({}) (delayed)",
-                event->delayed_msg ? "ON" : "OFF",
-                event->name,
-                event->uid
-            );
-        }
-
-        const rf::EventType event_type = static_cast<rf::EventType>(event->event_type);
-        if (event->delayed_msg) {
-            using Event_TurnOn = void(__thiscall*)(rf::Event*);
-            if (event_type == rf::EventType::UnHide) {
-                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BCDD0);
-                event_turn_on(event);
-            } else if (event_type == rf::EventType::Alarm_Siren) {
-                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BA830);
-                event_turn_on(event);
-            } else if (event_type == rf::EventType::Make_Invulnerable) {
-                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BC7C0);
-                event_turn_on(event);
-            } else if (event_type == rf::EventType::Cyclic_Timer) {
-                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BB7A0);
-                event_turn_on(event);
-            } else if (event_type == rf::EventType::Play_Sound) {
-                const auto& event_turn_on = addr_as_ref<Event_TurnOn>(0x004BA440);
-                event_turn_on(event);
-            }
-        } else {
-            using Event_TurnOff = void(__thiscall*)(rf::Event*);
-            if (event_type == rf::EventType::UnHide) {
-                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BCDE0);
-                event_turn_off(event);
-            } else if (event_type == rf::EventType::Alarm_Siren) {
-                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BA8C0);
-                event_turn_off(event);
-            } else if (event_type == rf::EventType::Make_Invulnerable) {
-                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BC880);
-                event_turn_off(event);
-            } else if (event_type == rf::EventType::Cyclic_Timer) {
-                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BB8A0);
-                event_turn_off(event);
-            } else if (event_type == rf::EventType::Play_Sound) {
-                const auto& event_turn_off = addr_as_ref<Event_TurnOff>(0x004BA690);
-                event_turn_off(event);
-            }
-        }
-
-        if (rf::event_type_forwards_messages(event_type)) {
-            using Event_ActivateLinks = void(__thiscall)(rf::Event*, int, int, bool);
-            const auto& event_activate_links = addr_as_ref<Event_ActivateLinks>(0x004B8B00);
-            event_activate_links(
-                event,
-                event->trigger_handle,
-                event->triggered_by_handle,
-                event->delayed_msg
-            );
-        }
-
-        event->delay_timestamp.invalidate();
-    }
-}
-
-CodeInjection EventUnhide__process_patch {
+CodeInjection EventUnhide__process_patch{
     0x004BCDF0,
     [] (const auto& regs) {
         rf::Event* const event = regs.ecx;
-        event_process_fixed_delay(event);
+        rf::event_process_fixed_delay(event);
     }
 };
 
-CodeInjection EventAlarmSiren__process_patch {
-    0x004BA880,
-    [] (const auto& regs) {
-        rf::Event* const event = regs.ecx;
-        event_process_fixed_delay(event);
-    }
-};
-
-CodeInjection EventMakeInvulnerable__process_patch {
+CodeInjection EventMakeInvulnerable__process_patch{
     0x004BC8F0,
     [] (const auto& regs) {
         rf::Event* const event = regs.ecx;
-        event_process_fixed_delay(event);
+        rf::Event__process(event);
     }
 };
 
-CodeInjection EventCyclicTimer__process_patch {
-    0x004BB7B0,
-    [] (const auto& regs) {
-        rf::Event* const event = regs.ecx;
-        event_process_fixed_delay(event);
-    }
-};
-
-CodeInjection EventPlaySound__process_patch {
-    0x004BA570,
-    [] (const auto& regs) {
-        rf::Event* const event = regs.ecx;
-        event_process_fixed_delay(event);
-    }
-};
+// These events are not implemented.
+bool af_is_forward_exempt(const rf::EventType event_type) {
+    static const std::unordered_set forward_exempt_events{{
+        rf::EventType::Set_Variable,
+        rf::EventType::Switch_Random,
+        rf::EventType::Difficulty_Gate,
+        rf::EventType::Sequence,
+        rf::EventType::Clear_Queued,
+        rf::EventType::Remove_Link,
+        rf::EventType::Add_Link,
+        rf::EventType::Valid_Gate,
+        rf::EventType::Goal_Gate,
+        rf::EventType::Scope_Gate,
+        rf::EventType::Inside_Gate,
+        rf::EventType::AF_When_Dead,
+        rf::EventType::Gametype_Gate,
+        rf::EventType::When_Picked_Up,
+        rf::EventType::Set_Entity_Flag,
+        rf::EventType::Light_State,
+        rf::EventType::World_HUD_Sprite,
+        rf::EventType::Set_Light_Color,
+    }};
+    return forward_exempt_events.find(event_type) != forward_exempt_events.end();
+}
 
 CodeInjection event_type_forwards_messages_patch{
     0x004B8C44,
     [] (auto& regs) {
         if (rf::level.version >= 300) {
             const rf::EventType event_type = static_cast<rf::EventType>(regs.eax);
-            if (event_type == rf::EventType::Cyclic_Timer
-                    && !AlpineLevelProps::instance().legacy_cyclic_timers) {
+            if (af_is_forward_exempt(event_type)
+                || (event_type == rf::EventType::Cyclic_Timer
+                    && !AlpineLevelProps::instance().legacy_cyclic_timers)) {
                 // Do not forward messages.
                 regs.al = false;
                 regs.eip = 0x004B8C5D;
@@ -487,10 +424,7 @@ void apply_event_patches()
 
     // In AF levels, fix events that are broken, if `delay_timestamp` is set.
     EventUnhide__process_patch.install();
-    EventAlarmSiren__process_patch.install();
     EventMakeInvulnerable__process_patch.install();
-    EventCyclicTimer__process_patch.install();
-    EventPlaySound__process_patch.install();
 
     // In AF levels, allow triggers to activate events in multiplayer.
     trigger_activate_linked_objects_activate_event_in_multi_patch.install();

@@ -158,6 +158,7 @@ set(SRCS
     misc/ui.cpp
     misc/game.cpp
     misc/level.cpp
+    misc/af_options.cpp
     sound/sound.cpp
     sound/sound.h
     sound/sound_ds.cpp

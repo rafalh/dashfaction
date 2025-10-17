@@ -24,6 +24,8 @@ namespace rf
     };
     static_assert(sizeof(Event) == 0x2B8);
 
+    static auto& Event__process = addr_as_ref<void __fastcall(rf::Event*)>(0x004B8CE0);
+    
     static auto& event_type_forwards_messages = addr_as_ref<bool(int)>(0x004B8C40);
 
     static auto& event_lookup_from_uid = addr_as_ref<Event*(int uid)>(0x004B6820);
@@ -121,7 +123,7 @@ namespace rf
         When_Life_Reaches,
         When_Armor_Reaches,
         Reverse_Mover,
-        // Alpine Faction events begin at 100.
+        // Alpine Faction 1.0 events.
         Set_Variable = 100,
         Clone_Entity,
         Set_Player_World_Collide,
@@ -154,6 +156,7 @@ namespace rf
         Set_Entity_Flag,
         AF_Teleport_Player,
         Set_Item_Drop,
+        // Alpine Faction 1.1 events.
         AF_Heal,
         Anchor_Marker_Orient,
         Light_State,

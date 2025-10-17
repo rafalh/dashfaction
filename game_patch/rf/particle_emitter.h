@@ -136,7 +136,7 @@ struct ParticleEmitter
     float time_to_change;
     float current_state_time;
     bool active;
-    int field_144;
+    int active_distance;;
     ParticleEmitter *next;
     ParticleEmitter *prev;
     ParticleEmitter *next_entity_emitter;

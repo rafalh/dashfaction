@@ -29,6 +29,8 @@
 #include "../misc/misc.h"
 #include "../misc/vpackfile.h"
 #include "../misc/high_fps.h"
+#include "../misc/level.h"
+#include "../misc/af_options.h"
 #include "../input/input.h"
 #include "../rf/gr/gr.h"
 #include "../rf/multi.h"
@@ -145,6 +147,7 @@ FunHook<int(rf::String&, rf::String&, char*)> level_load_hook{
         xlog::info("Loading level: {}", level_filename);
         if (!save_filename.empty())
             xlog::info("Restoring game from save file: {}", save_filename);
+        load_af_level_info_config(level_filename);
         int ret = level_load_hook.call_target(level_filename, save_filename, error);
         if (ret != 0)
             xlog::warn("Loading failed: {}", error);
@@ -160,6 +163,9 @@ FunHook<void(bool)> level_init_post_hook{
     [](bool transition) {
         level_init_post_hook.call_target(transition);
         xlog::info("Level loaded: {}{}", rf::level.filename, transition ? " (transition)" : "");
+        if (!rf::is_dedicated_server) {
+            set_levelmod_autotexture_ppm();
+        }
     },
 };
 

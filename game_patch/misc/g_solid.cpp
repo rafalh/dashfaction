@@ -9,9 +9,11 @@
 #include "../rf/os/frametime.h"
 #include "../rf/gameseq.h"
 #include "../os/console.h"
+#include "../rf/level.h"
 #include "../bmpman/bmpman.h"
 #include "../bmpman/fmt_conv_templates.h"
 #include "level.h"
+#include "af_options.h"
 
 constexpr auto reference_fps = 30.0f;
 constexpr auto reference_frametime = 1.0f / reference_fps;
@@ -220,6 +222,15 @@ CodeInjection g_face_does_point_lie_in_face_crashfix{
     },
 };
 
+rf::gr::Color color_from_u32(const uint32_t color) {
+    return rf::gr::Color{
+        (color >> 24) & 0xFF,
+        (color >> 16) & 0xFF,
+        (color >> 8) & 0xFF,
+        color & 0xFF
+    };
+}
+
 CodeInjection level_load_lightmaps_color_conv_patch{
     0x004ED3E9,
     [](auto& regs) {
@@ -232,10 +243,61 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         if (!rf::gr::lock(lightmap->bm_handle, 0, &lock, rf::gr::LOCK_WRITE_ONLY))
             return;
 
-        // cap minimal color channel value as RF does
-        if (!DashLevelProps::instance().lightmaps_full_depth) {
-            for (int i = 0; i < lightmap->w * lightmap->h * 3; ++i) {
-                lightmap->buf[i] = std::max(lightmap->buf[i], static_cast<std::uint8_t>(4 << 3)); // 32
+        // No floor.
+        uint32_t floor_clamp = 0;
+        // No ceiling.
+        uint32_t ceiling_clamp = 0xFFFFFFFF;
+        bool should_clamp = false;
+        bool is_floor_clamp_defined = false;
+
+        if (g_af_level_info_config
+            .is_option_loaded(rf::level.filename, AlpineLevelInfoId::LightmapClampFloor)) {
+            floor_clamp = std::get<uint32_t>(
+                g_af_level_info_config
+                    .level_options
+                    .at(rf::level.filename)
+                    .at(AlpineLevelInfoId::LightmapClampFloor)
+            );
+            is_floor_clamp_defined = true;
+            should_clamp = true;
+        }
+
+        if (g_af_level_info_config
+            .is_option_loaded(rf::level.filename, AlpineLevelInfoId::LightmapClampCeiling)) {
+            ceiling_clamp = std::get<uint32_t>(
+                g_af_level_info_config
+                    .level_options
+                    .at(rf::level.filename)
+                    .at(AlpineLevelInfoId::LightmapClampCeiling)
+            );
+            should_clamp = true;
+        }
+
+        if (!is_floor_clamp_defined 
+            && rf::level.version < 300
+            && !DashLevelProps::instance().lightmaps_full_depth) {
+            should_clamp = true;
+            constexpr int default_floor_clamp = 0x202020FF;
+            floor_clamp = default_floor_clamp;
+        }
+
+        if (should_clamp) {
+            xlog::debug("Applying lightmap clamping");
+
+            // Extract RGB components from clamping values.
+            const rf::gr::Color floor = color_from_u32(floor_clamp);
+            const rf::gr::Color ceiling = color_from_u32(ceiling_clamp);
+
+            for (int i = 0; i < lightmap->w * lightmap->h * 3; i += 3) {
+                // Apply floor clamp.
+                lightmap->buf[i] = std::max(lightmap->buf[i], floor.red);
+                lightmap->buf[i + 1] = std::max(lightmap->buf[i + 1], floor.green);
+                lightmap->buf[i + 2] = std::max(lightmap->buf[i + 2], floor.blue);
+
+                // Apply ceiling clamp.
+                lightmap->buf[i] = std::min(lightmap->buf[i], ceiling.red);
+                lightmap->buf[i + 1] = std::min(lightmap->buf[i + 1], ceiling.green);
+                lightmap->buf[i + 2] = std::min(lightmap->buf[i + 2], ceiling.blue);
             }
         }
 
