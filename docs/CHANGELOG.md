@@ -4,7 +4,7 @@ Dash Faction Changelog
 Version 1.9.2 (not released yet)
 --------------------------------
 [@is-this-c](https://github.com/is-this-c)
-- Changes derived from Alpine Faction's source code
+- Changes derived from [Alpine Faction's](https://github.com/GooberRF/alpinefaction) source code
 - - Improve compatibility with Alpine Faction network protocol
 - - In Alpine Faction levels
 - - - Handle `AlpineLevelProps::legacy_cyclic_timers`
