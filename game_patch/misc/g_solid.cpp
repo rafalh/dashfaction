@@ -224,10 +224,10 @@ CodeInjection g_face_does_point_lie_in_face_crashfix{
 
 rf::gr::Color color_from_u32(const uint32_t color) {
     return rf::gr::Color{
-        (color >> 24) & 0xFF,
-        (color >> 16) & 0xFF,
-        (color >> 8) & 0xFF,
-        color & 0xFF
+        static_cast<rf::ubyte>((color >> 24) & 0xFF),
+        static_cast<rf::ubyte>((color >> 16) & 0xFF),
+        static_cast<rf::ubyte>((color >> 8) & 0xFF),
+        static_cast<rf::ubyte>(color & 0xFF)
     };
 }
 

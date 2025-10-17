@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <variant>
+#include <cstdint>
 
 void load_af_level_info_config(const std::string& level_filename);
 
