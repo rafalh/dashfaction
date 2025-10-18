@@ -190,12 +190,12 @@ CodeInjection sort_clutter_patch{
 FunHook<rf::VMesh*(rf::Object*, const char*, rf::VMeshType)> obj_create_mesh_hook{
     0x00489FE0,
     [] (rf::Object* const objp, const char* name, const rf::VMeshType type) {
-        const auto level = g_af_level_info_config
+        const std::input_iterator auto level = g_af_level_info_config
             .mesh_replacements
             .find(rf::level.filename);
         if (level != g_af_level_info_config.mesh_replacements.end()) {
             const auto& meshes = level->second;
-            const auto mesh = meshes.find(string_to_lower(name));
+            const std::input_iterator auto mesh = meshes.find(string_to_lower(name));
             if (mesh != meshes.end()) {
                 name = mesh->second.c_str();
                 xlog::debug("Replacing mesh {} with {}", name, mesh->second);
