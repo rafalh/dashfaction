@@ -73,6 +73,11 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     }
 };
 
+enum class ServerSoftware {
+    DashFaction,
+    AlpineFaction,
+};
+
 struct RemoteServerInfo {
     struct {
         uint8_t major = 0;
@@ -80,7 +85,7 @@ struct RemoteServerInfo {
     } version{};
     bool saving = false;
     std::optional<float> max_fov{};
-    bool alpine_faction = false;
+    ServerSoftware software = ServerSoftware::DashFaction;
     bool allow_full_bright_entities = true;
     bool allow_light_maps_only = false;
     bool allow_no_screen_shake = true;

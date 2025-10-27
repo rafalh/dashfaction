@@ -780,6 +780,7 @@ bool parse_df_join_accept_tail(const std::byte* const tail) {
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
         remote_server_info.max_fov.emplace(ext.max_fov);
     }
+    remote_server_info.software = ServerSoftware::DashFaction;
     g_remote_server_info.emplace(remote_server_info);
     return true;
 }
@@ -806,7 +807,7 @@ bool parse_af_join_accept_tail(const std::byte* const tail) {
     if (!!(ext.flags & Flags::max_fov) && ext.max_fov >= default_fov) {
         remote_server_info.max_fov.emplace(ext.max_fov);
     }
-    remote_server_info.alpine_faction = true;
+    remote_server_info.software = ServerSoftware::AlpineFaction;
     remote_server_info.allow_full_bright_entities = !!(ext.flags & Flags::allow_fb_mesh);
     remote_server_info.allow_light_maps_only = !!(ext.flags & Flags::allow_lmap);
     remote_server_info.allow_no_screen_shake = !!(ext.flags & Flags::allow_no_ss);
@@ -843,7 +844,7 @@ ConsoleCommand2 remote_server_flags_cmd{
             rf::console::print("====================");
             rf::console::print(
                 "{} Faction {}.{}",
-                remote_server_info.alpine_faction ? "Alpine" : "Dash",
+                remote_server_info.software == ServerSoftware::AlpineFaction ? "Alpine" : "Dash",
                 remote_server_info.version.major,
                 remote_server_info.version.minor
             );
