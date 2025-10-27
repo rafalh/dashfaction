@@ -190,18 +190,13 @@ CodeInjection sort_clutter_patch{
 FunHook<rf::VMesh*(rf::Object*, const char*, rf::VMeshType)> obj_create_mesh_hook{
     0x00489FE0,
     [] (rf::Object* const objp, const char* name, const rf::VMeshType type) {
-       const auto mesh_replacements_iter = g_af_level_info_config
+       const auto mesh_replacement_iter = g_af_level_info_config
             .mesh_replacements
-            .find(rf::level.filename);
-        if (mesh_replacements_iter != g_af_level_info_config.mesh_replacements.end()) {
-            const std::unordered_map<std::string, std::string>& mesh_replacements =
-                mesh_replacements_iter->second;
-            const auto mesh_replacement_iter = mesh_replacements
-                .find(string_to_lower(name));
-            if (mesh_replacement_iter != mesh_replacements.end()) {
-                name = mesh_replacement_iter->second.c_str();
-                xlog::debug("Replacing mesh {} with {}", name, mesh_replacement_iter->second);
-            }
+            .find(string_to_lower(name));
+        if (mesh_replacement_iter != mesh_replacements.end()) {
+            const std::string& mesh_replacement =  mesh_replacement_iter->second;
+            xlog::debug("Replacing mesh {} with {}", name, mesh_replacement);
+            name = mesh_replacement.c_str();
         }
         rf::VMesh* const mesh = obj_create_mesh_hook.call_target(objp, name, type);
         if (mesh && (rf::level.flags & rf::LEVEL_LOADED) != 0) {

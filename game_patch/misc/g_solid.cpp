@@ -255,7 +255,6 @@ CodeInjection level_load_lightmaps_color_conv_patch{
             floor_clamp = std::get<uint32_t>(
                 g_af_level_info_config
                     .level_options
-                    .at(rf::level.filename)
                     .at(AlpineLevelInfoId::LightmapClampFloor)
             );
             is_floor_clamp_defined = true;
@@ -267,7 +266,6 @@ CodeInjection level_load_lightmaps_color_conv_patch{
             ceiling_clamp = std::get<uint32_t>(
                 g_af_level_info_config
                     .level_options
-                    .at(rf::level.filename)
                     .at(AlpineLevelInfoId::LightmapClampCeiling)
             );
             should_clamp = true;

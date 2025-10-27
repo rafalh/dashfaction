@@ -128,6 +128,13 @@ const std::unordered_map<std::string, LevelInfoMetadata> level_info_metadata = {
 // Load level info from filename_info.tbl
 void load_af_level_info_config(const std::string& level_filename)
 {
+    if (g_alpine_level_info_config.current_level == level_filename) {
+        xlog::debug("Reusing previously loaded mapname_info.tbl settings for {}", level_filename);
+        return;
+    }
+
+    g_alpine_level_info_config.reset_for_level(level_filename);
+
     std::string base_filename = level_filename.substr(0, level_filename.size() - 4);
     std::string info_filename = base_filename + "_info.tbl";
     auto level_info_file = std::make_unique<rf::File>();
@@ -196,8 +203,7 @@ void load_af_level_info_config(const std::string& level_filename)
         if (option_name == "$Mesh Replacement") {
             auto parsed_value = parse_mesh_replacement(option_value);
             if (parsed_value) {
-                g_af_level_info_config.mesh_replacements[level_filename][string_to_lower(parsed_value->first)]= parsed_value->second;
-
+                g_af_level_info_config.mesh_replacements[string_to_lower(parsed_value->first)] = parsed_value->second;
                 xlog::debug("Mesh Replacement Added: {} -> {} in {}", parsed_value->first, parsed_value->second, level_filename);
             }
             else {
@@ -213,7 +219,7 @@ void load_af_level_info_config(const std::string& level_filename)
             const auto& metadata = meta_it->second;
             auto parsed_value = metadata.parse(option_value);
             if (parsed_value) {
-                g_af_level_info_config.level_options[level_filename][metadata.id] = *parsed_value;
+                g_af_level_info_config.level_options[metadata.id] = *parsed_value;
                 xlog::debug("Parsed and applied {} for {}: {}", option_name, level_filename, option_value);
             }
         }

@@ -42,16 +42,19 @@ struct LevelInfoMetadata {
 };
 
 struct AlpineLevelInfoConfig {
-    std::unordered_map<std::string, std::unordered_map<AlpineLevelInfoId, LevelInfoValue>> level_options{};
-    // `mesh_replacements` is lowercase.
-    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> mesh_replacements{};
+    std::string current_level{};
+    std::unordered_map<AlpineLevelInfoId, LevelInfoValue> level_options{};
+    // `mesh_replacements` is lower case.
+    std::unordered_map<std::string, std::string> mesh_replacements{};
 
-    bool is_option_loaded(const std::string level_filename, const AlpineLevelInfoId option_id) const {
-        const auto level = level_options.find(level_filename);
-        if (level != level_options.end()) {
-            return level->second.find(option_id) != level->second.end();
-        }
-        return false;
+    void reset_for_level(const std::string& level) {
+        current_level = level;
+        level_options.clear();
+        mesh_replacements.clear();
+    }
+
+    bool is_option_loaded(const AlpineLevelInfoId option_id) const {
+        return level_options.find(option_id) != level_options.end();
     }
 };
 
