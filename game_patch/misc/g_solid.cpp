@@ -251,7 +251,7 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         bool is_floor_clamp_defined = false;
 
         if (g_af_level_info_config
-            .is_option_loaded(rf::level.filename, AlpineLevelInfoId::LightmapClampFloor)) {
+            .is_option_loaded(AlpineLevelInfoId::LightmapClampFloor)) {
             floor_clamp = std::get<uint32_t>(
                 g_af_level_info_config
                     .level_options
@@ -262,7 +262,7 @@ CodeInjection level_load_lightmaps_color_conv_patch{
         }
 
         if (g_af_level_info_config
-            .is_option_loaded(rf::level.filename, AlpineLevelInfoId::LightmapClampCeiling)) {
+            .is_option_loaded(AlpineLevelInfoId::LightmapClampCeiling)) {
             ceiling_clamp = std::get<uint32_t>(
                 g_af_level_info_config
                     .level_options

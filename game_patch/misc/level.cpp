@@ -136,7 +136,7 @@ CodeInjection level_blast_ppm_injection{
 
 void set_levelmod_autotexture_ppm() {
     if (g_af_level_info_config
-        .is_option_loaded(rAlpineLevelInfoId::CraterTexturePpm)) {
+        .is_option_loaded(AlpineLevelInfoId::CraterTexturePpm)) {
         g_crater_autotexture_ppm = std::get<float>(
             g_af_level_info_config
                 .level_options
