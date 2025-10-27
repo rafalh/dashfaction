@@ -128,12 +128,12 @@ const std::unordered_map<std::string, LevelInfoMetadata> level_info_metadata = {
 // Load level info from filename_info.tbl
 void load_af_level_info_config(const std::string& level_filename)
 {
-    if (g_alpine_level_info_config.current_level == level_filename) {
+    if (g_af_level_info_config.current_level == level_filename) {
         xlog::debug("Reusing previously loaded mapname_info.tbl settings for {}", level_filename);
         return;
     }
 
-    g_alpine_level_info_config.reset_for_level(level_filename);
+    g_af_level_info_config.reset_for_level(level_filename);
 
     std::string base_filename = level_filename.substr(0, level_filename.size() - 4);
     std::string info_filename = base_filename + "_info.tbl";
