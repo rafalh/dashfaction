@@ -377,8 +377,9 @@ CodeInjection EventMakeInvulnerable__process_patch{
     }
 };
 
-// These events are not implemented.
 bool af_is_forward_exempt(const rf::EventType event_type) {
+    // These Alpine Faction events are forward exempt.
+    // They are not however implemented.
     static const std::unordered_set forward_exempt_events{{
         rf::EventType::Set_Variable,
         rf::EventType::Switch_Random,
