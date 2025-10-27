@@ -193,10 +193,9 @@ FunHook<rf::VMesh*(rf::Object*, const char*, rf::VMeshType)> obj_create_mesh_hoo
        const auto mesh_replacement_iter = g_af_level_info_config
             .mesh_replacements
             .find(string_to_lower(name));
-        if (mesh_replacement_iter != mesh_replacement_iter.end()) {
-            const std::string& mesh_replacement =  mesh_replacement_iter->second;
-            xlog::debug("Replacing mesh {} with {}", name, mesh_replacement);
-            name = mesh_replacement.c_str();
+        if (mesh_replacement_iter != g_af_level_info_config.mesh_replacements.end()) {
+            xlog::debug("Replacing mesh {} with {}", name, mesh_replacement_iter->second);
+            name = mesh_replacement_iter->second;
         }
         rf::VMesh* const mesh = obj_create_mesh_hook.call_target(objp, name, type);
         if (mesh && (rf::level.flags & rf::LEVEL_LOADED) != 0) {
