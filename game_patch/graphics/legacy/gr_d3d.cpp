@@ -116,7 +116,7 @@ CodeInjection gr_d3d_init_error_patch{
         auto text = std::format("Failed to create Direct3D device object - error {}.\n"
                                  "A critical error has occurred and the program cannot continue.\n"
                                  "Press OK to exit the program",
-                                 hr, get_d3d_error_str(hr));
+                                 get_d3d_error_str(hr));
 
         hr = rf::gr::d3d::d3d->CheckDeviceType(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
             rf::gr::d3d::pp.BackBufferFormat, rf::gr::d3d::pp.Windowed);

@@ -366,7 +366,7 @@ void GrNewFont::draw(int x, int y, std::string_view text, rf::gr::Mode state) co
     for (auto ch : text) {
         if (ch == '\n') {
             pen_x = x;
-            y += line_spacing_;
+            pen_y += line_spacing_;
         }
         else {
             auto glyph_idx = char_map_[static_cast<unsigned char>(ch)];
