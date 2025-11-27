@@ -19,6 +19,16 @@ Dash Faction uses some open-source third-party components. Their licenses can
 be found below.
 
 ---------------------------------
+Assets
+---------------------------------
+
+soneproject:
+* af_killsound1.wav
+    Title: ecofuture3
+    Source: https://freesound.org/s/346425
+    License: https://creativecommons.org/licenses/by/3.0
+
+---------------------------------
 Contributors
 ---------------------------------
 

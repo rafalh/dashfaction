@@ -8,8 +8,11 @@
 #include "../rf/weapon.h"
 #include "../rf/hud.h"
 #include "../rf/input.h"
+#include "../rf/ui.h"
+#include "../rf/level.h"
 #include "../os/console.h"
 #include "../main/main.h"
+#include "../misc/level.h"
 #include "../multi/multi.h"
 #include "../hud/multi_spectate.h"
 #include <common/utils/list-utils.h>
@@ -269,6 +272,17 @@ ConsoleCommand2 damage_screen_flash_cmd{
     "Toggle damage screen flash effect",
 };
 
+ConsoleCommand2 hit_sounds_cmd{
+    "hit_sounds",
+    [] {
+        g_game_config.hit_sounds = !g_game_config.hit_sounds;
+        g_game_config.save();
+        rf::console::print("Hit sounds is {}", g_game_config.hit_sounds ? "enabled" : "disabled");
+    },
+    "Toggle whether to play a sound, when you hit players in multiplayer, if enabled by a server",
+    "hit_sounds",
+};
+
 CallHook<void(rf::VMesh*, rf::Vector3*, rf::Matrix3*, void*)> player_cockpit_vmesh_render_hook{
     0x004A7907,
     [](rf::VMesh *vmesh, rf::Vector3 *pos, rf::Matrix3 *orient, void *params) {
@@ -289,6 +303,25 @@ CodeInjection sr_load_player_weapon_anims_injection{
         rf::Entity *ep = regs.ebp;
         static auto& entity_update_weapon_animations = addr_as_ref<void(void*, int)>(0x0042AB20);
         entity_update_weapon_animations(ep, ep->ai.current_primary_weapon);
+    },
+};
+
+CodeInjection player_execute_action_spawn_player_injection{
+    0x004A678B,
+    [] (auto& regs) {
+        if (g_level_has_unsupported_event_classes) {
+            const std::string text = std::format(
+                "You cannot spawn in a level that has unsupported event classes!\nRFL version: {}",
+                 rf::level.version
+            );
+            rf::ui::popup_message(
+                "Error",
+                text.c_str(),
+                nullptr,
+                false
+            );
+            regs.eip = 0x004A679D;
+        }
     },
 };
 
@@ -356,4 +389,7 @@ void player_do_patch()
 
     // Commands
     damage_screen_flash_cmd.register_cmd();
+    hit_sounds_cmd.register_cmd();
+
+    player_execute_action_spawn_player_injection.install();
 }

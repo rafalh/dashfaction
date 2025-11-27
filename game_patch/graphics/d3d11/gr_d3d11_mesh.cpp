@@ -9,6 +9,8 @@
 #include "../../rf/math/quaternion.h"
 #include "../../rf/v3d.h"
 #include "../../rf/character.h"
+#include "../../main/main.h"
+#include "../../multi/multi.h"
 #include "gr_d3d11.h"
 #include "gr_d3d11_mesh.h"
 #include "gr_d3d11_context.h"
@@ -378,7 +380,7 @@ namespace df::gr::d3d11
         render_caches_.clear();
     }
 
-    void MeshRenderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::MeshRenderParams& params)
+    void MeshRenderer::render_v3d_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, rf::MeshRenderParams params)
     {
         page_in_v3d_mesh(lod_mesh);
 
@@ -389,10 +391,28 @@ namespace df::gr::d3d11
         render_context_.set_index_buffer(v3d_ib_.buffer());
 
         auto render_cache = reinterpret_cast<MeshRenderCache*>(lod_mesh->render_cache);
+
+        const bool ir_scanner = (params.flags & MRF_SCANNER_1) != 0;
+        if (!ir_scanner) {
+            rf::Vector3 ambient_light{0.f, 0.f, 0.f};
+            light_get_ambient(&ambient_light.x, &ambient_light.y, &ambient_light.z);
+            ambient_light *= 255.f;
+            // RF uses some hard-coded lights here but for now let's keep it simple
+            ambient_light += 40.f;
+            // Ignore ambient_color from params, it changes sharply and RF uses it only indirectly for
+            // its hard-coded lights
+            params.ambient_color.set(
+                static_cast<rf::ubyte>(std::min(ambient_light.x, 255.f)),
+                static_cast<rf::ubyte>(std::min(ambient_light.y, 255.f)),
+                static_cast<rf::ubyte>(std::min(ambient_light.z, 255.f)),
+                255
+            );
+        }
+
         draw_cached_mesh(lod_mesh, *render_cache, params, lod_index);
     }
 
-    void MeshRenderer::render_character_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, const rf::MeshRenderParams& params)
+    void MeshRenderer::render_character_vif(rf::VifLodMesh *lod_mesh, int lod_index, const rf::Vector3& pos, const rf::Matrix3& orient, const rf::CharacterInstance *ci, rf::MeshRenderParams params)
     {
         page_in_character_mesh(lod_mesh);
         auto render_cache = reinterpret_cast<CharacterMeshRenderCache*>(lod_mesh->render_cache);
@@ -416,6 +436,18 @@ namespace df::gr::d3d11
         }
         render_cache->update_bone_transforms_buffer(ci, render_context_);
         render_cache->bind_buffers(render_context_, morphed);
+
+        const bool ir_scanner = (params.flags & MRF_SCANNER_1) != 0;
+        if (!ir_scanner) {
+            const bool allow_full_bright = !(get_remote_server_info()
+                && !get_remote_server_info().value().allow_full_bright_entities);
+            if (g_game_config.full_bright_entities
+                && allow_full_bright
+                && !(params.flags & MRF_FIRST_PERSON)) {
+                params.ambient_color.set(255, 255, 255, 255);
+            }
+        }
+
         draw_cached_mesh(lod_mesh, *render_cache, params, lod_index);
     }
 
@@ -458,20 +490,7 @@ namespace df::gr::d3d11
         }
         rf::Color color{255, 255, 255};
         if (!ir_scanner) {
-            // Ignore ambient_color from params, it changes sharply and RF uses it only indirectly for
-            // its hard-coded lights
-            float ambient_r, ambient_g, ambient_b;
-            light_get_ambient(&ambient_r, &ambient_g, &ambient_b);
-            color.set(
-                static_cast<rf::ubyte>(ambient_r * 255.0f),
-                static_cast<rf::ubyte>(ambient_g * 255.0f),
-                static_cast<rf::ubyte>(ambient_b * 255.0f),
-                255
-            );
-            // RF uses some hard-coded lights here but for now let's keep it simple
-            color.red += 40;
-            color.green += 40;
-            color.blue += 40;
+            color = params.ambient_color;
         } else {
             color = params.self_illum;
         }

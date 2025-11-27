@@ -14,6 +14,7 @@
 #include "../rf/debris.h"
 #include "../rf/misc.h"
 #include "../main/main.h"
+#include "../multi/multi.h"
 
 rf::Timestamp g_player_jump_timestamp;
 
@@ -276,10 +277,38 @@ static FunHook<float(rf::Entity*, float, int, int, int)> entity_damage_hook{
     },
 };
 
+CallHook<void(rf::Camera*, float, float)> entity_fire_primary_weapon_camera_shake_hook{
+    0x00426C79,
+    [] (rf::Camera* const cp, const float amplitude, const float time_seconds) {
+        const bool force_screen_shake = get_remote_server_info() 
+            && !get_remote_server_info().value().allow_no_screen_shake;
+        if (g_game_config.weapon_screen_shake || force_screen_shake) {
+            entity_fire_primary_weapon_camera_shake_hook.call_target(cp, amplitude, time_seconds);
+        }
+    },
+};
+
+ConsoleCommand2 weapon_screen_shake_cmd{
+    "weapon_screen_shake",
+    [] {
+        g_game_config.weapon_screen_shake = !g_game_config.weapon_screen_shake;
+        g_game_config.save();
+        rf::console::print(
+            "Weapon screen shake is {}",
+            g_game_config.weapon_screen_shake
+                ? "enabled"
+                : "disabled [may be force enabled by multiplayer servers]"
+        );
+    },
+    "Toggle camera shake from weapon fire [may be force enabled by multiplayer servers]",
+};
+
 CallHook<void(rf::Entity&)> entity_update_muzzle_flash_light_hook{
     0x0041E814,
-    [](rf::Entity& ep) {
-        if (g_game_config.muzzle_flash) {
+    [] (rf::Entity& ep) {
+        const bool force_muzzle_flash = get_remote_server_info()
+            && !get_remote_server_info().value().allow_no_muzzle_flash;
+        if (g_game_config.muzzle_flash || force_muzzle_flash) {
             entity_update_muzzle_flash_light_hook.call_target(ep);
         }
     },
@@ -362,7 +391,11 @@ void entity_do_patch()
     // Don't create muzzle flash lights
     entity_update_muzzle_flash_light_hook.install();
 
+    // Support disabling camera shake from weapon fire.
+    entity_fire_primary_weapon_camera_shake_hook.install();
+
     // Commands
     gibs_cmd.register_cmd();
     muzzle_flash_cmd.register_cmd();
+    weapon_screen_shake_cmd.register_cmd();
 }

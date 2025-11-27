@@ -158,6 +158,7 @@ set(SRCS
     misc/ui.cpp
     misc/game.cpp
     misc/level.cpp
+    misc/af_options.cpp
     sound/sound.cpp
     sound/sound.h
     sound/sound_ds.cpp
@@ -172,7 +173,7 @@ set(SRCS
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
 
 add_library(DashFaction SHARED ${SRCS})
-target_compile_features(DashFaction PUBLIC cxx_std_20)
+target_compile_features(DashFaction PRIVATE cxx_std_23)
 set_target_properties(DashFaction PROPERTIES
     PREFIX ""
     CXX_EXTENSIONS NO

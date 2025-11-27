@@ -73,12 +73,29 @@ struct PlayerStatsNew : rf::PlayerLevelStats
     }
 };
 
-struct DashFactionServerInfo
-{
-    uint8_t version_major = 0;
-    uint8_t version_minor = 0;
-    bool saving_enabled = false;
-    std::optional<float> max_fov;
+enum class ServerSoftware {
+    DashFaction,
+    AlpineFaction,
+};
+
+struct RemoteServerInfo {
+    struct {
+        uint8_t major = 0;
+        uint8_t minor = 0;
+    } version{};
+    bool saving = false;
+    std::optional<float> max_fov{};
+    ServerSoftware software = ServerSoftware::DashFaction;
+    bool allow_full_bright_entities = true;
+    bool allow_light_maps_only = false;
+    bool allow_no_screen_shake = true;
+    bool no_player_collide = false;
+    bool allow_no_muzzle_flash = true;
+    bool click_limit = false;
+    std::optional<int> semiauto_cool_down{};
+    bool unlimited_fps = false;
+    bool gaussian_spread = false;
+    bool location_pinging = false;
 };
 
 void multi_level_download_update();
@@ -86,7 +103,7 @@ void multi_do_patch();
 void multi_after_full_game_init();
 void multi_init_player(rf::Player* player);
 void send_chat_line_packet(const char* msg, rf::Player* target, rf::Player* sender = nullptr, bool is_team_msg = false);
-const std::optional<DashFactionServerInfo>& get_df_server_info();
+const std::optional<RemoteServerInfo>& get_remote_server_info();
 void multi_level_download_do_frame();
 void multi_level_download_abort();
 void multi_ban_apply_patch();

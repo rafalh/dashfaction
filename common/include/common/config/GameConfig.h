@@ -58,6 +58,8 @@ struct GameConfig
     CfgVar<bool> muzzle_flash = true;
     CfgVar<bool> glares = true;
     CfgVar<bool> show_enemy_bullets = true;
+    CfgVar<bool> weapon_screen_shake = true;
+    CfgVar<bool> full_bright_entities = false;
 
     static constexpr float min_fov = 75.0f;
     static constexpr float max_fov = 160.0f;
@@ -67,6 +69,7 @@ struct GameConfig
     // Audio
     CfgVar<float> level_sound_volume = 1.0f;
     CfgVar<bool> eax_sound = true;
+    CfgVar<bool> hit_sounds = true;
 
     // Multiplayer
     static const char default_rf_tracker[];

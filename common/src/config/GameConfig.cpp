@@ -167,6 +167,7 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "Scoreboard Animations", scoreboard_anim);
     result &= visitor(dash_faction_key, "Spectate Mode Minimal UI", spectate_mode_minimal_ui);
     result &= visitor(dash_faction_key, "Level Sound Volume", level_sound_volume);
+    result &= visitor(dash_faction_key, "Hit Sounds", hit_sounds);
     result &= visitor(dash_faction_key, "Allow Overwriting Game Files", allow_overwrite_game_files);
     result &= visitor(dash_faction_key, "Version", dash_faction_version);
     result &= visitor(dash_faction_key, "Swap Assault Rifle Controls", swap_assault_rifle_controls);
@@ -174,6 +175,8 @@ bool GameConfig::visit_vars(T&& visitor, bool is_save)
     result &= visitor(dash_faction_key, "Glares", glares);
     result &= visitor(dash_faction_key, "Linear Pitch", linear_pitch);
     result &= visitor(dash_faction_key, "Show Enemy Bullets", show_enemy_bullets);
+    result &= visitor(dash_faction_key, "Weapon Screen Shake", weapon_screen_shake);
+    result &= visitor(dash_faction_key, "Full-Bright Entities", full_bright_entities);
     result &= visitor(dash_faction_key, "Keep Launcher Open", keep_launcher_open);
     result &= visitor(dash_faction_key, "Skip Cutscene Control", skip_cutscene_ctrl);
     result &= visitor(dash_faction_key, "Damage Screen Flash", damage_screen_flash);

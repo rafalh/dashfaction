@@ -5,15 +5,17 @@
 #include <xlog/xlog.h>
 #include <cassert>
 #include <unordered_map>
+#include <unordered_set>
 #include "../rf/object.h"
 #include "../rf/event.h"
 #include "../rf/entity.h"
-#include "../rf/level.h"
 #include "../rf/multi.h"
+#include "../rf/level.h"
 #include "../rf/file/file.h"
 #include "../rf/player/player.h"
 #include "../rf/os/console.h"
 #include "../os/console.h"
+#include "../misc/level.h"
 
 class EventNameMapper {
     std::unordered_map<std::string, int> event_name_map;
@@ -49,8 +51,6 @@ EventNameMapper event_name_mapper;
 
 const char* custom_event_names[] = {
     "AF_Teleport_Player",
-    "Clone_Entity",
-    "Anchor_Marker_Orient",
 };
 
 enum EventType : int {
@@ -264,13 +264,14 @@ CodeInjection event_load_level_turn_on_injection{
 
 FunHook event_lookup_type_hook{
     0x004BD700,
-    [](const rf::String& name) {
-        auto it = event_name_mapper.find(name.c_str());
-        if (!it) {
+    [] (const rf::String& name) {
+        const std::optional<int> id = event_name_mapper.find(name);
+        if (!id) {
             xlog::warn("Unsupported event class: {}", name);
+            g_level_has_unsupported_event_classes = true;  
             return -1;
         }
-        return it.value();
+        return id.value();
     },
 };
 
@@ -330,8 +331,105 @@ ConsoleCommand2 debug_event_msg_cmd{
     }
 };
 
+CodeInjection trigger_activate_linked_objects_activate_event_in_multi_patch{
+    0x004C038C,
+    [] (auto& regs) {
+        if (rf::level.version >= 300) {
+            const rf::Object* const obj = regs.esi;
+            const rf::Event* const event = static_cast<const rf::Event*>(obj);
+            static const std::unordered_set blocked_event_types{{
+                rf::EventType::Load_Level,
+                rf::EventType::Drop_Point_Marker,
+                rf::EventType::Go_Undercover,
+                rf::EventType::Win_PS2_Demo,
+                rf::EventType::Endgame,
+                rf::EventType::Defuse_Nuke,
+                rf::EventType::Play_Video,
+            }};
+            // RF does not allow triggers to activate events in multiplayer.
+            // In AF levels, we allow it, unless it is an event that would be 
+            // problematic in multiplayer. 
+            const rf::EventType event_type = static_cast<rf::EventType>(event->event_type);
+            if (!blocked_event_types.contains(event_type)) {
+                // Allow activation.
+                regs.eip = 0x004C03C2;
+            } else {
+                // Do not allow activation.
+                regs.eip = 0x004C03D3;
+            }
+        }
+    }
+};
+
+CodeInjection EventUnhide__process_patch{
+    0x004BCDF0,
+    [] (const auto& regs) {
+        rf::Event* const event = regs.ecx;
+        rf::Event__process(event);
+    }
+};
+
+CodeInjection EventMakeInvulnerable__process_patch{
+    0x004BC8F0,
+    [] (const auto& regs) {
+        rf::Event* const event = regs.ecx;
+        rf::Event__process(event);
+    }
+};
+
+bool af_is_forward_exempt(const rf::EventType event_type) {
+    // These Alpine Faction events are forward exempt.
+    // They are not however implemented.
+    static const std::unordered_set forward_exempt_events{{
+        rf::EventType::Set_Variable,
+        rf::EventType::Switch_Random,
+        rf::EventType::Difficulty_Gate,
+        rf::EventType::Sequence,
+        rf::EventType::Clear_Queued,
+        rf::EventType::Remove_Link,
+        rf::EventType::Add_Link,
+        rf::EventType::Valid_Gate,
+        rf::EventType::Goal_Gate,
+        rf::EventType::Scope_Gate,
+        rf::EventType::Inside_Gate,
+        rf::EventType::AF_When_Dead,
+        rf::EventType::Gametype_Gate,
+        rf::EventType::When_Picked_Up,
+        rf::EventType::Set_Entity_Flag,
+        rf::EventType::Light_State,
+        rf::EventType::World_HUD_Sprite,
+        rf::EventType::Set_Light_Color,
+    }};
+    return forward_exempt_events.find(event_type) != forward_exempt_events.end();
+}
+
+CodeInjection event_type_forwards_messages_patch{
+    0x004B8C44,
+    [] (auto& regs) {
+        if (rf::level.version >= 300) {
+            const rf::EventType event_type = static_cast<rf::EventType>(regs.eax);
+            if (af_is_forward_exempt(event_type)
+                || (event_type == rf::EventType::Cyclic_Timer
+                    && !AlpineLevelProps::instance().legacy_cyclic_timers)) {
+                // Do not forward messages.
+                regs.al = false;
+                regs.eip = 0x004B8C5D;
+            }
+        }
+    }
+};
+
 void apply_event_patches()
 {
+    event_type_forwards_messages_patch.install();
+
+    // In AF levels, fix events that are broken, if `delay_timestamp` is set.
+    EventUnhide__process_patch.install();
+    EventMakeInvulnerable__process_patch.install();
+
+    // In AF levels, allow triggers to activate events in multiplayer.
+    trigger_activate_linked_objects_activate_event_in_multi_patch.install();
+
     // Allow custom mesh (not used in clutter.tbl or items.tbl) in Switch_Model event
     switch_model_event_custom_mesh_patch.install();
     switch_model_event_obj_lighting_and_physics_fix.install();

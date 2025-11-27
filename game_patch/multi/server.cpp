@@ -713,6 +713,17 @@ CodeInjection multi_level_init_injection{
     },
 };
 
+CallHook<rf::Entity* (int, const char*, int, const rf::Vector3&, rf::Matrix3&, int, int)> player_create_entity_entity_create_hook{
+    0x004A41D3,
+    [] (const int type, const char* const name, const int parent_handle, const rf::Vector3& pos, rf::Matrix3& orient, int create_flags, const int mp_character) {
+        if (get_remote_server_info() && get_remote_server_info().value().no_player_collide) {
+            constexpr int NO_PLAYER_COLLIDE = 0x4;
+            create_flags |= NO_PLAYER_COLLIDE;
+        }
+        return player_create_entity_entity_create_hook.call_target(type, name, parent_handle, pos, orient, create_flags, mp_character);
+    }
+};
+
 void server_init()
 {
     // Override rcon command whitelist
@@ -781,6 +792,8 @@ void server_init()
 
     // Shuffle rotation when the last map in the list is loaded
     multi_level_init_injection.install();
+
+    player_create_entity_entity_create_hook.install();
 }
 
 void server_do_frame()

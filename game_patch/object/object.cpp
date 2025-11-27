@@ -3,6 +3,7 @@
 #include <patch_common/CodeInjection.h>
 #include <patch_common/AsmWriter.h>
 #include <patch_common/StaticBufferResizePatch.h>
+#include <common/utils/string-utils.h>
 #include <xlog/xlog.h>
 #include "../rf/object.h"
 #include "../rf/clutter.h"
@@ -10,6 +11,7 @@
 #include "../rf/level.h"
 #include "../rf/geometry.h"
 #include "../rf/math/ix.h"
+#include "../misc/af_options.h"
 #include "object.h"
 #include "object_private.h"
 
@@ -187,8 +189,15 @@ CodeInjection sort_clutter_patch{
 
 FunHook<rf::VMesh*(rf::Object*, const char*, rf::VMeshType)> obj_create_mesh_hook{
     0x00489FE0,
-    [](rf::Object* objp, const char* name, rf::VMeshType type) {
-        rf::VMesh* mesh = obj_create_mesh_hook.call_target(objp, name, type);
+    [] (rf::Object* const objp, const char* name, const rf::VMeshType type) {
+       const auto mesh_replacement_iter = g_af_level_info_config
+            .mesh_replacements
+            .find(string_to_lower(name));
+        if (mesh_replacement_iter != g_af_level_info_config.mesh_replacements.end()) {
+            xlog::debug("Replacing mesh {} with {}", name, mesh_replacement_iter->second);
+            name = mesh_replacement_iter->second.c_str();
+        }
+        rf::VMesh* const mesh = obj_create_mesh_hook.call_target(objp, name, type);
         if (mesh && (rf::level.flags & rf::LEVEL_LOADED) != 0) {
             obj_light_init_object(objp);
         }

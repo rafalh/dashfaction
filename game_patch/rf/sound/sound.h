@@ -88,7 +88,8 @@ namespace rf
     static auto snd_change_3d = addr_as_ref<void(int instance_handle, const Vector3& pos, const Vector3& vel, float vol_scale)>(0x005058C0);
     static auto snd_calculate_2d_from_3d_info = addr_as_ref<void(int handle, const Vector3& pos, float* pan, float* volume, float vol_multiplier)>(0x00505740);
     static auto snd_update_sounds = addr_as_ref<void(const Vector3& camera_pos, const Vector3& camera_vel, const Matrix3& camera_orient)>(0x00505EC0);
-
+    static auto snd_get_handle = addr_as_ref<int(const char*, float, float, float)>(0x005054B0);
+    
     static auto snd_pc_play = addr_as_ref<int(int handle, float vol_scale, float pan, float unused, bool is_final_volume)>(0x005439D0);
     static auto snd_pc_play_looping = addr_as_ref<int(int handle, float volume, float pan, float unused, bool skip_volume_scalling)>(0x00543A80);
     static auto snd_pc_play_3d = addr_as_ref<int(int handle, const Vector3& pos, bool looping, float unused)>(0x00544180);

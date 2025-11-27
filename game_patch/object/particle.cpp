@@ -7,6 +7,9 @@
 #include "../rf/particle_emitter.h"
 #include "../rf/geometry.h"
 #include "../rf/multi.h"
+#include "../rf/level.h"
+#include "../rf/player/camera.h"
+#include "../rf/player/player.h"
 
 FunHook<rf::ParticleEmitter*(int, rf::ParticleEmitterType&, rf::GRoom*, rf::Vector3&, bool)> particle_emitter_create_hook{
     0x00497CA0,
@@ -31,6 +34,50 @@ CodeInjection particle_update_accel_patch{
         if (vel->len() < 0.0001f) {
             regs.eip = 0x00495301;
         }
+    },
+};
+
+CallHook<void(
+    int,
+    rf::ParticleCreateInfo&,
+    rf::GRoom*,
+    rf::Vector3*,
+    int,
+    rf::Particle**,
+    rf::ParticleEmitter*
+)> particle_create_level_emitter_hook{
+    0x00496DBC,
+    [] (
+        const int pool_id,
+        rf::ParticleCreateInfo& pci,
+        rf::GRoom* const room,
+        rf::Vector3* const a4,
+        const int parent_obj,
+        rf::Particle** const result,
+        rf::ParticleEmitter* const emitter
+    ) {
+        // Make particle emitters placed into levels respect their active distance parameter.
+        if (rf::level.version >= 300
+            && !rf::is_server
+            && !rf::is_dedicated_server
+            && !parent_obj
+            && emitter->uid > 0
+        ) {
+            const rf::Vector3 camera_pos = rf::camera_get_pos(rf::local_player->cam);
+            const float dist = (emitter->pos - camera_pos).len();
+            if (emitter->active_distance != 0.f && emitter->active_distance <= dist) {
+                return;
+            }
+        }
+        particle_create_level_emitter_hook.call_target(
+            pool_id,
+            pci,
+            room,
+            a4,
+            parent_obj,
+            result,
+            emitter
+        );
     },
 };
 
@@ -107,6 +154,9 @@ void particle_do_patch()
     // RF code is broken here because level emitters have object handle set to 0 and other emitters are not added to
     // the searched list
     write_mem<uint8_t>(0x00495158, asm_opcodes::jmp_rel_short);
+
+    // Support respecting a particle emitter's active distance parameter.
+    particle_create_level_emitter_hook.install();
 
     // Recude particle emitters maximal spawn rate
     particle_emitter_create_hook.install();

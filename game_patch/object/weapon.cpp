@@ -126,6 +126,40 @@ CallHook<void(rf::Vector3&, float, float, int, int)> weapon_hit_wall_obj_apply_r
     },
 };
 
+CodeInjection player_fire_primary_weapon_semi_auto_patch{
+    0x004A50BB,
+    [] (auto& regs) {
+        const rf::Entity* const entity = regs.esi;
+        if (get_remote_server_info()
+            && get_remote_server_info().value().click_limit
+            && !entity->ai.next_fire_primary.elapsed()) {
+            regs.eip = 0x004A58B8;
+        }
+    },
+};
+
+std::optional<int> get_fire_wait_override() {
+    return get_remote_server_info().and_then([] (const RemoteServerInfo& remote_server_info) {
+        return remote_server_info.semiauto_cool_down;
+    });
+}
+
+CodeInjection entity_fire_primary_weapon_semi_auto_patch{
+    0x004259B8,
+    [] (auto& regs) {
+        // HACKFIX: Override fire wait for stock semiauto weapons.
+        auto& fire_wait = regs.eax;
+        const int weapon_type = regs.ebx;
+        const rf::Entity* const entity = regs.esi;
+        if (get_fire_wait_override()
+            && rf::obj_is_player(entity)
+            && rf::weapon_is_semi_automatic(weapon_type)
+            && fire_wait == 500) {
+            fire_wait = get_fire_wait_override().value();
+        }
+    },
+};
+
 void apply_weapon_patches()
 {
     // Fix crashes caused by too many records in weapons.tbl file
@@ -157,4 +191,7 @@ void apply_weapon_patches()
 
     // Fix rockets not making damage after hitting a detail brush
     weapon_hit_wall_obj_apply_radius_damage_hook.install();
+
+    player_fire_primary_weapon_semi_auto_patch.install();
+    entity_fire_primary_weapon_semi_auto_patch.install();
 }

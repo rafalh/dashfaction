@@ -127,7 +127,7 @@ namespace rf
     static auto& obj_flag_dead = addr_as_ref<void(Object* obj)>(0x0048AB40);
     static auto& obj_find_root_bone_pos = addr_as_ref<void(Object*, Vector3&)>(0x0048AC70);
     static auto& obj_update_liquid_status = addr_as_ref<void(Object* obj)>(0x00486C30);
-    static auto& obj_is_player = addr_as_ref<bool(Object* obj)>(0x004895D0);
+    static auto& obj_is_player = addr_as_ref<bool(const Object* obj)>(0x004895D0);
     static auto& obj_hide = addr_as_ref<void(Object* obj)>(0x0048A570);
 
     static auto& obj_light_free = addr_as_ref<void()>(0x0048B370);

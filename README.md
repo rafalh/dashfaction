@@ -64,6 +64,9 @@ Name                          | Description
 `debug_event_msg`             | toggle tracking of event messages in console
 `gibs`                        | toggle gibs (characters exploding into parts)
 `muzzle_flash`                | toggle muzzle flash
+`hit_sounds`                  | toggle whether to play a sound, when you hit players in multiplayer, if enabled by a server
+`weapon_screen_shake`         | toggle camera shake from weapon fire [may be force enabled by multiplayer servers]
+`full_bright_entities`        | toggle full-bright entities [may be force disabled by multiplayer servers]
 
 ### Server commands
 

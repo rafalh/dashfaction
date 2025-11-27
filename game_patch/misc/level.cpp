@@ -9,8 +9,13 @@
 #include "../rf/level.h"
 #include "../rf/geometry.h"
 #include "../rf/file/file.h"
-#include "level.h"
+#include "../rf/player/player.h"
+#include "../rf/player/camera.h"
 #include "../main/main.h"
+#include "level.h"
+#include "af_options.h"
+
+static float g_crater_autotexture_ppm = 32.f;
 
 CodeInjection level_load_header_version_check_patch{
     0x004615BF,
@@ -74,26 +79,43 @@ CallHook level_init_pre_console_output_hook{
     },
 };
 
+bool g_level_has_unsupported_event_classes = false;
+
+CodeInjection level_load_player_create_entity_injection{
+    0x0045C7D9,
+    [] (auto& regs) {
+        if (g_level_has_unsupported_event_classes) {
+            rf::camera_enter_fixed(rf::local_player->cam);
+            regs.eip = 0x0045C80F;
+        }
+    },
+};
+
 CodeInjection level_read_header_inj{
     0x004616FB,
-    []() {
+    [] {
         DashLevelProps::instance().reset(rf::level.version);
+        AlpineLevelProps::instance().reset();
+        g_level_has_unsupported_event_classes = false;
     },
 };
 
 CodeInjection level_load_chunk_inj{
     0x00460912,
-    [](auto& regs) {
-        int chunk_id = regs.eax;
+    [] (auto& regs) {
+        const int chunk_id = regs.eax;
         rf::File& file = addr_as_ref<rf::File>(regs.esp + 0x2B0 - 0x278);
-        auto chunk_len = addr_as_ref<std::size_t>(regs.esp + 0x2B0 - 0x2A0);
-
-        if (chunk_id == dash_level_props_chunk_id) {
-            auto version = file.read<std::uint32_t>();
-            if (version == 1) {
+        const std::size_t chunk_len = addr_as_ref<std::size_t>(regs.esp + 0x2B0 - 0x2A0);
+        if (chunk_id == dash_level_props_chunk_id
+            || chunk_id == alpine_props_chunk_id) {
+            const int chunk_end = file.tell() + chunk_len;
+            if (chunk_id == dash_level_props_chunk_id) {
                 DashLevelProps::instance().deserialize(file);
-            } else {
-                file.seek(chunk_len - 4, rf::File::seek_cur);
+            } else if (chunk_id == alpine_props_chunk_id) {
+                AlpineLevelProps::instance().deserialize(file);
+            }
+            if (file.tell() != chunk_end) {
+                file.seek(chunk_end, rf::File::seek_set);
             }
             regs.eip = 0x004608EF;
         }
@@ -107,10 +129,23 @@ CodeInjection level_blast_ppm_injection{
         int bmh = regs.edi;
         int w = 256, h = 256;
         rf::bm::get_dimensions(bmh, &w, &h);
-        float ppm = std::min(w, h) / 256.0 * 32.0;
+        float ppm = std::min(w, h) / 256.f * g_crater_autotexture_ppm;
         solid->set_autotexture_pixels_per_meter(ppm);
     },
 };
+
+void set_levelmod_autotexture_ppm() {
+    if (g_af_level_info_config
+        .is_option_loaded(AlpineLevelInfoId::CraterTexturePpm)) {
+        g_crater_autotexture_ppm = std::get<float>(
+            g_af_level_info_config
+                .level_options
+                .at(AlpineLevelInfoId::CraterTexturePpm)
+        );
+    } else {
+        g_crater_autotexture_ppm = 32.f;
+    }
+}
 
 void level_apply_patch()
 {
@@ -128,6 +163,9 @@ void level_apply_patch()
 
     // Add level name to "-- Level Initializing --" message
     level_init_pre_console_output_hook.install();
+
+    // If a level has unsupported event classes, do not automatically spawn in a listen server.
+    level_load_player_create_entity_injection.install();
 
     // Load custom rfl chunks
     level_read_header_inj.install();

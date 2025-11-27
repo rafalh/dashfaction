@@ -82,10 +82,13 @@ float gr_scale_world_fov(float horizontal_fov = 90.0f)
         horizontal_fov = gr_scale_fov_hor_plus(horizontal_fov);
     }
 
-    const auto& server_info_opt = get_df_server_info();
-    if (server_info_opt && server_info_opt.value().max_fov) {
-        horizontal_fov = std::min(horizontal_fov, server_info_opt.value().max_fov.value());
+    if (get_remote_server_info()) {
+        const RemoteServerInfo& remote_server_info = get_remote_server_info().value();
+        if (remote_server_info.max_fov) {
+            horizontal_fov = std::min(horizontal_fov, remote_server_info.max_fov.value());
+        }
     }
+
     return horizontal_fov;
 }
 
@@ -122,10 +125,12 @@ ConsoleCommand2 fov_cmd{
             g_game_config.save();
         }
         rf::console::print("Horizontal FOV: {:.2f}", gr_scale_world_fov());
-
-        const auto& server_info_opt = get_df_server_info();
-        if (server_info_opt && server_info_opt.value().max_fov) {
-            rf::console::print("Server FOV limit: {:.2f}", server_info_opt.value().max_fov.value());
+ 
+        if (get_remote_server_info()) {
+            const RemoteServerInfo& remote_server_info = get_remote_server_info().value();
+            if (remote_server_info.max_fov) {
+                rf::console::print("Server FOV limit: {:.2f}", remote_server_info.max_fov.value());
+            }
         }
     },
     "Sets horizontal FOV (field of view) in degrees. Use 0 to enable automatic FOV scaling.",
@@ -240,7 +245,7 @@ ConsoleCommand2 nearest_texture_filtering_cmd{
 ConsoleCommand2 lod_distance_scale_cmd{
     "lod_distance_scale",
     [](std::optional<float> scale_opt) {
-        if (scale_opt.has_value()) {
+        if (scale_opt) {
             gr_lod_dist_scale = scale_opt.value();
         }
         rf::console::print("LOD distance scale: {:.2f}", gr_lod_dist_scale);

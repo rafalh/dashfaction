@@ -145,5 +145,6 @@ namespace rf
         MRF_SCANNER_1 = 1,
         MRF_SCANNER_2 = 8,
         MRF_AMBIENT_COLOR = 0x80,
+        MRF_FIRST_PERSON = 0x400,
     };
 }
