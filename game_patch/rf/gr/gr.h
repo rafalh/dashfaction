@@ -26,6 +26,15 @@ namespace rf::gr
             this->alpha = a;
         }
 
+        static Color from_u32(const uint32_t color) {
+            return Color{
+                static_cast<rf::ubyte>((color >> 24) & 0xFF),
+                static_cast<rf::ubyte>((color >> 16) & 0xFF),
+                static_cast<rf::ubyte>((color >> 8) & 0xFF),
+                static_cast<rf::ubyte>(color & 0xFF)
+            };
+        }
+
         bool operator==(const Color& other) const = default;
     };
 
