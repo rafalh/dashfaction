@@ -36,6 +36,7 @@ namespace rf::gr::d3d
     static auto& create_texture = addr_as_ref<int(int bm_handle, Texture& tslot)>(0x0055CC00);
     static auto& get_texture = addr_as_ref<IDirect3DTexture8*(int bm_handle)>(0x0055D1E0);
     static auto& free_texture = addr_as_ref<void(Texture& tslot)>(0x0055B640);
+    static auto& set_state = addr_as_ref<void(Mode)>(0x0054F160);
 
 #if defined(DIRECT3D_VERSION) && DIRECT3D_VERSION == 0x0800
     static auto& d3d = addr_as_ref<IDirect3D8*>(0x01CFCBE0);
