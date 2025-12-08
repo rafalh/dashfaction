@@ -52,7 +52,7 @@ namespace rf::gr
     };
     static_assert(sizeof(Vertex) == 0x30);
 
-    enum TextureSource : uint8_t {
+    enum TextureSource {
         TEXTURE_SOURCE_NONE = 0x0,
         TEXTURE_SOURCE_WRAP = 0x1,
         TEXTURE_SOURCE_CLAMP = 0x2,
@@ -67,7 +67,7 @@ namespace rf::gr
         TEXTURE_SOURCE_MT_CLAMP_TRILIN = 0xB,
     };
 
-    enum ColorSource : uint8_t {
+    enum ColorSource {
         COLOR_SOURCE_VERTEX = 0x0,
         COLOR_SOURCE_TEXTURE = 0x1,
         COLOR_SOURCE_VERTEX_TIMES_TEXTURE = 0x2,
@@ -75,14 +75,14 @@ namespace rf::gr
         COLOR_SOURCE_VERTEX_TIMES_TEXTURE_2X = 0x4,
     };
 
-    enum AlphaSource : uint8_t {
+    enum AlphaSource {
         ALPHA_SOURCE_VERTEX = 0x0,
         ALPHA_SOURCE_VERTEX_NONDARKENING = 0x1,
         ALPHA_SOURCE_TEXTURE = 0x2,
         ALPHA_SOURCE_VERTEX_TIMES_TEXTURE = 0x3,
     };
 
-    enum AlphaBlend : uint8_t {
+    enum AlphaBlend {
         ALPHA_BLEND_NONE = 0x0,
         ALPHA_BLEND_ADDITIVE = 0x1,
         ALPHA_BLEND_ALPHA_ADDITIVE = 0x2,
@@ -93,7 +93,7 @@ namespace rf::gr
         ALPHA_BLEND_SWAPPED_SRC_DEST_COLOR = 0x7,
     };
 
-    enum ZbufferType : uint8_t {
+    enum ZbufferType {
         ZBUFFER_TYPE_NONE = 0x0,
         ZBUFFER_TYPE_READ = 0x1,
         ZBUFFER_TYPE_READ_EQUAL = 0x2,
@@ -102,7 +102,7 @@ namespace rf::gr
         ZBUFFER_TYPE_FULL_ALPHA_TEST = 0x5,
     };
 
-    enum FogType : uint8_t {
+    enum FogType {
         FOG_ALLOWED = 0x0,
         FOG_ALLOWED_ADD2 = 0x1,
         FOG_ALLOWED_MULT2 = 0x2,
