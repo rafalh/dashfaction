@@ -5,7 +5,9 @@ Version 1.9.2 (not released yet)
 --------------------------------
 [@is-this-c](https://github.com/is-this-c)
 - Set `rf::gr::text_2d_mode` to ignore fog
+- Fix `gr_d3d_bitmap`, so `gr_d3d_set_state` is called earlier
 - Fix a potential crash, after a client quits a game, if Directd3D 11 is enabled
+- Fix a potential crash after a client quits a game if Directd3D 11 is enabled
 - Improve compatibility with Alpine Faction servers
 - Fix `PgUp`, `PgDown`, `End`, and `Home` on numeric keypads
 

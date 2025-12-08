@@ -116,7 +116,7 @@ CodeInjection gr_d3d_init_error_patch{
         auto text = std::format("Failed to create Direct3D device object - error {}.\n"
                                  "A critical error has occurred and the program cannot continue.\n"
                                  "Press OK to exit the program",
-                                 hr, get_d3d_error_str(hr));
+                                 get_d3d_error_str(hr));
 
         hr = rf::gr::d3d::d3d->CheckDeviceType(rf::gr::d3d::adapter_idx, D3DDEVTYPE_HAL, rf::gr::d3d::pp.BackBufferFormat,
             rf::gr::d3d::pp.BackBufferFormat, rf::gr::d3d::pp.Windowed);
@@ -472,6 +472,43 @@ CodeInjection gr_d3d_lock_crash_fix{
     },
 };
 
+FunHook<
+    void(int, int, int, int, int, int, int, int, int, bool, bool, rf::gr::Mode)
+> gr_d3d_bitmap_hook{
+    0x00550AA0,
+    [] (
+        const int bm_handle,
+        const int x,
+        const int y,
+        const int w,
+        const int h,
+        const int sx,
+        const int sy,
+        const int sw,
+        const int sh,
+        const bool flip_x,
+        const bool flip_y,
+        const rf::gr::Mode mode
+    ) {
+        // `gr_d3d_bitmap` calls `gr_d3d_set_state` too late.
+        rf::gr::d3d::set_state(mode);
+        gr_d3d_bitmap_hook.call_target(
+            bm_handle,
+            x,
+            y,
+            w,
+            h,
+            sx,
+            sy,
+            sw,
+            sh,
+            flip_x,
+            flip_y,
+            mode
+        );
+    },
+};
+
 CodeInjection gr_d3d_bitmap_patch_1{
     0x00550CD6,
     [](auto& regs) {
@@ -778,6 +815,7 @@ void gr_d3d_apply_patch()
     // gr_d3d_set_state, gr_d3d_set_state_and_texture and gr_d3d_tcache_set
     gr_d3d_bitmap_patch_1.install();
     gr_d3d_bitmap_patch_2.install();
+    gr_d3d_bitmap_hook.install();
     gr_d3d_line_patch_1.install();
     gr_d3d_line_patch_2.install();
     gr_d3d_line_vertex_internal_patch_1.install();
