@@ -123,21 +123,35 @@ CodeInjection key_get_hook{
     },
 };
 
-CodeInjection key_down_handler_injection{
-    0x0051E9AC,
-    [] (auto& regs) {
-        const int virtual_key = addr_as_ref<int>(regs.esp + 4);
-        // For numeric keypads, we need to fix these keys' scan codes.
-        auto& scan_code = regs.eax;
-        if (virtual_key == VK_PRIOR) {
-            scan_code = rf::KEY_PAGEUP;
-        } else if (virtual_key == VK_NEXT) {
-            scan_code = rf::KEY_PAGEDOWN;
-        } else if (virtual_key == VK_END) {
-            scan_code = rf::KEY_END;
-        } else if (virtual_key == VK_HOME) {
-            scan_code = rf::KEY_HOME;
+FunHook<void(int, int, int)> key_msg_handler_hook{
+    0x0051EBA0,
+    [] (const int msg, const int w_param, int l_param) {
+        // For num pads, we need to fix these scan codes.
+        switch (msg) {
+            case WM_KEYDOWN:
+            case WM_SYSKEYDOWN:
+            case WM_KEYUP:
+            case WM_SYSKEYUP: {
+                uint32_t scan_code = (l_param >> 16) & 0xFF;
+                constexpr uint32_t EXTENDED_KEY_FLAG = 0x1000000;
+                if (w_param == VK_PRIOR) {
+                    scan_code = rf::KEY_PAGEUP;
+                    l_param &= ~EXTENDED_KEY_FLAG;
+                } else if (w_param == VK_NEXT) {
+                    scan_code = rf::KEY_PAGEDOWN;
+                    l_param &= ~EXTENDED_KEY_FLAG;
+                } else if (w_param == VK_END) {
+                    scan_code = rf::KEY_END;
+                    l_param &= ~EXTENDED_KEY_FLAG;
+                } else if (w_param == VK_HOME) {
+                    scan_code = rf::KEY_HOME;
+                    l_param &= ~EXTENDED_KEY_FLAG;
+                }
+                l_param &= 0xFF00FFFF;
+                l_param |= scan_code << 16;
+            }
         }
+        key_msg_handler_hook.call_target(msg, w_param, l_param);
     },
 };
 
@@ -154,5 +168,6 @@ void key_apply_patch()
     // win32 console support and addition of os_poll
     key_get_hook.install();
 
-    key_down_handler_injection.install();
+    // On num pads, support `PgUp`, `PgDown`, `End`, and `Home`.
+    key_msg_handler_hook.install();
 }
