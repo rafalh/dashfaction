@@ -133,19 +133,14 @@ FunHook<void(int, int, int)> key_msg_handler_hook{
             case WM_KEYUP:
             case WM_SYSKEYUP: {
                 uint32_t scan_code = (l_param >> 16) & 0xFF;
-                constexpr uint32_t EXTENDED_KEY_FLAG = 0x1000000;
                 if (w_param == VK_PRIOR) {
                     scan_code = rf::KEY_PAGEUP;
-                    l_param &= ~EXTENDED_KEY_FLAG;
                 } else if (w_param == VK_NEXT) {
                     scan_code = rf::KEY_PAGEDOWN;
-                    l_param &= ~EXTENDED_KEY_FLAG;
                 } else if (w_param == VK_END) {
                     scan_code = rf::KEY_END;
-                    l_param &= ~EXTENDED_KEY_FLAG;
                 } else if (w_param == VK_HOME) {
                     scan_code = rf::KEY_HOME;
-                    l_param &= ~EXTENDED_KEY_FLAG;
                 }
                 l_param &= 0xFF00FFFF;
                 l_param |= scan_code << 16;
