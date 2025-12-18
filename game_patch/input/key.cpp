@@ -126,24 +126,18 @@ CodeInjection key_get_hook{
 FunHook<void(int, int, int)> key_msg_handler_hook{
     0x0051EBA0,
     [] (const int msg, const int w_param, int l_param) {
-        // For num pads, we need to fix these scan codes.
         switch (msg) {
             case WM_KEYDOWN:
             case WM_SYSKEYDOWN:
             case WM_KEYUP:
             case WM_SYSKEYUP: {
-                uint32_t scan_code = (l_param >> 16) & 0xFF;
-                if (w_param == VK_PRIOR) {
-                    scan_code = rf::KEY_PAGEUP;
-                } else if (w_param == VK_NEXT) {
-                    scan_code = rf::KEY_PAGEDOWN;
-                } else if (w_param == VK_END) {
-                    scan_code = rf::KEY_END;
-                } else if (w_param == VK_HOME) {
-                    scan_code = rf::KEY_HOME;
+                // For num pads, RF requires `KF_EXTENDED` to be set.
+                if (w_param == VK_PRIOR
+                    || w_param == VK_NEXT
+                    || w_param == VK_END
+                    || w_param == VK_HOME) {
+                    l_param |= KF_EXTENDED << 16;
                 }
-                l_param &= 0xFF00FFFF;
-                l_param |= scan_code << 16;
             }
         }
         key_msg_handler_hook.call_target(msg, w_param, l_param);
@@ -163,6 +157,6 @@ void key_apply_patch()
     // win32 console support and addition of os_poll
     key_get_hook.install();
 
-    // On num pads, support `PgUp`, `PgDown`, `End`, and `Home`.
+    // Num pads need a patch to support `PgUp`, `PgDown`, `End`, and `Home`.
     key_msg_handler_hook.install();
 }
