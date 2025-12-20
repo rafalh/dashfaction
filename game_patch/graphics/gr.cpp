@@ -330,4 +330,7 @@ void gr_apply_patch()
     windowed_cmd.register_cmd();
     nearest_texture_filtering_cmd.register_cmd();
     lod_distance_scale_cmd.register_cmd();
+
+    // Fix `rf::gr::text_2d_mode`.
+    AsmWriter{0x0050BB40}.push(static_cast<uint8_t>(rf::gr::FOG_NOT_ALLOWED));
 }
