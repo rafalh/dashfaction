@@ -123,21 +123,24 @@ CodeInjection key_get_hook{
     },
 };
 
-CodeInjection key_down_handler_injection{
-    0x0051E9AC,
-    [] (auto& regs) {
-        const int virtual_key = addr_as_ref<int>(regs.esp + 4);
-        // For numeric keypads, we need to fix these keys' scan codes.
-        auto& scan_code = regs.eax;
-        if (virtual_key == VK_PRIOR) {
-            scan_code = rf::KEY_PAGEUP;
-        } else if (virtual_key == VK_NEXT) {
-            scan_code = rf::KEY_PAGEDOWN;
-        } else if (virtual_key == VK_END) {
-            scan_code = rf::KEY_END;
-        } else if (virtual_key == VK_HOME) {
-            scan_code = rf::KEY_HOME;
+FunHook<void(int, int, int)> key_msg_handler_hook{
+    0x0051EBA0,
+    [] (const int msg, const int w_param, int l_param) {
+        switch (msg) {
+            case WM_KEYDOWN:
+            case WM_SYSKEYDOWN:
+            case WM_KEYUP:
+            case WM_SYSKEYUP: {
+                // For num pads, RF requires `KF_EXTENDED` to be set.
+                if (w_param == VK_PRIOR
+                    || w_param == VK_NEXT
+                    || w_param == VK_END
+                    || w_param == VK_HOME) {
+                    l_param |= KF_EXTENDED << 16;
+                }
+            }
         }
+        key_msg_handler_hook.call_target(msg, w_param, l_param);
     },
 };
 
@@ -154,5 +157,6 @@ void key_apply_patch()
     // win32 console support and addition of os_poll
     key_get_hook.install();
 
-    key_down_handler_injection.install();
+    // Num pads need a patch to support `PgUp`, `PgDown`, `End`, and `Home`.
+    key_msg_handler_hook.install();
 }
