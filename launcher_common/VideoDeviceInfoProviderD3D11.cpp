@@ -15,7 +15,7 @@ public:
     ~VideoDeviceInfoProviderD3D11() override = default;
     std::vector<std::string> get_adapters() override;
     std::set<Resolution> get_resolutions(unsigned adapter, unsigned format) override;
-    std::set<unsigned> get_multisample_types(unsigned adapter, unsigned format, bool windowed) override;
+    std::set<uint32_t> get_multisample_types(uint32_t adapter, uint32_t format, bool windowed) override;
     bool has_anisotropy_support(unsigned adapter) override;
 
     unsigned get_format_from_bpp(unsigned bpp) override
@@ -123,30 +123,47 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D11::get_
     return result;
 }
 
-std::set<unsigned> VideoDeviceInfoProviderD3D11::get_multisample_types(
-    unsigned adapter, unsigned format, [[maybe_unused]] bool windowed
+std::set<uint32_t> VideoDeviceInfoProviderD3D11::get_multisample_types(
+    const uint32_t adapter,
+    const uint32_t format,
+    [[maybe_unused]] const bool windowed
 ) {
-
-    ComPtr<IDXGIAdapter> dxgi_adapter;
+    ComPtr<IDXGIAdapter> dxgi_adapter{};
     HRESULT hr = m_factory->EnumAdapters(adapter, &dxgi_adapter);
     if (FAILED(hr)) {
         xlog::error("EnumAdapters failed: {:x}", hr);
         return {};
     }
 
-    ComPtr<ID3D11Device> d3d11_device;
-    hr = m_D3D11CreateDevice(dxgi_adapter, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &d3d11_device, nullptr, nullptr);
+    ComPtr<ID3D11Device> d3d11_device{};
+    hr = m_D3D11CreateDevice(
+        dxgi_adapter,
+        D3D_DRIVER_TYPE_UNKNOWN,
+        nullptr,
+        0,
+        nullptr,
+        0,
+        D3D11_SDK_VERSION,
+        &d3d11_device,
+        nullptr,
+        nullptr
+    );
     if (FAILED(hr)) {
         xlog::error("D3D11CreateDevice failed: {:x}", hr);
         return {};
     }
 
-    std::set<unsigned> result;
-    for (unsigned i = 2; i <= D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT; i *= 2) {
-        UINT quality_levels;
-        HRESULT hr = d3d11_device->CheckMultisampleQualityLevels(static_cast<DXGI_FORMAT>(format), i, &quality_levels);
-        if (SUCCEEDED(hr))
+    std::set<uint32_t> result{};
+    for (uint32_t i = 2; i <= D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT; i <<= 1) {
+        UINT quality_levels = 0;
+        const HRESULT hr = d3d11_device->CheckMultisampleQualityLevels(
+            static_cast<DXGI_FORMAT>(format),
+            i,
+            &quality_levels
+        );
+        if (SUCCEEDED(hr) && quality_levels > 0) {
             result.insert(i);
+        }
     }
     return result;
 }

@@ -14,7 +14,7 @@ public:
     ~VideoDeviceInfoProviderD3D9() override = default;
     std::vector<std::string> get_adapters() override;
     std::set<Resolution> get_resolutions(unsigned adapter, unsigned format) override;
-    std::set<unsigned> get_multisample_types(unsigned adapter, unsigned format, bool windowed) override;
+    std::set<uint32_t> get_multisample_types(uint32_t adapter, uint32_t format, bool windowed) override;
     bool has_anisotropy_support(unsigned adapter) override;
 
     unsigned get_format_from_bpp(unsigned bpp) override
@@ -83,14 +83,25 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D9::get_r
     return result;
 }
 
-std::set<unsigned> VideoDeviceInfoProviderD3D9::get_multisample_types(unsigned adapter, unsigned format, bool windowed)
-{
-    std::set<unsigned> result;
-    for (unsigned i = 2; i <= 16; ++i) {
-        HRESULT hr = m_d3d->CheckDeviceMultiSampleType(adapter, D3DDEVTYPE_HAL, static_cast<D3DFORMAT>(format), windowed,
-            static_cast<D3DMULTISAMPLE_TYPE>(i), nullptr);
-        if (SUCCEEDED(hr))
+std::set<uint32_t> VideoDeviceInfoProviderD3D9::get_multisample_types(
+    const uint32_t adapter,
+    const uint32_t format,
+    const bool windowed
+) {
+    std::set<uint32_t> result{};
+    for (uint32_t i = 2; i <= 16; ++i) {
+        DWORD quality_levels = 0;
+        const HRESULT hr = m_d3d->CheckDeviceMultiSampleType(
+            adapter,
+            D3DDEVTYPE_HAL,
+            static_cast<D3DFORMAT>(format),
+            windowed,
+            static_cast<D3DMULTISAMPLE_TYPE>(i),
+            &quality_levels
+        );
+        if (SUCCEEDED(hr) && quality_levels > 0) {
             result.insert(i);
+        }
     }
     return result;
 }
