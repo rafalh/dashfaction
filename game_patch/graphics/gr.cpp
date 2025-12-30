@@ -332,6 +332,6 @@ void gr_apply_patch()
     lod_distance_scale_cmd.register_cmd();
 
     // Fix `rf::gr::text_2d_mode`.
-    constexpr uint8_t FOG_TYPE = static_cast<uint8_t>(rf::gr::FOG_NOT_ALLOWED);
-    AsmWriter{0x0050BB40}.push(FOG_TYPE);
+    constexpr uint8_t TEXT_FOG_TYPE = static_cast<uint8_t>(rf::gr::FOG_NOT_ALLOWED);
+    AsmWriter{0x0050BB40}.push(TEXT_FOG_TYPE);
 }

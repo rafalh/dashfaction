@@ -15,7 +15,7 @@ public:
     ~VideoDeviceInfoProviderD3D11() override = default;
     std::vector<std::string> get_adapters() override;
     std::set<Resolution> get_resolutions(unsigned adapter, unsigned format) override;
-    std::set<uint32_t> get_multisample_types(uint32_t adapter, uint32_t format, bool windowed) override;
+    std::set<uint32_t> get_multisample_types(unsigned adapter, unsigned format, bool windowed) override;
     bool has_anisotropy_support(unsigned adapter) override;
 
     unsigned get_format_from_bpp(unsigned bpp) override
@@ -124,8 +124,8 @@ std::set<VideoDeviceInfoProvider::Resolution> VideoDeviceInfoProviderD3D11::get_
 }
 
 std::set<uint32_t> VideoDeviceInfoProviderD3D11::get_multisample_types(
-    const uint32_t adapter,
-    const uint32_t format,
+    const unsigned adapter,
+    const unsigned format,
     [[maybe_unused]] const bool windowed
 ) {
     ComPtr<IDXGIAdapter> dxgi_adapter{};
