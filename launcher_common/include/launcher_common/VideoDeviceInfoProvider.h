@@ -23,7 +23,7 @@ public:
     virtual std::vector<std::string> get_adapters() = 0;
     virtual unsigned get_format_from_bpp(unsigned bpp) = 0;
     virtual std::set<Resolution> get_resolutions(unsigned adapter, unsigned format) = 0;
-    virtual std::set<unsigned> get_multisample_types(unsigned adapter, unsigned format, bool windowed) = 0;
+    virtual std::set<uint32_t> get_multisample_types(uint32_t adapter, uint32_t format, bool windowed) = 0;
     virtual bool has_anisotropy_support(unsigned adapter) = 0;
 };
 
